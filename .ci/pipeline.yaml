@@ -1,4 +1,4 @@
-triggers: none
+trigger: none
 
 schedules:
   - cron: "0 * * * *"
