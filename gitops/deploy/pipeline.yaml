@@ -27,6 +27,6 @@ stages:
       - template: deploy.yaml
         parameters:
           poolName: ${{ format(parameters.poolNameTemplate, env) }}
-          environment: ${ env }}
+          environment: ${{ env }}
           serviceName: ${{ parameters.serviceName }}
           deployTags: false
