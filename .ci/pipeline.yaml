@@ -3,6 +3,12 @@ pool:
 
 steps:
   - script: |
+      set -x
+      set -e
+
+      git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
+      git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
+
       cd $(mktemp -d)
       git status
       git clone https://github.com/XenitAB/azure-devops-templates
