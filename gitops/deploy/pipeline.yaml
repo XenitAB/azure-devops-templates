@@ -18,7 +18,7 @@ stages:
           serviceName: ${{ parameters.serviceName }}
 
   - ${{ each env in parameters.envs }}:
-    - stage: deploy_$${{ env }}
+    - stage: deploy_${{ env }}
       #dependsOn: [Push_containers]
       jobs:
       - template: deploy.yaml
