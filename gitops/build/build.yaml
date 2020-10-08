@@ -1,9 +1,9 @@
 parameters:
   poolVmImage: "ubuntu-16.04" # vm image to use if azure build pool
   poolName: "" # name of pool to use
-  sourceBranch: "" # refs to limit builds to
-  dockerfilePath: "" # path to dockerfile
-  serviceName: "" # name of service used in image tag
+  sourceBranch: "refs/heads/master" # refs to limit builds to
+  dockerfilePath: "./Dockerfile" # path to dockerfile
+  serviceName: "${{ variables.Build.Repository.Name }}" # name of service used in image tag
 stages:
 - stage: build
   jobs:
