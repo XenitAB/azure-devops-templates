@@ -2,16 +2,13 @@ pool:
   vmImage: 'Ubuntu 16.04'
 
 steps:
+  - checkout: self
+    persistCredentials: true
   - script: |
       set -x
       set -e
-
       git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
       git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
-
-      cd $(mktemp -d)
-      git clone https://github.com/XenitAB/azure-devops-templates
-      cd azure-devops-templates
-      git remote remove origin
-      git remote add origin $(Build.Repository.Uri)
+      git remote add original https://github.com/XenitAB/azure-devops-templates
+      git pull --all original
       git push --all origin
