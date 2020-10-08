@@ -1,42 +1,37 @@
 parameters:
-  dockerfilePath: ""
-  serviceName: ""
-  sourceBranch: ""
+  poolName: "ubuntu-16.04" # name of build pool to use
+  sourceBranch: "" # refs to limit builds to
+  dockerfilePath: "" # path to dockerfile
+  serviceName: "" # name of service, will also be image tag
 stages:
-- stage: Build_container
+- stage: Build
   jobs:
-    - job: Build_container
-      displayName: Build container image
-      pool: dev-k8s
+    - job: Build Image
+      pool: ${poolName}
       continueOnError: false
       steps:
-        - script: |
+        - bash: |
             set -e
-            shortCommitHash=${sourceVersion:0:7}
+            shortHash=${sourceVersion:0:7}
             echo "Long commit hash: ${sourceVersion}"
-            echo "Short commit hash: ${shortCommitHash}"
-            echo "##vso[task.setvariable variable=shortCommitHash]$shortCommitHash"
-          displayName: "Generate shortCommitHash (7-digit git hash)"
-          env: 
+            echo "Short commit hash: ${shortHash}"
+            echo "##vso[task.setvariable variable=shortHash]$shortHash"
+          displayName: "Generate short commit hash (7-char git hash)"
+          env:
             sourceVersion: $(Build.SourceVersion)
 
         - bash: |
             set -e
-            echo "Running docker build:"
-            echo ""
-            docker build \
-              -f ${{ parameters.dockerfilePath }} \
-              -t ${{ parameters.serviceName }}:$(shortCommitHash) \
-              .
-            echo "Running docker save:"
-            echo ""
-            docker save ${{ parameters.serviceName }}:$(shortCommitHash) | gzip > ${{ parameters.serviceName }}_$(shortCommitHash).tar.gz
-          displayName: "Build and save container image"
+            echo "Running docker build:\n"
+            docker build -f ${{ parameters.dockerfilePath }} -t ${{ parameters.serviceName }}:$(shortHash) .
+            echo "Running docker save:\n"
+            docker save ${{ parameters.serviceName }}:$(shortHash) | gzip > ${{ parameters.serviceName }}_$(shortHash).tar.gz
+          displayName: "Build and save image"
           condition: and(succeeded(), eq(variables['Build.sourceBranch'], variables['sourceBranch']))
 
         - task: PublishPipelineArtifact@1
           displayName: "Publish Azure Pipelines Artifact"
           inputs:
-            targetPath: ${{ parameters.serviceName }}_$(shortCommitHash).tar.gz
+            targetPath: ${{ parameters.serviceName }}_$(shortHash).tar.gz
             artifactName: ${{ parameters.serviceName }}
           condition: and(succeeded(), eq(variables['Build.sourceBranch'], variables['sourceBranch']))
