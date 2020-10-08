@@ -2,11 +2,11 @@ parameters:
   poolName: "ubuntu-16.04" # name of build pool to use
   sourceBranch: "" # refs to limit builds to
   dockerfilePath: "" # path to dockerfile
-  serviceName: "" # name of service, will also be image tag
+  serviceName: "" # name of service used in image tag
 stages:
-- stage: Build
+- stage: build
   jobs:
-    - job: Build Image
+    - job: image
       pool: ${poolName}
       continueOnError: false
       steps:
