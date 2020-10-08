@@ -17,11 +17,12 @@ stages:
       steps:
         - bash: |
             NAME=${SERVICE_NAME:-$REPO_NAME}
+            echo "Service Name: $NAME"
             echo "##vso[task.setvariable variable=serviceName]$NAME"
           displayName: Set default values
           env:
             SERVICE_NAME: ${{ parameters.serviceName }}
-            REPO_NAME: ${{ variables.Build.Repository.Name }}
+            REPO_NAME: $(Build.Repository.Name)
 
         - bash: |
             set -e
