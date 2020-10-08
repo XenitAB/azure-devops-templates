@@ -1,5 +1,6 @@
 parameters:
-  poolName: "ubuntu-16.04" # name of build pool to use
+  poolVmImage: "ubuntu-16.04" # vm image to use if azure build pool
+  poolName: "" # name of pool to use
   sourceBranch: "" # refs to limit builds to
   dockerfilePath: "" # path to dockerfile
   serviceName: "" # name of service used in image tag
@@ -7,7 +8,9 @@ stages:
 - stage: build
   jobs:
     - job: image
-      pool: ${poolName}
+      pool:
+        name: "${{ parameters.poolName }}"
+        vmImage: "${{ parameters.poolVmImage }}"
       continueOnError: false
       steps:
         - bash: |
