@@ -16,7 +16,7 @@ stages:
     - ${{ each env in parameters.envs }}:
       - template: push_image.yaml
         parameters:
-          poolName: ${{ parameters.poolName }}
+          poolName: ${{ format(parameters.poolNameTemplate, env) }}
           environment: ${{ env }}
           serviceName: ${{ parameters.serviceName }}
 
@@ -26,7 +26,7 @@ stages:
       jobs:
       - template: deploy.yaml
         parameters:
-          poolName: ${{ parameters.poolName }}
+          poolName: ${{ format(parameters.poolNameTemplate, env) }}
           environment: ${ env }}
           serviceName: ${{ parameters.serviceName }}
           deployTags: false
