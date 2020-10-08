@@ -10,13 +10,6 @@ steps:
       git config --global pull.rebase true
       git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
       git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
-
-      REMOTE_URL=$(git remote get-url origin)
-
-      cd $(mktemp -d)
-      git clone https://github.com/XenitAB/azure-devops-templates
-      cd azure-devops-templates
-      git pull --all
-      git remote remove origin
-      git remote add origin ${REMOTE_URL}
-      git push --all
+      git remote add upstream https://github.com/XenitAB/azure-devops-templates
+      git pull upstream master
+      git push origin master
