@@ -7,6 +7,10 @@ steps:
   - script: |
       set -x
       set -e
+      git checkout master
+      git pull
+      git fetch -p
+      git reset --hard origin/master
       git config --global pull.rebase true
       git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
       git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
