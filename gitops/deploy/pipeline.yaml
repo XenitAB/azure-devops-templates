@@ -12,7 +12,7 @@ stages:
     - ${{ each env in parameters.envs }}:
       - template: push_image.yaml
         parameters:
-          jobName: push_dev
+          jobName: push_${{ env }}
           environment: dev
           serviceName: "foo"
 
