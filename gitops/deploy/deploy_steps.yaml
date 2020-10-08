@@ -1,9 +1,6 @@
 parameters:
   environment: ""
   serviceName: ""
-  gitopsAzdoProject: ""
-  gitopsAzdoRepository: ""
-  gitopsAzdoRepositoryBranch: ""
 
 steps:
   - checkout: self
@@ -35,12 +32,12 @@ steps:
 
       echo "Changing image tag from ${CURRENT_TAG} to ${NEW_TAG} for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml"
       set -x
-      git checkout ${{ parameters.gitopsAzdoRepositoryBranch }}
+      git checkout master
       git pull
       git fetch -p
-      git reset --hard origin/${{ parameters.gitopsAzdoRepositoryBranch }}
-      git config --global user.email "azure-pipelines@${{ parameters.gitopsAzdoProject }}.${{ parameters.gitopsAzdoRepository }}"
-      git config --global user.name "Azure Pipelines (${{ parameters.gitopsAzdoProject }} ${{ parameters.gitopsAzdoRepository }})"
+      git reset --hard origin/master
+      git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
+      git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
       git status
 
       yq --in-place -Y ".spec.values.image.tag=\"${NEW_TAG}\"" ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
