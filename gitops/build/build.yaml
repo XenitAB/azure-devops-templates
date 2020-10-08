@@ -40,11 +40,11 @@ stages:
             echo "Running docker save:\n"
             docker save $(.serviceName):$(shortHash) | gzip > $(serviceName)_$(shortHash).tar.gz
           displayName: "Build and save image"
-          condition: and(succeeded(), eq(variables['Build.sourceBranch'], "${{ parameters.sourceBranch }}"))
+          condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
 
         - task: PublishPipelineArtifact@1
           displayName: "Publish Azure Pipelines Artifact"
           inputs:
             targetPath: $(serviceName)_$(shortHash).tar.gz
             artifactName: $(serviceName)
-          condition: and(succeeded(), eq(variables['Build.sourceBranch'], "${{ parameters.sourceBranch }}"))
+          condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
