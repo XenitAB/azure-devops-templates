@@ -1,16 +1,15 @@
 parameters:
-  jobName: ""
   environment: ""
   serviceName: ""
+  poolName: ""
 
 jobs:
-- job: ${{ parameters.jobName }}
+- job: push_${{ parameters.environment }}
   condition: and(and(succeeded(), eq(variables['resources.pipeline.ciPipeline.sourceBranch'], variables['sourceBranch'])), and(succeeded(), eq(variables['${{ parameters.environment }}EnvEnabled'], true)))
   displayName: Push ${{ parameters.environment }}
   pool: xks-dev
   continueOnError: false
   steps:
-
   # Should run for all environments and all branches (master + tags)
   - script: |
       set -e
