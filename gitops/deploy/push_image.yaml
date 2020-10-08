@@ -37,7 +37,7 @@ jobs:
   - task: AzureCLI@2
     displayName: "Push container to ACR"
     inputs:
-      azureSubscription: azure-legacyproxy-${{ parameters.environment }}-contributor
+      #azureSubscription: azure-legacyproxy-${{ parameters.environment }}-contributor
       addSpnToEnvironment: true
       workingDirectory: "."
       scriptLocation: inlineScript
