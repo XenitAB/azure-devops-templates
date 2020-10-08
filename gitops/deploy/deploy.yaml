@@ -7,7 +7,7 @@ jobs:
 - deployment: ${{ parameters.deployment }}
   condition: and(succeeded(), or(and(eq(variables['resources.pipeline.ciPipeline.sourceBranch'], variables['sourceBranch']), eq(${{ parameters.deployTags }}, false)), and(startsWith(variables['resources.pipeline.ciPipeline.sourceBranch'], 'refs/tags/'), eq(${{ parameters.deployTags }}, true))))
   displayName: Deploy to ${{ parameters.environment }}
-  pool: ${{ parameters.environment }}-k8s
+  pool: xks-dev
   continueOnError: false
   environment: ${{ parameters.environment }}
   variables:
@@ -29,7 +29,7 @@ jobs:
   condition: succeeded()
   dependsOn: ${{ parameters.deployment }}
   displayName: Wait for ${{ parameters.environment }}
-  pool: ${{ parameters.environment }}-k8s
+  pool: xks-dev
   continueOnError: false
   timeoutInMinutes: 15
   variables:

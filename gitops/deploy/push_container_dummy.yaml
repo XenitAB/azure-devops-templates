@@ -7,7 +7,7 @@ jobs:
 - job: ${{ parameters.jobName }}
   condition: and(and(succeeded(), eq(variables['resources.pipeline.ciPipeline.sourceBranch'], variables['sourceBranch'])), and(succeeded(), eq(variables['${{ parameters.environment }}EnvEnabled'], true)))
   displayName: Push ${{ parameters.environment }}
-  pool: ${{ parameters.environment }}-k8s
+  pool: xks-dev
   continueOnError: false
   steps:
 
