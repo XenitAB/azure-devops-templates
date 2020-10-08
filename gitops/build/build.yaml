@@ -9,10 +9,10 @@ stages:
   jobs:
     - job: image
       pool:
-      ${{ if not(eq(parameters.poolName, '')) }}:
-        name: ${{ parameters.poolName }}
-      ${{ if not(eq(parameters.vmImage, '')) }}:
-        vmImage: ${{ parameters.vmImage }}
+        ${{ if not(eq(parameters.poolName, '')) }}:
+          name: ${{ parameters.poolName }}
+        ${{ if not(eq(parameters.vmImage, '')) }}:
+          vmImage: ${{ parameters.vmImage }}
       continueOnError: false
       steps:
         - bash: |
