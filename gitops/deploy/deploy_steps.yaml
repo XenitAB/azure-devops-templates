@@ -1,0 +1,56 @@
+parameters:
+  environment: ""
+  serviceName: ""
+  gitopsAzdoProject: ""
+  gitopsAzdoRepository: ""
+  gitopsAzdoRepositoryBranch: ""
+
+steps:
+  - checkout: self
+    displayName: Get sources
+    persistCredentials: true
+
+  - script: |
+      set -e
+      shortCommitHash=${sourceVersion:0:7}
+      echo "Long commit hash: ${sourceVersion}"
+      echo "Short commit hash: ${shortCommitHash}"
+      echo "Branch: ${sourceBranch}"
+      echo "##vso[task.setvariable variable=shortCommitHash]$shortCommitHash"
+    displayName: "Generate shortCommitHash (7-digit git hash)"
+    env:
+      sourceVersion: $(resources.pipeline.ciPipeline.sourceCommit)
+      sourceBranch: $(resources.pipeline.ciPipeline.sourceBranch)
+
+  - script: |
+      set -e
+      pip3 install yq
+
+      CURRENT_TAG=$(yq -r '.spec.values.application.buildId' ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml)
+      NEW_TAG="$(shortCommitHash)"
+      if [ "${CURRENT_TAG}" == "${NEW_TAG}" ]; then
+        echo "INFO: Nothing to do - image tag for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml is already ${NEW_TAG}"
+        exit 1
+      fi
+
+      echo "Changing image tag from ${CURRENT_TAG} to ${NEW_TAG} for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml"
+      set -x
+      git checkout ${{ parameters.gitopsAzdoRepositoryBranch }}
+      git pull
+      git fetch -p
+      git reset --hard origin/${{ parameters.gitopsAzdoRepositoryBranch }}
+      git config --global user.email "azure-pipelines@${{ parameters.gitopsAzdoProject }}.${{ parameters.gitopsAzdoRepository }}"
+      git config --global user.name "Azure Pipelines (${{ parameters.gitopsAzdoProject }} ${{ parameters.gitopsAzdoRepository }})"
+      git status
+
+      yq --in-place -Y ".spec.values.image.tag=\"${NEW_TAG}\"" ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
+
+      git add ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
+      git status
+      git commit -m "${{ parameters.environment }}/${{ parameters.serviceName }}.yaml - changed image tag from ${CURRENT_TAG} to ${NEW_TAG}"
+      git push origin
+
+      COMMIT_ID=$(git rev-parse HEAD)
+      echo "##vso[task.setvariable variable=commitId;isOutput=true]$COMMIT_ID"
+    name: updateImage
+    displayName: "Change image in GitOps repo"

@@ -1,0 +1,48 @@
+stages:
+- stage: Push_containers
+  jobs:
+  - template: push_container.yaml
+    parameters:
+      jobName: Push_dev
+      environment: dev
+      serviceName: $(serviceName)
+  - template: push_container.yaml
+    parameters:
+      jobName: Push_qa
+      environment: qa
+      serviceName: $(serviceName)
+  - template: push_container.yaml
+    parameters:
+      jobName: Push_prod
+      environment: prod
+      serviceName: $(serviceName)
+
+- stage: Deploy_dev
+  dependsOn: [Push_containers]
+  jobs:
+  - template: deploy.yaml
+    parameters:
+      deployment: Deploy_dev
+      environment: dev
+      serviceName: $(serviceName)
+      deployTags: false
+
+- stage: Deploy_qa
+  dependsOn: [Deploy_dev]
+  jobs:
+  - template: deploy.yaml
+    parameters:
+      deployment: Deploy_qa
+      environment: qa
+      serviceName: $(serviceName)
+      deployTags: true
+
+- stage: Deploy_prod
+  dependsOn: [Deploy_qa]
+  jobs:
+  - template: deploy.yaml
+    parameters:
+      deployment: Deploy_prod
+      environment: prod
+      serviceName: $(serviceName)
+      deployTags: true

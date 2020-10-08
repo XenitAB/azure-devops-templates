@@ -1,0 +1,19 @@
+parameters:
+  jobName: ""
+  environment: ""
+  serviceName: ""
+
+jobs:
+- job: ${{ parameters.jobName }}
+  condition: and(and(succeeded(), eq(variables['resources.pipeline.ciPipeline.sourceBranch'], variables['sourceBranch'])), and(succeeded(), eq(variables['${{ parameters.environment }}EnvEnabled'], true)))
+  displayName: Push ${{ parameters.environment }}
+  pool: ${{ parameters.environment }}-k8s
+  continueOnError: false
+  steps:
+
+  # why?
+  # Should run for all environments and all branches (master + tags)
+  - script: |
+      set -e
+      echo "This is just a dummy test"
+    displayName: "Dummy test"

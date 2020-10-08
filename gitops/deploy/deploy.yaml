@@ -1,0 +1,73 @@
+parameters:
+  deployment: ""
+  environment: ""
+  serviceName: ""
+
+jobs:
+- deployment: ${{ parameters.deployment }}
+  condition: and(succeeded(), or(and(eq(variables['resources.pipeline.ciPipeline.sourceBranch'], variables['sourceBranch']), eq(${{ parameters.deployTags }}, false)), and(startsWith(variables['resources.pipeline.ciPipeline.sourceBranch'], 'refs/tags/'), eq(${{ parameters.deployTags }}, true))))
+  displayName: Deploy to ${{ parameters.environment }}
+  pool: ${{ parameters.environment }}-k8s
+  continueOnError: false
+  environment: ${{ parameters.environment }}
+  variables:
+    gitopsAzdoProject: Legacy-Proxy
+    gitopsAzdoRepository: gitops
+    gitopsAzdoRepositoryBranch: master
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - template: deploy_steps.yaml
+          parameters:
+            environment: ${{ parameters.environment }}
+            serviceName: ${{ parameters.serviceName }}
+            gitopsAzdoProject: ${{ variables.gitopsAzdoProject }}
+            gitopsAzdoRepository: ${{ variables.gitopsAzdoRepository }}
+            gitopsAzdoRepositoryBranch: ${{ variables.gitopsAzdoRepositoryBranch }}
+- job: wait_${{ parameters.deployment }}
+  condition: succeeded()
+  dependsOn: ${{ parameters.deployment }}
+  displayName: Wait for ${{ parameters.environment }}
+  pool: ${{ parameters.environment }}-k8s
+  continueOnError: false
+  timeoutInMinutes: 15
+  variables:
+    COMMIT_ID: $[ dependencies.${{ parameters.deployment }}.outputs['${{ parameters.deployment }}.updateImage.commitId'] ]
+  steps:
+  - script: |
+      set -e
+
+      COMMIT_ID=$(COMMIT_ID)
+      if [ -z "$COMMIT_ID" ]; then
+        echo "Commit Id is not set"
+        exit 1
+      fi
+
+      wget https://github.com/XenitAB/flux-status/releases/download/v0.1.0-rc4/flux-status-cli
+      chmod +x flux-status-cli
+      wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+      mv jq-linux64 jq
+      chmod +x jq
+
+      echo "Environment: ${{ parameters.environment }}"
+      echo "Commit Id: $COMMIT_ID"
+      while true; do
+        sleep 3
+
+        set +e
+        RESULT=$(./flux-status-cli --instance ${{ parameters.environment }} --action workload  --git-url $(Build.Repository.Uri) --azdo-pat $(System.AccessToken) --commit-id $COMMIT_ID)
+        if [ $? -ne 0 ]; then
+          echo $RESULT
+          continue
+        fi
+        set -e
+
+        STATE=$(echo $RESULT | jq -r .state)
+        echo "Commit status is $STATE"
+        if [ $STATE == "succeeded" ]; then
+          exit 0
+        elif [[ $STATE == "failed" || $STATE == "canceled" ]]; then
+          exit 1
+        fi
+      done

@@ -1,0 +1,42 @@
+parameters:
+  dockerfilePath: ""
+  serviceName: ""
+  sourceBranch: ""
+stages:
+- stage: Build_container
+  jobs:
+    - job: Build_container
+      displayName: Build container image
+      pool: dev-k8s
+      continueOnError: false
+      steps:
+        - script: |
+            set -e
+            shortCommitHash=${sourceVersion:0:7}
+            echo "Long commit hash: ${sourceVersion}"
+            echo "Short commit hash: ${shortCommitHash}"
+            echo "##vso[task.setvariable variable=shortCommitHash]$shortCommitHash"
+          displayName: "Generate shortCommitHash (7-digit git hash)"
+          env: 
+            sourceVersion: $(Build.SourceVersion)
+
+        - bash: |
+            set -e
+            echo "Running docker build:"
+            echo ""
+            docker build \
+              -f ${{ parameters.dockerfilePath }} \
+              -t ${{ parameters.serviceName }}:$(shortCommitHash) \
+              .
+            echo "Running docker save:"
+            echo ""
+            docker save ${{ parameters.serviceName }}:$(shortCommitHash) | gzip > ${{ parameters.serviceName }}_$(shortCommitHash).tar.gz
+          displayName: "Build and save container image"
+          condition: and(succeeded(), eq(variables['Build.sourceBranch'], variables['sourceBranch']))
+
+        - task: PublishPipelineArtifact@1
+          displayName: "Publish Azure Pipelines Artifact"
+          inputs:
+            targetPath: ${{ parameters.serviceName }}_$(shortCommitHash).tar.gz
+            artifactName: ${{ parameters.serviceName }}
+          condition: and(succeeded(), eq(variables['Build.sourceBranch'], variables['sourceBranch']))

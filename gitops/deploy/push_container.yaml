@@ -1,0 +1,53 @@
+parameters:
+  jobName: ""
+  environment: ""
+  serviceName: ""
+
+jobs:
+- job: ${{ parameters.jobName }}
+  condition: and(and(succeeded(), eq(variables['resources.pipeline.ciPipeline.sourceBranch'], variables['sourceBranch'])), and(succeeded(), eq(variables['${{ parameters.environment }}EnvEnabled'], true)))
+  displayName: Push ${{ parameters.environment }}
+  pool: ${{ parameters.environment }}-k8s
+  continueOnError: false
+  steps:
+
+  # Should run for all environments and all branches (master + tags)
+  - script: |
+      set -e
+      shortCommitHash=${sourceVersion:0:7}
+      echo "Long commit hash: ${sourceVersion}"
+      echo "Short commit hash: ${shortCommitHash}"
+      echo "##vso[task.setvariable variable=shortCommitHash]$shortCommitHash"
+    displayName: "Generate shortCommitHash (7-digit git hash)"
+    env:
+      sourceVersion: $(resources.pipeline.ciPipeline.sourceCommit)
+      sourceBranch: $(resources.pipeline.ciPipeline.sourceBranch)
+
+  # Only needed for commits to master
+  - task: DownloadPipelineArtifact@2
+    displayName: "Download container artifact"
+    inputs:
+      buildType: 'specific'
+      project: '$(resources.pipeline.ciPipeline.projectID)'
+      definition: '$(resources.pipeline.ciPipeline.pipelineID)'
+      preferTriggeringPipeline: true
+      targetPath: '$(Pipeline.Workspace)'
+
+  # Should upload to ACR for DEV/QA/PROD
+  - task: AzureCLI@2
+    displayName: "Push container to ACR"
+    inputs:
+      azureSubscription: azure-legacyproxy-${{ parameters.environment }}-contributor
+      addSpnToEnvironment: true
+      workingDirectory: "."
+      scriptLocation: inlineScript
+      scriptType: bash
+      inlineScript: |
+        docker load < $(Pipeline.Workspace)/${{ parameters.serviceName }}/${{ parameters.serviceName }}_$(shortCommitHash).tar.gz
+        docker tag ${IMAGE_TAG_NAME} ${IMAGE_FULL_NAME}
+        az acr login -n ${REGISTRY}
+        docker push ${IMAGE_FULL_NAME}
+    env:
+      REGISTRY: "acr${{ parameters.environment }}wevks"
+      IMAGE_TAG_NAME: "${{ parameters.serviceName }}:$(shortCommitHash)"
+      IMAGE_FULL_NAME: "acr${{ parameters.environment }}wevks.azurecr.io/legacyproxy/${{ parameters.serviceName }}:$(shortCommitHash)"
