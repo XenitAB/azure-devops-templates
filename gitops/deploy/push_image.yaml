@@ -48,8 +48,9 @@ jobs:
           scriptType: bash
           inlineScript: |
             set -e
+            set -x
             ARTIFACT_PATH="$(Pipeline.Workspace)/${{ parameters.serviceName }}/${{ parameters.serviceName }}_$(shortCommitHash).tar.gz"
-            [[ ! -f $ARTIFACT_PATH ]] && echo "Missing artifact file ($ARTIFACT_PATH) from CI pipeline, did you trigger this pipeline manually?" && exit 1
+            [[ ! -f "${ARTIFACT_PATH}" ]] && echo "Missing artifact file ($ARTIFACT_PATH) from CI pipeline, did you trigger this pipeline manually?" && exit 1
             IMAGE_ID="${{ parameters.serviceName }}:$(shortCommitHash)"
             IMAGE_ID_FULL="${{ parameters.acrName }}.azure.io/${{ parameters.imagePathPrefix }}/${IMAGE_ID}"
             az acr login -n "${{ parameters.acrName }}"
