@@ -23,7 +23,7 @@ stages:
               echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
             displayName: "Create image id"
             env:
-              SERVICE_NAME: ${{ variables.serviceName }}
+              SERVICE_NAME: $[variables.serviceName]
               SOURCE_VERSION: $(Build.SourceVersion)
 
           - bash: |
