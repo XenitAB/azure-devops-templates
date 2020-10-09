@@ -94,7 +94,7 @@ jobs:
                   COMMIT_ID=$(git rev-parse HEAD)
 
                   set +e
-                  RESULT=$(./flux-status-cli --instance ${{ parameters.environment }} --action workload  --git-url $(Build.Repository.Uri) --azdo-pat $(System.AccessToken) --commit-id $COMMIT_ID)
+                  RESULT=$(flux-status-cli --instance ${{ parameters.environment }} --action workload  --git-url $(Build.Repository.Uri) --azdo-pat $(System.AccessToken) --commit-id $COMMIT_ID)
                   if [ $? -ne 0 ]; then
                     echo $RESULT
                     continue
