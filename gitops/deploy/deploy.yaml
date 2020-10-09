@@ -66,9 +66,11 @@ jobs:
                 pip3 install yq
                 wget https://github.com/XenitAB/flux-status/releases/download/v0.1.0-rc4/flux-status-cli
                 chmod +x flux-status-cli
+                mv flux-status-cli /usr/bin/
                 wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
                 mv jq-linux64 jq
                 chmod +x jq
+                mv jq /usr/bin/
 
                 git checkout master
                 git pull
