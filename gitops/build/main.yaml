@@ -15,7 +15,7 @@ stages:
             vmImage: ${{ parameters.vmImage }}
         continueOnError: false
         variables:
-          serviceName: $(coalesce(parameters.serviceName, variables.Build.Repository.Name))
+          serviceName: $[coalesce(parameters.serviceName, variables.Build.Repository.Name)]
         steps:
           - bash: |
               set -e
