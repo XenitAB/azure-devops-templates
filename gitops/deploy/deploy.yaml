@@ -86,8 +86,8 @@ jobs:
                   git pull origin master
                   CURRENT_TAG=$(yq -r '${{ parameters.imageTagPath }}' ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml)
                   EXPECTED_TAG="$(shortCommitHash)"
-                  if [ "${CURRENT_TAG}" == "${EXPECTED_TAG}" ]; then
-                    echo "Image tag for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml has changed and is not longer ${NEW_TAG}"
+                  if [ "${CURRENT_TAG}" != "${EXPECTED_TAG}" ]; then
+                    echo "Image tag for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml is no longer the expected value ${NEW_TAG}"
                     exit 1
                   fi
 
