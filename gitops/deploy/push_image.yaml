@@ -10,7 +10,7 @@ parameters:
 jobs:
   - job: push_${{ parameters.environment }}
     condition: and(succeeded(), eq(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'))
-    displayName: Push ${{ parameters.environment }}
+    displayName: Push image to ${{ parameters.environment }}
     pool:
       name: ${{ parameters.poolName }}
     continueOnError: false

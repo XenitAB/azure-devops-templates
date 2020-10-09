@@ -18,56 +18,93 @@ jobs:
       runOnce:
         deploy:
           steps:
-          - template: deploy_steps.yaml
-            parameters:
-              environment: ${{ parameters.environment }}
-              serviceName: ${{ parameters.serviceName }}
-              imageTagPath: ${{ parameters.imageTagPath }}
+            - checkout: self
+              displayName: Get sources
+              persistCredentials: true
 
-  - job: wait_${{ parameters.environment }}
-    condition: succeeded()
-    dependsOn: deploy_${{ parameters.environment }}
-    displayName: Wait for ${{ parameters.environment }}
-    pool:
-      name: ${{ parameters.poolName }}
-    continueOnError: false
-    timeoutInMinutes: 15
-    variables:
-      COMMIT_ID: $[ dependencies.deploy_${{ parameters.environment }}.outputs['deploy_${{ parameters.environment }}.updateImage.commitId'] ]
-    steps:
-    - script: |
-        set -e
+            - script: |
+                set -e
+                shortCommitHash=${sourceVersion:0:7}
+                echo "Long commit hash: ${sourceVersion}"
+                echo "Short commit hash: ${shortCommitHash}"
+                echo "Branch: ${sourceBranch}"
+                echo "##vso[task.setvariable variable=shortCommitHash]$shortCommitHash"
+              displayName: "Generate shortCommitHash (7-digit git hash)"
+              env:
+                sourceVersion: $(resources.pipeline.ciPipeline.sourceCommit)
+                sourceBranch: $(resources.pipeline.ciPipeline.sourceBranch)
 
-        COMMIT_ID=$(COMMIT_ID)
-        if [ -z "$COMMIT_ID" ]; then
-          echo "Commit Id is not set"
-          exit 1
-        fi
+            - script: |
+                set -e
+                pip3 install yq
 
-        wget https://github.com/XenitAB/flux-status/releases/download/v0.1.0-rc4/flux-status-cli
-        chmod +x flux-status-cli
-        wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
-        mv jq-linux64 jq
-        chmod +x jq
+                git checkout master
+                git pull
+                git fetch -p
+                git reset --hard origin/master
+                git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
+                git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
+                git status
 
-        echo "Environment: ${{ parameters.environment }}"
-        echo "Commit Id: $COMMIT_ID"
-        while true; do
-          sleep 3
+                CURRENT_TAG=$(yq -r '${{ parameters.imageTagPath }}' ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml)
+                NEW_TAG="$(shortCommitHash)"
+                if [ "${CURRENT_TAG}" == "${NEW_TAG}" ]; then
+                  echo "Image tag for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml is already ${NEW_TAG}"
+                  exit 0
+                fi
 
-          set +e
-          RESULT=$(./flux-status-cli --instance ${{ parameters.environment }} --action workload  --git-url $(Build.Repository.Uri) --azdo-pat $(System.AccessToken) --commit-id $COMMIT_ID)
-          if [ $? -ne 0 ]; then
-            echo $RESULT
-            continue
-          fi
-          set -e
+                echo "Changing image tag from ${CURRENT_TAG} to ${NEW_TAG} for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml"
+                yq --in-place -Y "${{ parameters.imageTagPath }}=\"${NEW_TAG}\"" ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
+                git add ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
+                git status
+                git commit -m "${{ parameters.environment }}/${{ parameters.serviceName }}.yaml - changed image tag from ${CURRENT_TAG} to ${NEW_TAG}"
+                git push origin
+              displayName: "Change image in GitOps repo"
 
-          STATE=$(echo $RESULT | jq -r .state)
-          echo "Commit status is $STATE"
-          if [ $STATE == "succeeded" ]; then
-            exit 0
-          elif [[ $STATE == "failed" || $STATE == "canceled" ]]; then
-            exit 1
-          fi
-        done
+            - script: |
+                set -e
+                pip3 install yq
+                wget https://github.com/XenitAB/flux-status/releases/download/v0.1.0-rc4/flux-status-cli
+                chmod +x flux-status-cli
+                wget https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+                mv jq-linux64 jq
+                chmod +x jq
+
+                git checkout master
+                git pull
+                git fetch -p
+                git reset --hard origin/master
+                git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
+                git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
+                git status
+
+                while true; do
+                  sleep 5
+
+                  git pull origin master
+                  CURRENT_TAG=$(yq -r '${{ parameters.imageTagPath }}' ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml)
+                  EXPECTED_TAG="$(shortCommitHash)"
+                  if [ "${CURRENT_TAG}" == "${EXPECTED_TAG}" ]; then
+                    echo "Image tag for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml has changed and is not longer ${NEW_TAG}"
+                    exit 1
+                  fi
+
+                  COMMIT_ID=$(git rev-parse HEAD)
+
+                  set +e
+                  RESULT=$(./flux-status-cli --instance ${{ parameters.environment }} --action workload  --git-url $(Build.Repository.Uri) --azdo-pat $(System.AccessToken) --commit-id $COMMIT_ID)
+                  if [ $? -ne 0 ]; then
+                    echo $RESULT
+                    continue
+                  fi
+                  set -e
+
+                  STATE=$(echo $RESULT | jq -r .state)
+                  echo "Commit status is $STATE"
+                  if [ $STATE == "succeeded" ]; then
+                    exit 0
+                  elif [[ $STATE == "failed" || $STATE == "canceled" ]]; then
+                    exit 1
+                  fi
+                done
+              displayName: Wait for ${{ parameters.environment }}
