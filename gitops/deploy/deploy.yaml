@@ -22,17 +22,13 @@ jobs:
               displayName: Get sources
               persistCredentials: true
 
-            - script: |
+            - bash: |
                 set -e
-                shortCommitHash=${sourceVersion:0:7}
-                echo "Long commit hash: ${sourceVersion}"
-                echo "Short commit hash: ${shortCommitHash}"
-                echo "Branch: ${sourceBranch}"
-                echo "##vso[task.setvariable variable=shortCommitHash]$shortCommitHash"
-              displayName: "Generate shortCommitHash (7-digit git hash)"
+                IMAGE_TAG=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
+                echo "##vso[task.setvariable variable=imageTag]$IMAGE_TAG"
+              displayName: "Create image id"
               env:
-                sourceVersion: $(resources.pipeline.ciPipeline.sourceCommit)
-                sourceBranch: $(resources.pipeline.ciPipeline.sourceBranch)
+                SOURCE_VERSION: $(Build.SourceVersion)
 
             - script: |
                 set -e
@@ -42,24 +38,30 @@ jobs:
                 git pull
                 git fetch -p
                 git reset --hard origin/master
-                git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
-                git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
+                git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
+                git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
                 git status
 
-                CURRENT_TAG=$(yq -r '${{ parameters.imageTagPath }}' ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml)
-                NEW_TAG="$(shortCommitHash)"
+                CURRENT_TAG=$(yq -r '${TAG_PATH}' ${ENV}/${SERVICE_NAME}.yaml)
                 if [ "${CURRENT_TAG}" == "${NEW_TAG}" ]; then
-                  echo "Image tag for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml is already ${NEW_TAG}"
+                  echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is already ${NEW_TAG}"
                   exit 0
                 fi
 
-                echo "Changing image tag from ${CURRENT_TAG} to ${NEW_TAG} for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml"
-                yq --in-place -Y "${{ parameters.imageTagPath }}=\"${NEW_TAG}\"" ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
-                git add ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
+                echo "Changing image tag from ${CURRENT_TAG} to ${NEW_TAG} for ${ENV}/${SERVICE_NAME}.yaml"
+                yq --in-place -Y "${TAG_PATH}=\"${NEW_TAG}\"" ${ENV}/${SERVICE_NAME}.yaml
+                git add ${ENV}/${SERVICE_NAME}.yaml
                 git status
-                git commit -m "${{ parameters.environment }}/${{ parameters.serviceName }}.yaml - changed image tag from ${CURRENT_TAG} to ${NEW_TAG}"
+                git commit -m "${ENV}/${SERVICE_NAME}.yaml - changed image tag from ${CURRENT_TAG} to ${NEW_TAG}"
                 git push origin
               displayName: "Change image in GitOps repo"
+              env:
+                ENV: ${{ parameters.environment }}
+                SERVICE_NAME: ${{ parameters.serviceName }}
+                NEW_TAG: $(imageTag)
+                TAG_PATH: ${{ parameters.imageTagPath }}
+                PROJECT_NAME: $(System.TeamProject)
+                REPO_NAME: $(Build.Repository.Name)
 
             - script: |
                 set -e
@@ -76,25 +78,24 @@ jobs:
                 git pull
                 git fetch -p
                 git reset --hard origin/master
-                git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
-                git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
+                git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
+                git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
                 git status
 
                 while true; do
                   sleep 5
 
                   git pull origin master
-                  CURRENT_TAG=$(yq -r '${{ parameters.imageTagPath }}' ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml)
-                  EXPECTED_TAG="$(shortCommitHash)"
-                  if [ "${CURRENT_TAG}" != "${EXPECTED_TAG}" ]; then
-                    echo "Image tag for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml is no longer the expected value ${NEW_TAG}"
+                  CURRENT_TAG=$(yq -r '${TAG_PATH}' ${ENV}/${SERVICE_NAME}.yaml)
+                  if [ "${CURRENT_TAG}" != "${NEW_TAG}" ]; then
+                    echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is no longer the expected value ${NEW_TAG}"
                     exit 1
                   fi
 
                   COMMIT_ID=$(git rev-parse HEAD)
 
                   set +e
-                  RESULT=$(flux-status-cli --instance ${{ parameters.environment }} --action workload  --git-url $(Build.Repository.Uri) --azdo-pat $(System.AccessToken) --commit-id $COMMIT_ID)
+                  RESULT=$(flux-status-cli --instance ${ENV} --action workload  --git-url ${REPO_URI} --azdo-pat ${TOKEN} --commit-id ${COMMIT_ID})
                   if [ $? -ne 0 ]; then
                     echo $RESULT
                     continue
@@ -110,3 +111,12 @@ jobs:
                   fi
                 done
               displayName: Wait for ${{ parameters.environment }}
+              env:
+                ENV: ${{ parameters.environment }}
+                SERVICE_NAME: ${{ parameters.serviceName }}
+                NEW_TAG: $(imageTag)
+                TAG_PATH: ${{ parameters.imageTagPath }}
+                PROJECT_NAME: $(System.TeamProject)
+                REPO_NAME: $(Build.Repository.Name)
+                REPO_URI: $(Build.Repository.Uri)
+                TOKEN: $(System.AccessToken)
