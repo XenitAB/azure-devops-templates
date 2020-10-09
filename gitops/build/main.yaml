@@ -15,14 +15,8 @@ stages:
             vmImage: ${{ parameters.vmImage }}
         continueOnError: false
         steps:
-          - bash: |
-              NAME=${SERVICE_NAME:-$REPO_NAME}
-              echo "Service Name: $NAME"
-              echo "##vso[task.setvariable variable=serviceName]$NAME"
-            displayName: Set default values
-            env:
-              SERVICE_NAME: ${{ parameters.serviceName }}
-              REPO_NAME: $(Build.Repository.Name)
+          - variables:
+              serviceName: "${{ coalesce(parameters.serviceName, Build.Repository.Name) }}"
 
           - bash: |
               set -e
@@ -36,9 +30,8 @@ stages:
 
           - bash: |
               set -e
-              echo "Running docker build:\n"
+              set -x
               docker build -f ${{ parameters.dockerfilePath }} -t $(serviceName):$(shortHash) .
-              echo "Running docker save:\n"
               docker save $(serviceName):$(shortHash) | gzip > $(serviceName)_$(shortHash).tar.gz
             displayName: "Build and save image"
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
