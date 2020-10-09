@@ -15,30 +15,28 @@ stages:
             vmImage: ${{ parameters.vmImage }}
         continueOnError: false
         steps:
+          - bash: |
+              set -e
+              imageTag=${$(Build.SourceVersion):0:7}
+              echo "##vso[task.setvariable variable=imageTag]$imageTag"
+            displayName: "Calculate image tag"
+
           - variables:
               serviceName: "${{ coalesce(parameters.serviceName, Build.Repository.Name) }}"
 
-          - bash: |
-              set -e
-              shortHash=${sourceVersion:0:7}
-              echo "Long commit hash: ${sourceVersion}"
-              echo "Short commit hash: ${shortHash}"
-              echo "##vso[task.setvariable variable=shortHash]$shortHash"
-            displayName: "Generate short commit hash (7-char git hash)"
-            env:
-              sourceVersion: $(Build.SourceVersion)
+          - variables:
+              imageId: "$(serviceName):$(imageTag)"
 
           - bash: |
-              set -e
-              set -x
-              docker build -f ${{ parameters.dockerfilePath }} -t $(serviceName):$(shortHash) .
-              docker save $(serviceName):$(shortHash) | gzip > $(serviceName)_$(shortHash).tar.gz
+              set -ex
+              docker build -f ${{ parameters.dockerfilePath }} -t $(imageId) .
+              docker save $(imageId) | gzip > $(imageId).tar.gz
             displayName: "Build and save image"
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
 
           - task: PublishPipelineArtifact@1
             displayName: "Publish Azure Pipelines Artifact"
             inputs:
-              targetPath: $(serviceName)_$(shortHash).tar.gz
+              targetPath: $(imageId).tar.gz
               artifactName: $(serviceName)
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
