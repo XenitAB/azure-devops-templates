@@ -1,9 +1,9 @@
 parameters:
   poolName: ""
   environment: ""
-  serviceName: ""
   sourceBranch: ""
   azureSubscription: ""
+  serviceName: ""
   acrName: ""
   imagePathPrefix: ""
 
@@ -15,7 +15,6 @@ jobs:
       name: ${{ parameters.poolName }}
     continueOnError: false
     steps:
-      # Should run for all environments and all branches (master + tags)
       - script: |
           set -e
           shortCommitHash=${sourceVersion:0:7}
@@ -27,7 +26,6 @@ jobs:
           sourceVersion: $(resources.pipeline.ciPipeline.sourceCommit)
           sourceBranch: $(resources.pipeline.ciPipeline.sourceBranch)
 
-      # Only needed for commits to master
       - task: DownloadPipelineArtifact@2
         displayName: "Download container artifact"
         inputs:
@@ -37,7 +35,6 @@ jobs:
           preferTriggeringPipeline: true
           targetPath: '$(Pipeline.Workspace)'
 
-      # Should upload to ACR for DEV/QA/PROD
       - task: AzureCLI@2
         displayName: "Push image to ACR"
         inputs:
@@ -50,7 +47,8 @@ jobs:
             set -e
             set -x
             ARTIFACT_PATH="$(Pipeline.Workspace)/${{ parameters.serviceName }}/${{ parameters.serviceName }}_$(shortCommitHash).tar.gz"
-            if [[ ! -f "${ARTIFACT_PATH}" ]]; then
+            if [[ ! -f "${ARTIFACT_PATH}" ]]
+            then
                 echo "Missing artifact file ($ARTIFACT_PATH) from CI pipeline, did you trigger this pipeline manually?"
                 exit 1
             fi
@@ -60,3 +58,36 @@ jobs:
             docker load < $ARTIFACT_PATH
             docker tag "${IMAGE_ID}" "${IMAGE_ID_FULL}"
             docker push "${IMAGE_ID_FULL}"
+
+  - job: verify_push_${{ parameters.environment }}
+    condition: and(succeeded(), ne(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'))
+    displayName: Verify image is in ${{ parameters.environment }} ACR
+    pool:
+      name: ${{ parameters.poolName }}
+    continueOnError: false
+    steps:
+      - script: |
+          set -e
+          shortCommitHash=${sourceVersion:0:7}
+          echo "Long commit hash: ${sourceVersion}"
+          echo "Short commit hash: ${shortCommitHash}"
+          echo "##vso[task.setvariable variable=shortCommitHash]$shortCommitHash"
+        displayName: "Generate shortCommitHash (7-digit git hash)"
+        env:
+          sourceVersion: $(resources.pipeline.ciPipeline.sourceCommit)
+          sourceBranch: $(resources.pipeline.ciPipeline.sourceBranch)
+
+      - task: AzureCLI@2
+        displayName: "Pull image from ACR"
+        inputs:
+          azureSubscription: ${{ parameters.azureSubscription }}
+          addSpnToEnvironment: true
+          workingDirectory: "."
+          scriptLocation: inlineScript
+          scriptType: bash
+          inlineScript: |
+            set -e
+            IMAGE_ID="${{ parameters.serviceName }}:$(shortCommitHash)"
+            IMAGE_ID_FULL="${{ parameters.acrName }}.azurecr.io/${{ parameters.imagePathPrefix }}/${IMAGE_ID}"
+            az acr login -n "${{ parameters.acrName }}"
+            docker pull "${IMAGE_ID_FULL}"

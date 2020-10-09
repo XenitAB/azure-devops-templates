@@ -23,10 +23,10 @@ parameters:
     default: ".spec.values.image.tag"
 
 stages:
-  - stage: push_images
+  - stage: push
     jobs:
     - ${{ each env in parameters.environments }}:
-      - template: push_image.yaml
+      - template: push.yaml
         parameters:
           poolName: ${{ format(parameters.poolNameTemplate, env) }}
           sourceBranch: ${{ parameters.sourceBranch }}
@@ -35,7 +35,6 @@ stages:
           azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env) }}
           acrName: ${{ format(parameters.acrNameTemplate, env) }}
           imagePathPrefix: ${{ parameters.imagePathPrefix }}
-
 
   - ${{ each env in parameters.environments }}:
     - stage: deploy_${{ env }}
