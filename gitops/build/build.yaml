@@ -39,7 +39,7 @@ stages:
             echo "Running docker build:\n"
             docker build -f ${{ parameters.dockerfilePath }} -t $(serviceName):$(shortHash) .
             echo "Running docker save:\n"
-            docker save $(.serviceName):$(shortHash) | gzip > $(serviceName)_$(shortHash).tar.gz
+            docker save $(serviceName):$(shortHash) | gzip > $(serviceName)_$(shortHash).tar.gz
           displayName: "Build and save image"
           condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
 
