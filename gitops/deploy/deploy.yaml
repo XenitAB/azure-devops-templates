@@ -2,6 +2,7 @@ parameters:
   poolName: ""
   environment: ""
   serviceName: ""
+  sourceBranch: ""
   deployTags: false
 
 jobs:

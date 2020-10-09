@@ -1,6 +1,9 @@
 parameters:
   - name: poolNameTemplate
     type: string
+  - name: sourceBranch
+    type: string
+    default: "refs/heads/master"
   - name: serviceName
     type: string
   - name: azureSubscriptionTemplate
@@ -23,6 +26,7 @@ stages:
       - template: push_image.yaml
         parameters:
           poolName: ${{ format(parameters.poolNameTemplate, env) }}
+          sourceBranch: ${{ parameters.sourceBranch }}
           environment: ${{ env }}
           serviceName: ${{ parameters.serviceName }}
           azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env) }}
@@ -36,6 +40,7 @@ stages:
       - template: deploy.yaml
         parameters:
           poolName: ${{ format(parameters.poolNameTemplate, env) }}
+          sourceBranch: ${{ parameters.sourceBranch }}
           environment: ${{ env }}
           serviceName: ${{ parameters.serviceName }}
           deployTags: false

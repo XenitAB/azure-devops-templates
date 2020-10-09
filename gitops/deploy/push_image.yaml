@@ -2,7 +2,7 @@ parameters:
   poolName: ""
   environment: ""
   serviceName: ""
-  sourceBranch: "refs/heads/master"
+  sourceBranch: ""
   azureSubscription: ""
   acrName: ""
   imagePathPrefix: ""
