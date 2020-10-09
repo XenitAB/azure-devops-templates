@@ -15,7 +15,7 @@ stages:
             vmImage: ${{ parameters.vmImage }}
         continueOnError: false
         variables:
-          serviceName: "${{ coalesce(parameters.serviceName, variables.Build.Repository.Name) }}"
+          serviceName: $(coalesce(parameters.serviceName, variables.Build.Repository.Name))
         steps:
           - bash: |
               set -e
@@ -23,7 +23,7 @@ stages:
               echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
             displayName: "Create image id"
             env:
-              SERVICE_NAME: $[variables.serviceName]
+              SERVICE_NAME: $(serviceName)
               SOURCE_VERSION: $(Build.SourceVersion)
 
           - bash: |
