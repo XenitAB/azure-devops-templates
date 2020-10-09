@@ -19,9 +19,12 @@ stages:
         steps:
           - bash: |
               set -e
-              imageId=$(serviceName):${$(Build.SourceVersion):0:7}
-              echo "##vso[task.setvariable variable=imageId]$imageId"
+              IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
+              echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
             displayName: "Create image id"
+            env:
+              SOURCE_VERSION: $(Build.SourceVersion)
+              SERVICE_NAME: $(serviceName)
 
           - bash: |
               set -ex
