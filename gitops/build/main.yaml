@@ -35,5 +35,5 @@ stages:
             displayName: "Publish Azure Pipelines Artifact"
             inputs:
               targetPath: $(imageId).tar.gz
-              artifactName: $(serviceName)
+              artifactName: ${{ parameters.serviceName }}
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
