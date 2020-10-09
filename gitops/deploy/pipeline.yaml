@@ -3,6 +3,12 @@ parameters:
     type: string
   - name: serviceName
     type: string
+  - name: azureSubscriptionTemplate
+    type: string
+  - name: acrNameTemplate
+    type: string
+  - name: imagePathPrefix
+    type: string
   - name: envs
     type: object
     default:
@@ -19,6 +25,9 @@ stages:
           poolName: ${{ format(parameters.poolNameTemplate, env) }}
           environment: ${{ env }}
           serviceName: ${{ parameters.serviceName }}
+          azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env) }}
+          acrName: ${{ format(parameters.acrNameTemplate, env) }}
+          imagePathPrefix: ${{ parameters.imagePathPrefix }}
 
 
   - ${{ each env in parameters.envs }}:
