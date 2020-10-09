@@ -55,7 +55,7 @@ jobs:
                 exit 1
             fi
             IMAGE_ID="${{ parameters.serviceName }}:$(shortCommitHash)"
-            IMAGE_ID_FULL="${{ parameters.acrName }}.azure.io/${{ parameters.imagePathPrefix }}/${IMAGE_ID}"
+            IMAGE_ID_FULL="${{ parameters.acrName }}.azurecr.io/${{ parameters.imagePathPrefix }}/${IMAGE_ID}"
             az acr login -n "${{ parameters.acrName }}"
             docker load < $ARTIFACT_PATH
             docker tag "${IMAGE_ID}" "${IMAGE_ID_FULL}"
