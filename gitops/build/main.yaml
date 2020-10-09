@@ -14,18 +14,14 @@ stages:
           ${{ if not(eq(parameters.vmImage, '')) }}:
             vmImage: ${{ parameters.vmImage }}
         continueOnError: false
+        variables:
+          serviceName: "${{ coalesce(parameters.serviceName, Build.Repository.Name) }}"
         steps:
           - bash: |
               set -e
-              imageTag=${$(Build.SourceVersion):0:7}
-              echo "##vso[task.setvariable variable=imageTag]$imageTag"
-            displayName: "Calculate image tag"
-
-          - variables:
-              serviceName: "${{ coalesce(parameters.serviceName, Build.Repository.Name) }}"
-
-          - variables:
-              imageId: "$(serviceName):$(imageTag)"
+              imageId=$(serviceName):${$(Build.SourceVersion):0:7}
+              echo "##vso[task.setvariable variable=imageId]$imageId"
+            displayName: "Create image id"
 
           - bash: |
               set -ex
