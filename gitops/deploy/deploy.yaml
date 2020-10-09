@@ -4,6 +4,7 @@ parameters:
   serviceName: ""
   sourceBranch: ""
   deployTags: false
+  imageTagPath: ""
 
 jobs:
   - deployment: deploy_${{ parameters.environment }}
@@ -21,6 +22,7 @@ jobs:
             parameters:
               environment: ${{ parameters.environment }}
               serviceName: ${{ parameters.serviceName }}
+              imageTagPath: ${{ parameters.imageTagPath }}
 
   - job: wait_${{ parameters.environment }}
     condition: succeeded()

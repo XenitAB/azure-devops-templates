@@ -1,6 +1,7 @@
 parameters:
   environment: ""
   serviceName: ""
+  imageTagPath: ""
 
 steps:
   - checkout: self
@@ -23,7 +24,7 @@ steps:
       set -e
       pip3 install yq
 
-      CURRENT_TAG=$(yq -r '.spec.values.application.buildId' ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml)
+      CURRENT_TAG=$(yq -r '${{ parameters.imageTagPath }}' ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml)
       NEW_TAG="$(shortCommitHash)"
       if [ "${CURRENT_TAG}" == "${NEW_TAG}" ]; then
         echo "INFO: Nothing to do - image tag for ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml is already ${NEW_TAG}"
@@ -40,7 +41,7 @@ steps:
       git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
       git status
 
-      yq --in-place -Y ".spec.values.image.tag=\"${NEW_TAG}\"" ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
+      yq --in-place -Y "${{ parameters.imageTagPath }}=\"${NEW_TAG}\"" ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
 
       git add ${{ parameters.environment }}/${{ parameters.serviceName }}.yaml
       git status

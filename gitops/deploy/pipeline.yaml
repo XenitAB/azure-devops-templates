@@ -12,17 +12,20 @@ parameters:
     type: string
   - name: imagePathPrefix
     type: string
-  - name: envs
+  - name: environments
     type: object
     default:
       - dev
       - qa
       - prod
+  - name: imageTagPath
+    type: string
+    default: ".spec.values.image.tag"
 
 stages:
   - stage: push_images
     jobs:
-    - ${{ each env in parameters.envs }}:
+    - ${{ each env in parameters.environments }}:
       - template: push_image.yaml
         parameters:
           poolName: ${{ format(parameters.poolNameTemplate, env) }}
@@ -34,7 +37,7 @@ stages:
           imagePathPrefix: ${{ parameters.imagePathPrefix }}
 
 
-  - ${{ each env in parameters.envs }}:
+  - ${{ each env in parameters.environments }}:
     - stage: deploy_${{ env }}
       jobs:
       - template: deploy.yaml
@@ -43,4 +46,5 @@ stages:
           sourceBranch: ${{ parameters.sourceBranch }}
           environment: ${{ env }}
           serviceName: ${{ parameters.serviceName }}
+          imageTagPath: ${{ parameters.imageTagPath }}
           deployTags: false
