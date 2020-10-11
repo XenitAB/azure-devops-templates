@@ -3,6 +3,7 @@ parameters:
   poolName: ""
   sourceBranch: "refs/heads/master"
   dockerfilePath: "./Dockerfile"
+  dockerBuildArgs: ""
   serviceName: ""
 stages:
   - stage: build
@@ -26,8 +27,12 @@ stages:
 
           - bash: |
               set -ex
-              docker build -f ${{ parameters.dockerfilePath }} -t $(imageId) .
-              docker save $(imageId) | gzip > $(imageId).tar.gz
+              docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
+              docker save ${IMAGE_ID} | gzip > ${IMAGE_ID}.tar.gz
+            env:
+              DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
+              IMAGE_ID: $(imageId)
+              DOCKER_BUILD_ARGS: ${{ parameters.dockerBuildArgs }}
             displayName: "Build and save image"
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
 
