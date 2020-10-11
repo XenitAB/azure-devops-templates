@@ -22,5 +22,10 @@ stages:
   - template: gitops/deploy/pipeline.yaml@templates
 ```
 
+# Versioning
+Versions follow the [CalVer](https://calver.org/) standard. This simplifies detecting usage of very old versions.
+The versions should use the following pattern `YYYY.0M.MICRO`. The micro value starts at 0 and increments by one
+for each release during the same month.
+
 # License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
