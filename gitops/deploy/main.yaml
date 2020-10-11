@@ -15,9 +15,12 @@ parameters:
   - name: environments
     type: object
     default:
-      - dev
-      - qa
-      - prod
+      - name: dev
+        deployTags: false
+      - name: qa
+        deployTags: true
+      - name: prod
+        deployTags: true
   - name: imageTagPath
     type: string
     default: ".spec.values.image.tag"
@@ -30,7 +33,7 @@ stages:
         parameters:
           poolName: ${{ format(parameters.poolNameTemplate, env) }}
           sourceBranch: ${{ parameters.sourceBranch }}
-          environment: ${{ env }}
+          environment: ${{ env.name }}
           serviceName: ${{ parameters.serviceName }}
           azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env) }}
           acrName: ${{ format(parameters.acrNameTemplate, env) }}
@@ -43,7 +46,7 @@ stages:
         parameters:
           poolName: ${{ format(parameters.poolNameTemplate, env) }}
           sourceBranch: ${{ parameters.sourceBranch }}
-          environment: ${{ env }}
+          environment: ${{ env.name }}
+          deployTags: ${{ env.deployTags }}
           serviceName: ${{ parameters.serviceName }}
           imageTagPath: ${{ parameters.imageTagPath }}
-          deployTags: false
