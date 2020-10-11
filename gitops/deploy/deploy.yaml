@@ -28,7 +28,7 @@ jobs:
                 echo "##vso[task.setvariable variable=imageTag]$IMAGE_TAG"
               displayName: "Create image id"
               env:
-                SOURCE_VERSION: $(Build.SourceVersion)
+                SOURCE_VERSION: $(resources.pipeline.ciPipeline.sourceCommit)
 
             - bash: |
                 set -e

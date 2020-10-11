@@ -22,7 +22,7 @@ jobs:
         displayName: "Create image id"
         env:
           SERVICE_NAME: ${{ parameters.serviceName }}
-          SOURCE_VERSION: $(Build.SourceVersion)
+          SOURCE_VERSION: $(resources.pipeline.ciPipeline.sourceCommit)
 
       - task: DownloadPipelineArtifact@2
         displayName: "Download container artifact"
