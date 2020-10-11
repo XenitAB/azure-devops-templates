@@ -43,6 +43,13 @@ jobs:
           scriptType: bash
           inlineScript: |
             set -ex
+
+            WORKSPACE=$(Pipeline.Workspace)
+            SERVICE_NAME=${{ parameters.serviceName }}
+            IMAGE_ID=$(imageId)
+            IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
+            ACR_NAME=${{ parameters.acrName }}
+
             ls "${WORKSPACE}/${SERVICE_NAME}"
             ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${IMAGE_ID}.tar.gz"
             if [[ ! -f "${ARTIFACT_PATH}" ]]
@@ -55,12 +62,6 @@ jobs:
             docker load < $ARTIFACT_PATH
             docker tag $(imageId) "${IMAGE_ID_FULL}"
             docker push "${IMAGE_ID_FULL}"
-          env:
-            WORKSPACE: $(Pipeline.Workspace)
-            SERVICE_NAME: ${{ parameters.serviceName }}
-            IMAGE_ID: $(imageId)
-            IMAGE_PATH_PREFIX: ${{ parameters.imagePathPrefix }}
-            ACR_NAME: ${{ parameters.acrName }}
 
   - job: verify_push_${{ parameters.environment }}
     condition: and(succeeded(), ne(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'))
@@ -88,10 +89,11 @@ jobs:
           scriptType: bash
           inlineScript: |
             set -e
+
+            IMAGE_ID=$(imageId)
+            IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
+            ACR_NAME=${{ parameters.acrName }}
             IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${IMAGE_ID}"
+
             az acr login -n "${ACR_NAME}"
             docker pull "${IMAGE_ID_FULL}"
-          env:
-            IMAGE_ID: $(imageId)
-            IMAGE_PATH_PREFIX: ${{ parameters.imagePathPrefix }}
-            ACR_NAME: ${{ parameters.acrName }}

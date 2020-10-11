@@ -30,7 +30,7 @@ jobs:
               env:
                 SOURCE_VERSION: $(Build.SourceVersion)
 
-            - script: |
+            - bash: |
                 set -e
                 pip3 install yq
 
@@ -63,7 +63,7 @@ jobs:
                 PROJECT_NAME: $(System.TeamProject)
                 REPO_NAME: $(Build.Repository.Name)
 
-            - script: |
+            - bash: |
                 set -e
                 pip3 install yq
                 wget https://github.com/XenitAB/flux-status/releases/download/v0.1.0-rc4/flux-status-cli
