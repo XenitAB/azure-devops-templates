@@ -86,7 +86,7 @@ jobs:
                   sleep 5
 
                   git pull origin master
-                  CURRENT_TAG=$(yq -r '${TAG_PATH}' ${ENV}/${SERVICE_NAME}.yaml)
+                  CURRENT_TAG=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
                   if [ "${CURRENT_TAG}" != "${NEW_TAG}" ]; then
                     echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is no longer the expected value ${NEW_TAG}"
                     exit 1
