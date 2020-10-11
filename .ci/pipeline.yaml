@@ -25,3 +25,5 @@ steps:
       git remote add upstream https://github.com/XenitAB/azure-devops-templates
       git pull upstream master
       git push origin master
+      git fetch upstream --tags
+      git push origin --tags
