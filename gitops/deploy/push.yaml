@@ -43,6 +43,7 @@ jobs:
           scriptType: bash
           inlineScript: |
             set -ex
+            ls "${WORKSPACE}/${SERVICE_NAME}"
             ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${IMAGE_ID}.tar.gz"
             if [[ ! -f "${ARTIFACT_PATH}" ]]
             then
