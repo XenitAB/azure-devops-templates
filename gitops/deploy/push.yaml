@@ -51,7 +51,7 @@ jobs:
             ACR_NAME=${{ parameters.acrName }}
 
             ls "${WORKSPACE}/${SERVICE_NAME}"
-            ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${IMAGE_ID/:/_}.tar.gz"
+            ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${IMAGE_ID}.tar.gz"
             if [[ ! -f "${ARTIFACT_PATH}" ]]
             then
                 echo "Missing artifact file ($ARTIFACT_PATH) from CI pipeline, did you trigger this pipeline manually?"
