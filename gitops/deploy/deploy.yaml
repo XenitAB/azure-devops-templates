@@ -24,7 +24,7 @@ jobs:
 
             - bash: |
                 set -e
-                IMAGE_TAG=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
+                IMAGE_TAG=${SOURCE_VERSION:0:7}
                 echo "##vso[task.setvariable variable=imageTag]$IMAGE_TAG"
               displayName: "Create image id"
               env:
