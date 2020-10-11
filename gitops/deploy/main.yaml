@@ -31,20 +31,20 @@ stages:
     - ${{ each env in parameters.environments }}:
       - template: push.yaml
         parameters:
-          poolName: ${{ format(parameters.poolNameTemplate, env) }}
+          poolName: ${{ format(parameters.poolNameTemplate, env.name) }}
           sourceBranch: ${{ parameters.sourceBranch }}
           environment: ${{ env.name }}
           serviceName: ${{ parameters.serviceName }}
-          azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env) }}
-          acrName: ${{ format(parameters.acrNameTemplate, env) }}
+          azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+          acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
           imagePathPrefix: ${{ parameters.imagePathPrefix }}
 
   - ${{ each env in parameters.environments }}:
-    - stage: deploy_${{ env }}
+    - stage: deploy_${{ env.name }}
       jobs:
       - template: deploy.yaml
         parameters:
-          poolName: ${{ format(parameters.poolNameTemplate, env) }}
+          poolName: ${{ format(parameters.poolNameTemplate, env.name) }}
           sourceBranch: ${{ parameters.sourceBranch }}
           environment: ${{ env.name }}
           deployTags: ${{ env.deployTags }}
