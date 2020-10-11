@@ -8,6 +8,7 @@ parameters:
 
 jobs:
   - deployment: deploy_${{ parameters.environment }}
+    timeoutInMinutes: 20
     condition: and(succeeded(), or(and(eq(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'), eq(${{ parameters.deployTags }}, false)), and(startsWith(variables['resources.pipeline.ciPipeline.sourceBranch'], 'refs/tags/'), eq(${{ parameters.deployTags }}, true))))
     displayName: Deploy to ${{ parameters.environment }}
     pool:
