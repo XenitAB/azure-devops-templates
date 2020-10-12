@@ -88,11 +88,8 @@ jobs:
           scriptType: bash
           inlineScript: |
             set -e
-
-            IMAGE_ID=$(imageId)
-            IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
-            ACR_NAME=${{ parameters.acrName }}
-            IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${IMAGE_ID}"
-
-            az acr login -n "${ACR_NAME}"
-            docker pull "${IMAGE_ID_FULL}"
+            az acr repository show --name ${ACR_NAME} --image ${IMAGE_PATH_PREFIX}/${IMAGE_ID}
+          env:
+            IMAGE_ID: $(imageId)
+            IMAGE_PATH_PREFIX: ${{ parameters.imagePathPrefix }}
+            ACR_NAME: ${{ parameters.acrName }}
