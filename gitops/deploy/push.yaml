@@ -27,11 +27,11 @@ jobs:
       - task: DownloadPipelineArtifact@2
         displayName: "Download container artifact"
         inputs:
-          buildType: 'specific'
-          project: '$(resources.pipeline.ciPipeline.projectID)'
-          definition: '$(resources.pipeline.ciPipeline.pipelineID)'
+          buildType: "specific"
+          project: "$(resources.pipeline.ciPipeline.projectID)"
+          definition: "$(resources.pipeline.ciPipeline.pipelineID)"
           preferTriggeringPipeline: true
-          targetPath: '$(Pipeline.Workspace)'
+          targetPath: "$(Pipeline.Workspace)"
 
       - task: AzureCLI@2
         displayName: "Push image to ACR"
@@ -76,7 +76,7 @@ jobs:
         displayName: "Create image id"
         env:
           SERVICE_NAME: ${{ parameters.serviceName }}
-          SOURCE_VERSION: $(Build.SourceVersion)
+          SOURCE_VERSION: $(resources.pipeline.ciPipeline.sourceCommit)
 
       - task: AzureCLI@2
         displayName: "Pull image from ACR"
