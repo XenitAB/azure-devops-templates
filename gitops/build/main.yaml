@@ -1,10 +1,28 @@
 parameters:
-  poolVmImage: "ubuntu-16.04"
-  poolName: ""
-  sourceBranch: "refs/heads/master"
-  dockerfilePath: "./Dockerfile"
-  dockerBuildArgs: ""
-  serviceName: ""
+  - name: poolVmImage:
+    type: string
+    default: "ubuntu-16.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: sourceBranch
+    type: string
+    default: "refs/heads/master"
+  - name: dockerfilePath
+    type: string
+    default: "./Dockerfile"
+  - name: dockerBuildArgs
+    type: string
+    default: ""
+  - name: serviceName
+    type: string
+    default: ""
+  - name: preBuild
+    type: stepList
+    default: []
+  - name: postBuild
+    type: stepList
+    default: []
 stages:
   - stage: build
     jobs:
@@ -24,7 +42,7 @@ stages:
             env:
               SERVICE_NAME: ${{ parameters.serviceName }}
               SOURCE_VERSION: $(Build.SourceVersion)
-
+          - ${{ parameters.preBuild }}
           - bash: |
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
@@ -35,7 +53,7 @@ stages:
               DOCKER_BUILD_ARGS: ${{ parameters.dockerBuildArgs }}
             displayName: "Build and save image"
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
-
+          - ${{ parameters.postBuild }}
           - task: PublishPipelineArtifact@1
             displayName: "Publish Azure Pipelines Artifact"
             inputs:

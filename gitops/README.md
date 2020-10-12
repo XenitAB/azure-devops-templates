@@ -17,6 +17,8 @@ The format command is passed the environment name, which can be placed in the st
 | dockerfilePath | "./Dockerfile" | Path to Dockerfile used in build. |
 | dockerBuildArgs | "" | Additional build args to append when building docker image. |
 | serviceName | "" | Name of application or service, will also be the name of the image. |
+| preBuild | [] | Steps to run  before docker build, takes a list of steps. |
+| postBuild | [] | Steps to run  after docker build, takes a list of steps. |
 
 ## Deploy
 | Name | Default | Description |
