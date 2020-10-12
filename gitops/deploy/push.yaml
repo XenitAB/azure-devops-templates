@@ -89,7 +89,7 @@ jobs:
           inlineScript: |
             set -e
             az acr repository show --name ${ACR_NAME} --image ${IMAGE_PATH_PREFIX}/${IMAGE_ID}
-          env:
-            IMAGE_ID: $(imageId)
-            IMAGE_PATH_PREFIX: ${{ parameters.imagePathPrefix }}
-            ACR_NAME: ${{ parameters.acrName }}
+        env:
+          IMAGE_ID: $(imageId)
+          IMAGE_PATH_PREFIX: ${{ parameters.imagePathPrefix }}
+          ACR_NAME: ${{ parameters.acrName }}
