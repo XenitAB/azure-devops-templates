@@ -1,10 +1,22 @@
 parameters:
-  poolName: ""
-  environment: ""
-  serviceName: ""
-  sourceBranch: ""
-  deployTags: false
-  imageTagPath: ""
+  - name: poolName
+    type: string
+    default: ""
+  - name: environment
+    type: string
+    default: ""
+  - name: serviceName
+    type: string
+    default: ""
+  - name: sourceBranch
+    type: string
+    default: ""
+  - name: deployTags
+    type: boolean
+    default: false
+  - name: imageTagPath
+    type: string
+    default: ""
 
 jobs:
   - deployment: deploy_${{ parameters.environment }}
