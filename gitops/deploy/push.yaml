@@ -79,7 +79,7 @@ jobs:
           SOURCE_VERSION: $(resources.pipeline.ciPipeline.sourceCommit)
 
       - task: AzureCLI@2
-        displayName: "Pull image from ACR"
+        displayName: "Validate image exists in ACR"
         inputs:
           azureSubscription: ${{ parameters.azureSubscription }}
           addSpnToEnvironment: true
