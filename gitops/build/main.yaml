@@ -1,5 +1,5 @@
 parameters:
-  - name: poolVmImage:
+  - name: poolVmImage
     type: string
     default: "ubuntu-16.04"
   - name: poolName
