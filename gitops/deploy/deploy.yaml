@@ -124,7 +124,7 @@ jobs:
                     exit 1
                   fi
 
-                  COMMIT_ID=$(git rev-parse HEAD)
+                  COMMIT_ID=$(git rev-list -1 HEAD -- $ENV)
 
                   set +e
                   RESULT=$(flux-status-cli --instance ${ENV} --action workload  --git-url ${REPO_URI} --azdo-pat ${TOKEN} --commit-id ${COMMIT_ID})
