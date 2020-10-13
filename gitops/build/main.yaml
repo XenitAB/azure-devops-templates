@@ -23,6 +23,17 @@ parameters:
   - name: postBuild
     type: stepList
     default: []
+  - name: dockerLint
+    type: object
+    default:
+      enable: true
+      ignoreRuleViolations: true
+  - name: binaries
+    type: object
+    default:
+      hadolint:
+        tag: "v1.18.0"
+        sha: "f9bc9de12438b463ca84e77fde70b07b155d4da07ca21bc3f4354a62c6199db4"
 stages:
   - stage: build
     jobs:
@@ -43,6 +54,33 @@ stages:
               SERVICE_NAME: ${{ parameters.serviceName }}
               SOURCE_VERSION: $(Build.SourceVersion)
           - ${{ parameters.preBuild }}
+          - bash: |
+                set -ex
+                # Download
+                wget https://github.com/hadolint/hadolint/releases/download/${HADOLINT_TAG}/hadolint-Linux-x86_64
+                DOWNLOAD_HADOLINT_SHA=$(openssl sha1 -sha256 hadolint-Linux-x86_64 | awk '{print $2}')
+                if [[ "${HADOLINT_SHA}" != "${HADOLINT_SHA}" ]]; then
+                    echo "Downloaded checksum (${DOWNLOAD_HADOLINT_SHA}) for hadolint does not match expected value: ${HADOLINT_SHA}"
+                    exit 1
+                fi
+                chmod +x hadolint-Linux-x86_64
+                mv hadolint-Linux-x86_64 /usr/bin/hadolint
+                # Run
+                set +e
+                hadolint ${DOCKERFILE_PATH}
+                RESULT=$?
+                if [[ $RESULT -eq 1 ]] && [[ $IGNORE_RULE_VIOLATIONS == false ]]; then
+                  echo "Linter failed and violations are set to not be ignored"
+                  exit $RESULT
+                elif [[ $RESULT -gt 1 ]]; then
+                  exit $RESULT
+                fi
+            displayName: Dockerfile Lint
+            env:
+              HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
+              HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
+              IGNORE_RULE_VIOLATIONS: ${{ parameters.dockerLint.ignoreRuleViolations }}
+              DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
           - bash: |
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
