@@ -66,20 +66,12 @@ stages:
                 chmod +x hadolint-Linux-x86_64
                 mv hadolint-Linux-x86_64 /usr/bin/hadolint
                 # Run
-                set +e
                 hadolint ${DOCKERFILE_PATH}
-                RESULT=$?
-                if [[ $RESULT -eq 1 ]] && [[ $IGNORE_RULE_VIOLATIONS == false ]]; then
-                  echo "Linter failed and violations are set to not be ignored"
-                  exit $RESULT
-                elif [[ $RESULT -gt 1 ]]; then
-                  exit $RESULT
-                fi
             displayName: Dockerfile Lint
+            continueOnError: ${{ parameters.dockerLint.ignoreRuleViolations }}
             env:
               HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
               HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
-              IGNORE_RULE_VIOLATIONS: ${{ parameters.dockerLint.ignoreRuleViolations }}
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
           - bash: |
               set -ex
