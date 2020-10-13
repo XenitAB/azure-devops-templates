@@ -11,14 +11,18 @@ The format command is passed the environment name, which can be placed in the st
 ## Build
 | Name | Default | Description |
 | --- | --- | --- |
-| poolVmImage | "ubuntu-16.04" | VM Image to set in pool configuration. |
-| poolName | "" | Pool name to set in pool configuration. |
-| sourceBranch | "refs/heads/master" | Source branch to limit image builds to. |
-| dockerfilePath | "./Dockerfile" | Path to Dockerfile used in build. |
-| dockerBuildArgs | "" | Additional build args to append when building docker image. |
-| serviceName | "" | Name of application or service, will also be the name of the image. |
-| preBuild | [] | Steps to run  before docker build, takes a list of steps. |
-| postBuild | [] | Steps to run  after docker build, takes a list of steps. |
+| poolVmImage | `"ubuntu-16.04"` | VM Image to set in pool configuration. |
+| poolName | `""` | Pool name to set in pool configuration. |
+| sourceBranch | `"refs/heads/master"` | Source branch to limit image builds to. |
+| dockerfilePath | `"./Dockerfile"` | Path to Dockerfile used in build. |
+| dockerBuildArgs | `""` | Additional build args to append when building docker image. |
+| serviceName | `""` | Name of application or service, will also be the name of the image. |
+| preBuild | `[]` | Steps to run  before Docker build, takes a list of steps. |
+| postBuild | `[]` | Steps to run  after Docker build, takes a list of steps. |
+| dockerLint.enable | `false` | Enable running Docker lint step. |
+| dockerLint.ignoreRuleViolations | `false` | Continues if any Docker lint violations occur. |
+| binaries.hadolint.tag | `v.18.0` | Version of hadolint to download. |
+| binaries.hadolint.sha | `f9bc9de12438b463ca84e77fde70b07b155d4da07ca21bc3f4354a62c6199db4` | SHA sum to verify downloaded hadolint binary with. |
 
 ## Deploy
 | Name | Default | Description |
