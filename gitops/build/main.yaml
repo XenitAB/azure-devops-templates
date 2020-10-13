@@ -63,8 +63,9 @@ stages:
                     echo "Downloaded checksum (${DOWNLOAD_HADOLINT_SHA}) for hadolint does not match expected value: ${HADOLINT_SHA}"
                     exit 1
                 fi
-                chmod +x hadolint-Linux-x86_64
-                mv hadolint-Linux-x86_64 /usr/bin/hadolint
+                mv hadolint-Linux-x86_64 hadolint
+                chmod +x hadolint
+                mv hadolint /usr/bin
                 # Run
                 hadolint ${DOCKERFILE_PATH}
             displayName: Dockerfile Lint
