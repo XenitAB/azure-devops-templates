@@ -73,6 +73,7 @@ stages:
               HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
               HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
+            condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true))
           - bash: |
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
