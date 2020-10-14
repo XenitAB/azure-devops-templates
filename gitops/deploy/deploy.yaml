@@ -75,6 +75,7 @@ jobs:
                 git add ${ENV}/${SERVICE_NAME}.yaml
                 git status
                 git commit -m "${ENV}/${SERVICE_NAME}.yaml - changed image tag from ${CURRENT_TAG} to ${NEW_TAG}"
+                git pull --rebase origin master
                 git push origin
               displayName: "Change image in GitOps repo"
               env:
