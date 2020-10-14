@@ -18,7 +18,9 @@ jobs:
       - bash: |
           set -e
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
+          ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
           echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
+          echo "##vso[task.setvariable variable=artifactFileName]$ARTIFACT_FILE_NAME"
         displayName: "Create image id"
         env:
           SERVICE_NAME: ${{ parameters.serviceName }}
@@ -50,11 +52,9 @@ jobs:
             IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
             ACR_NAME=${{ parameters.acrName }}
 
-            find .
-
             find ${WORKSPACE}/
 
-            ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${IMAGE_ID}.tar.gz"
+            ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${ARTIFACT_FILE_NAME}"
             if [[ ! -f "${ARTIFACT_PATH}" ]]
             then
                 echo "Missing artifact file ($ARTIFACT_PATH) from CI pipeline, did you trigger this pipeline manually?"
@@ -65,6 +65,8 @@ jobs:
             docker load < $ARTIFACT_PATH
             docker tag $(imageId) "${IMAGE_ID_FULL}"
             docker push "${IMAGE_ID_FULL}"
+        env:
+          ARTIFACT_FILE_NAME: $(artifactFileName)
 
   - job: verify_push_${{ parameters.environment }}
     condition: and(succeeded(), ne(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'))

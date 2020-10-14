@@ -56,7 +56,9 @@ stages:
           - bash: |
               set -e
               IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
+              ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
               echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
+              echo "##vso[task.setvariable variable=artifactFileName]$ARTIFACT_FILE_NAME"
             displayName: "Create image id"
             env:
               SERVICE_NAME: ${{ parameters.serviceName }}
@@ -87,11 +89,12 @@ stages:
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
               docker save --output ${IMAGE_ID}.tar ${IMAGE_ID}
-              gzip -c ${IMAGE_ID}.tar > ${IMAGE_ID}.tar.gz
+              gzip -c ${IMAGE_ID}.tar > ${ARTIFACT_FILE_NAME}
             env:
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
               IMAGE_ID: $(imageId)
               DOCKER_BUILD_ARGS: ${{ parameters.dockerBuildArgs }}
+              ARTIFACT_FILE_NAME: $(artifactFileName)
             displayName: "Build and save image"
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
           - bash: |
@@ -121,6 +124,6 @@ stages:
           - task: PublishPipelineArtifact@1
             displayName: "Publish Azure Pipelines Artifact"
             inputs:
-              targetPath: $(imageId).tar.gz
+              targetPath: $(artifactFileName)
               artifactName: ${{ parameters.serviceName }}
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
