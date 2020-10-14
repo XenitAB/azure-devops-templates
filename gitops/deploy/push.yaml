@@ -33,6 +33,7 @@ jobs:
           project: "$(resources.pipeline.ciPipeline.projectID)"
           definition: "$(resources.pipeline.ciPipeline.pipelineID)"
           runId: "$(resources.pipeline.ciPipeline.runID)"
+          runVersion: "specific"
           preferTriggeringPipeline: true
           targetPath: "$(Pipeline.Workspace)"
 
