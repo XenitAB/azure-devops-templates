@@ -52,6 +52,8 @@ jobs:
 
             find .
 
+            find ${WORKSPACE}/
+
             ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${IMAGE_ID}.tar.gz"
             if [[ ! -f "${ARTIFACT_PATH}" ]]
             then
