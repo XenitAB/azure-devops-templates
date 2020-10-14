@@ -28,12 +28,20 @@ parameters:
     default:
       enable: true
       ignoreRuleViolations: true
+  - name: imageScan
+    type: object
+    default:
+      enable: true
+      ignoreRuleViolations: true
   - name: binaries
     type: object
     default:
       hadolint:
         tag: "v1.18.0"
         sha: "f9bc9de12438b463ca84e77fde70b07b155d4da07ca21bc3f4354a62c6199db4"
+      trivy:
+        tag: "v0.12.0"
+        sha: "4003d993d4b6b5673d4ef6e216578e8ac2bf6b439201a8e748a75fc68430c3f5"
 stages:
   - stage: build
     jobs:
@@ -55,19 +63,19 @@ stages:
               SOURCE_VERSION: $(Build.SourceVersion)
           - ${{ parameters.preBuild }}
           - bash: |
-                set -ex
-                # Download
-                wget https://github.com/hadolint/hadolint/releases/download/${HADOLINT_TAG}/hadolint-Linux-x86_64
-                DOWNLOAD_HADOLINT_SHA=$(openssl sha1 -sha256 hadolint-Linux-x86_64 | awk '{print $2}')
-                if [[ "${HADOLINT_SHA}" != "${HADOLINT_SHA}" ]]; then
-                    echo "Downloaded checksum (${DOWNLOAD_HADOLINT_SHA}) for hadolint does not match expected value: ${HADOLINT_SHA}"
-                    exit 1
-                fi
-                mv hadolint-Linux-x86_64 hadolint
-                chmod +x hadolint
-                mv hadolint /usr/bin
-                # Run
-                hadolint ${DOCKERFILE_PATH}
+              set -ex
+              # Download
+              wget https://github.com/hadolint/hadolint/releases/download/${HADOLINT_TAG}/hadolint-Linux-x86_64
+              DOWNLOAD_HADOLINT_SHA=$(openssl sha1 -sha256 hadolint-Linux-x86_64 | awk '{print $2}')
+              if [[ "${HADOLINT_SHA}" != "${HADOLINT_SHA}" ]]; then
+                  echo "Downloaded checksum (${DOWNLOAD_HADOLINT_SHA}) for hadolint does not match expected value: ${HADOLINT_SHA}"
+                  exit 1
+              fi
+              mv hadolint-Linux-x86_64 hadolint
+              chmod +x hadolint
+              mv hadolint /usr/bin
+              # Run
+              hadolint ${DOCKERFILE_PATH}
             displayName: Dockerfile Lint
             continueOnError: ${{ parameters.dockerLint.ignoreRuleViolations }}
             env:
@@ -78,13 +86,37 @@ stages:
           - bash: |
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
-              docker save ${IMAGE_ID} | gzip > ${IMAGE_ID}.tar.gz
+              docker save --output ${IMAGE_ID}.tar ${IMAGE_ID}
+              gzip -c ${IMAGE_ID}.tar > ${IMAGE_ID}.tar.gz
             env:
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
               IMAGE_ID: $(imageId)
               DOCKER_BUILD_ARGS: ${{ parameters.dockerBuildArgs }}
             displayName: "Build and save image"
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+          - bash: |
+              set -ex
+              # Download
+              wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_TAG}/trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
+              DOWNLOAD_TRIVY_SHA=$(openssl sha1 -sha256 trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz | awk '{print $2}')
+              if [[ "${TRIVY_SHA}" != "${TRIVY_SHA}" ]]; then
+                  echo "Downloaded checksum (${DOWNLOAD_TRIVY_SHA}) for trivy does not match expected value: ${TRIVY_SHA}"
+                  exit 1
+              fi
+              tar xzvf trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
+              chmod +x trivy
+              mv trivy /usr/bin
+              # Run
+              trivy --reset --no-progress
+              trivy --exit-code 0 --no-progress --input ${IMAGE_ID}.tar
+              trivy --exit-code 1 --no-progress --ignore-unfixed --input ${IMAGE_ID}.tar
+            displayName: Image scan
+            continueOnError: ${{ parameters.imageScan.ignoreRuleViolations }}
+            env:
+              TRIVY_TAG: ${{ parameters.binaries.trivy.tag }}
+              TRIVY_SHA: ${{ parameters.binaries.trivy.sha }}
+              IMAGE_ID: $(imageId)
+            condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true))
           - ${{ parameters.postBuild }}
           - task: PublishPipelineArtifact@1
             displayName: "Publish Azure Pipelines Artifact"

@@ -19,10 +19,14 @@ The format command is passed the environment name, which can be placed in the st
 | serviceName | `""` | Name of application or service, will also be the name of the image. |
 | preBuild | `[]` | Steps to run  before Docker build, takes a list of steps. |
 | postBuild | `[]` | Steps to run  after Docker build, takes a list of steps. |
-| dockerLint.enable | `false` | Enable running Docker lint step. |
-| dockerLint.ignoreRuleViolations | `false` | Continues if any Docker lint violations occur. |
+| dockerLint.enable | `true` | Enable running Docker lint step. |
+| dockerLint.ignoreRuleViolations | `true` | Continues if any Docker lint violations occur. |
+| imageScan.enable | `true` | Enable running Image scan step. |
+| imageScan.ignoreRuleViolations | `true` | Continues if any Image scan violations occur. |
 | binaries.hadolint.tag | `v.18.0` | Version of hadolint to download. |
 | binaries.hadolint.sha | `f9bc9de12438b463ca84e77fde70b07b155d4da07ca21bc3f4354a62c6199db4` | SHA sum to verify downloaded hadolint binary with. |
+| binaries.trivy.tag | `v0.12.0 | Version of trivy to download. |
+| binaries.trivy.sha | `4003d993d4b6b5673d4ef6e216578e8ac2bf6b439201a8e748a75fc68430c3f5` | SHA sum to verify downloaded trivy archive with. |
 
 ## Deploy
 | Name | Default | Description |
