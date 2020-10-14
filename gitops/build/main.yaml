@@ -87,7 +87,7 @@ stages:
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
               docker save --output ${IMAGE_ID}.tar ${IMAGE_ID}
-              gzip -c ${IMAGE_ID}.tar > ${IMAGE_ID}.tar.gz
+              gzip -c ${IMAGE_ID}.tar > ${IMAGE_ID}.gz
             env:
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
               IMAGE_ID: $(imageId)
