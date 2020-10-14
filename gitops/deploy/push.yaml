@@ -54,8 +54,6 @@ jobs:
             IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
             ACR_NAME=${{ parameters.acrName }}
 
-            find ${WORKSPACE}/
-
             ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${ARTIFACT_FILE_NAME}"
             if [[ ! -f "${ARTIFACT_PATH}" ]]
             then
