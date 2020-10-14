@@ -97,7 +97,7 @@ stages:
           - bash: |
               set -ex
               # Download
-              wget https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_TAG}/trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
+              wget https://github.com/aquasecurity/trivy/releases/download/${TRIVY_TAG}/trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
               DOWNLOAD_TRIVY_SHA=$(openssl sha1 -sha256 trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz | awk '{print $2}')
               if [[ "${TRIVY_SHA}" != "${TRIVY_SHA}" ]]; then
                   echo "Downloaded checksum (${DOWNLOAD_TRIVY_SHA}) for trivy does not match expected value: ${TRIVY_SHA}"
