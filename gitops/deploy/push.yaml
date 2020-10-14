@@ -32,6 +32,7 @@ jobs:
           buildType: "specific"
           project: "$(resources.pipeline.ciPipeline.projectID)"
           definition: "$(resources.pipeline.ciPipeline.pipelineID)"
+          runId: "$(resources.pipeline.ciPipeline.runID)"
           preferTriggeringPipeline: true
           targetPath: "$(Pipeline.Workspace)"
 
