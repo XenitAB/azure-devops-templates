@@ -86,7 +86,7 @@ resources:
       source: ci-podinfo
       trigger:
         stages:
-        - cd-trigger
+        - cd_trigger
 
 stages:
   - template: gitops/deploy/main.yaml@templates

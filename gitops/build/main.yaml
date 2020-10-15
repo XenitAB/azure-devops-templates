@@ -128,11 +128,11 @@ stages:
               artifactName: ${{ parameters.serviceName }}
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'), ne(variables['Build.Reason'], 'PullRequest'))
 
-  - stage: cd-trigger
+  - stage: cd_trigger
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     dependsOn: build
     jobs:
-      - job: cd-trigger
+      - job: cd_trigger
         pool:
           ${{ if not(eq(parameters.poolName, '')) }}:
             name: ${{ parameters.poolName }}
@@ -142,4 +142,4 @@ stages:
         steps:
           - bash: |
               echo "Running this to have something for cd to trigger on if not Pull Request."
-            displayName: "cd-trigger"
+            displayName: "cd_trigger"
