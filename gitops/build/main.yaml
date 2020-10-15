@@ -79,7 +79,7 @@ stages:
               # Run
               hadolint ${DOCKERFILE_PATH}
             displayName: Dockerfile Lint
-            continueOnError: ${{ parameters.dockerLint.ignoreRuleViolations }}
+            continueOnError: and(and(succeeded(), ${{ parameters.dockerLint.ignoreRuleViolations }}), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
             env:
               HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
               HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
@@ -114,7 +114,7 @@ stages:
               trivy --exit-code 0 --no-progress --input ${IMAGE_ID}.tar
               trivy --exit-code 1 --no-progress --ignore-unfixed --input ${IMAGE_ID}.tar
             displayName: Image scan
-            continueOnError: ${{ parameters.imageScan.ignoreRuleViolations }}
+            continueOnError: and(and(succeeded(), ${{ parameters.imageScan.ignoreRuleViolations }}, eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
             env:
               TRIVY_TAG: ${{ parameters.binaries.trivy.tag }}
               TRIVY_SHA: ${{ parameters.binaries.trivy.sha }}
