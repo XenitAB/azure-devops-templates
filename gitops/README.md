@@ -84,7 +84,9 @@ resources:
   pipelines:
     - pipeline: ciPipeline
       source: ci-podinfo
-      trigger: true
+      trigger:
+        stages:
+        - cd-trigger
 
 stages:
   - template: gitops/deploy/main.yaml@templates
