@@ -84,7 +84,7 @@ stages:
               HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
               HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
-            condition: and(and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true)), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
           - bash: |
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
@@ -119,7 +119,7 @@ stages:
               TRIVY_TAG: ${{ parameters.binaries.trivy.tag }}
               TRIVY_SHA: ${{ parameters.binaries.trivy.sha }}
               IMAGE_ID: $(imageId)
-            condition: and(and(succeeded(), eq(${{ parameters.imageScan.enable }}, true)), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
           - ${{ parameters.postBuild }}
           - task: PublishPipelineArtifact@1
             displayName: "Publish Azure Pipelines Artifact"
