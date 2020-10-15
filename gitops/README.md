@@ -86,7 +86,7 @@ resources:
       source: ci-podinfo
       trigger:
         stages:
-        - cd_trigger
+        - cd_trigger # Stage will only trigger if the build reason isn't pull request
 
 stages:
   - template: gitops/deploy/main.yaml@templates

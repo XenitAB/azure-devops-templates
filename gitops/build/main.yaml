@@ -84,6 +84,7 @@ stages:
               HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
               HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
+            # IF needed to apply different conditions if pull request or not
             ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
               condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
             ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
@@ -123,6 +124,7 @@ stages:
               TRIVY_TAG: ${{ parameters.binaries.trivy.tag }}
               TRIVY_SHA: ${{ parameters.binaries.trivy.sha }}
               IMAGE_ID: $(imageId)
+            # IF needed to apply different conditions if pull request or not
             ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
               condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
             ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
@@ -135,6 +137,7 @@ stages:
               artifactName: ${{ parameters.serviceName }}
             condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'), ne(variables['Build.Reason'], 'PullRequest'))
 
+  # Stage needed to trigger CD, since it can't identify if the build reason is pull request or not
   - stage: cd_trigger
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
     dependsOn: build
