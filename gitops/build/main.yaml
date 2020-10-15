@@ -79,12 +79,12 @@ stages:
               # Run
               hadolint ${DOCKERFILE_PATH}
             displayName: Dockerfile Lint
-            continueOnError: and(and(succeeded(), ${{ parameters.dockerLint.ignoreRuleViolations }}), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            continueOnError: ${{ parameters.dockerLint.ignoreRuleViolations }}
             env:
               HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
               HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
-            condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true))
+            condition: and(and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true)), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
           - bash: |
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
@@ -114,12 +114,12 @@ stages:
               trivy --exit-code 0 --no-progress --input ${IMAGE_ID}.tar
               trivy --exit-code 1 --no-progress --ignore-unfixed --input ${IMAGE_ID}.tar
             displayName: Image scan
-            continueOnError: and(and(succeeded(), ${{ parameters.imageScan.ignoreRuleViolations }}, eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            continueOnError: ${{ parameters.imageScan.ignoreRuleViolations }}
             env:
               TRIVY_TAG: ${{ parameters.binaries.trivy.tag }}
               TRIVY_SHA: ${{ parameters.binaries.trivy.sha }}
               IMAGE_ID: $(imageId)
-            condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true))
+            condition: and(and(succeeded(), eq(${{ parameters.imageScan.enable }}, true)), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
           - ${{ parameters.postBuild }}
           - task: PublishPipelineArtifact@1
             displayName: "Publish Azure Pipelines Artifact"
