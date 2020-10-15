@@ -26,5 +26,4 @@ steps:
       git pull upstream master
       git push origin master
       git fetch upstream --tags --prune
-      git push origin --tags --force
-      git push origin --all --prune --force
+      git push origin --tags refs/remotes/upstream/*:refs/heads/*
