@@ -24,7 +24,9 @@ Begin by [importing the repository](https://docs.microsoft.com/en-us/azure/devop
 Configure Build Service to have permission to push changes to the template repository.
 
 - Azure DevOps > Project > Project settings > Repositories > azure-devops-templates > Permissions
-- [Project Name] Build Service ([org name]) > Contribute: `Allow`
+- [Project Name] Build Service ([org name]):
+  - Contribute: `Allow`
+  - Create branch: `Allow`
 
 ### Adding Azure Pipelines for repository syncronization
 
