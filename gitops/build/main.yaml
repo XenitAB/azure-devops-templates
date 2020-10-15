@@ -84,7 +84,10 @@ stages:
               HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
               HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
-            condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+              condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true))
           - bash: |
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
@@ -96,7 +99,8 @@ stages:
               DOCKER_BUILD_ARGS: ${{ parameters.dockerBuildArgs }}
               ARTIFACT_FILE_NAME: $(artifactFileName)
             displayName: "Build and save image"
-            condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
           - bash: |
               set -ex
               # Download
@@ -119,7 +123,10 @@ stages:
               TRIVY_TAG: ${{ parameters.binaries.trivy.tag }}
               TRIVY_SHA: ${{ parameters.binaries.trivy.sha }}
               IMAGE_ID: $(imageId)
-            condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+              condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true))
           - ${{ parameters.postBuild }}
           - task: PublishPipelineArtifact@1
             displayName: "Publish Azure Pipelines Artifact"
