@@ -84,7 +84,11 @@ stages:
               HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
               HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
-            condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            # IF needed to apply different conditions if pull request or not
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+              condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true))
           - bash: |
               set -ex
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
@@ -96,7 +100,8 @@ stages:
               DOCKER_BUILD_ARGS: ${{ parameters.dockerBuildArgs }}
               ARTIFACT_FILE_NAME: $(artifactFileName)
             displayName: "Build and save image"
-            condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
           - bash: |
               set -ex
               # Download
@@ -119,11 +124,32 @@ stages:
               TRIVY_TAG: ${{ parameters.binaries.trivy.tag }}
               TRIVY_SHA: ${{ parameters.binaries.trivy.sha }}
               IMAGE_ID: $(imageId)
-            condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            # IF needed to apply different conditions if pull request or not
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+              condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true))
           - ${{ parameters.postBuild }}
           - task: PublishPipelineArtifact@1
             displayName: "Publish Azure Pipelines Artifact"
             inputs:
               targetPath: $(artifactFileName)
               artifactName: ${{ parameters.serviceName }}
-            condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'), ne(variables['Build.Reason'], 'PullRequest'))
+
+  # Stage needed to trigger CD, since it can't identify if the build reason is pull request or not
+  - stage: cd_trigger
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    dependsOn: build
+    jobs:
+      - job: cd_trigger
+        pool:
+          ${{ if not(eq(parameters.poolName, '')) }}:
+            name: ${{ parameters.poolName }}
+          ${{ if not(eq(parameters.poolVmImage, '')) }}:
+            vmImage: ${{ parameters.poolVmImage }}
+        continueOnError: false
+        steps:
+          - bash: |
+              echo "Running this to have something for cd to trigger on if not Pull Request."
+            displayName: "cd_trigger"
