@@ -67,7 +67,7 @@ jobs:
       - task: AzureCLI@2
         displayName: "Run packer"
         inputs:
-          azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+          azureSubscription: ${{ parameters.azureSubscription }}
           addSpnToEnvironment: true
           workingDirectory: "."
           scriptLocation: inlineScript
