@@ -8,22 +8,16 @@ The format command is passed the environment name, which can be placed in the st
 ## Build
 | Name | Default | Description |
 | --- | --- | --- |
-| poolVmImage | `"ubuntu-16.04"` | VM Image to set in pool configuration. |
-| poolName | `""` | Pool name to set in pool configuration. |
-| sourceBranch | `"refs/heads/master"` | Source branch to limit image builds to. |
-| dockerfilePath | `"./Dockerfile"` | Path to Dockerfile used in build. |
-| dockerBuildArgs | `""` | Additional build args to append when building docker image. |
-| serviceName | `""` | Name of application or service, will also be the name of the image. |
+| poolNameTemplate | `""` | Pool name template. |
+| azureSubscriptionTemplate | `""` | Azure subscription name template. |
+| resourceGroupTemplate | `""` | Azure resource group name template. |
+| packerTemplateRepo | `"https://github.com/XenitAB/cloud-automation.git"` | GIT repository to use for packer template. |
+| packerTemplateRepoBranch | `"master"` | GIT branch to use for packer template repository. |
+| packerTemplateFile | `""` | Location (inside of packerTemplateRepo) of the packer template. |
 | preBuild | `[]` | Steps to run  before Docker build, takes a list of steps. |
 | postBuild | `[]` | Steps to run  after Docker build, takes a list of steps. |
-| dockerLint.enable | `true` | Enable running Docker lint step. |
-| dockerLint.ignoreRuleViolations | `true` | Continues if any Docker lint violations occur. |
-| imageScan.enable | `true` | Enable running Image scan step. |
-| imageScan.ignoreRuleViolations | `true` | Continues if any Image scan violations occur. |
-| binaries.hadolint.tag | `v.18.0` | Version of hadolint to download. |
-| binaries.hadolint.sha | `f9bc9de12438b463ca84e77fde70b07b155d4da07ca21bc3f4354a62c6199db4` | SHA sum to verify downloaded hadolint binary with. |
-| binaries.trivy.tag | `v0.12.0 | Version of trivy to download. |
-| binaries.trivy.sha | `4003d993d4b6b5673d4ef6e216578e8ac2bf6b439201a8e748a75fc68430c3f5` | SHA sum to verify downloaded trivy archive with. |
+| binaries.packer.tag | `"1.6.5"` | Packer binary version. |
+| binaries.packer.sha | `"a49f6408a50c220fe3f1a6192ea21134e2e8f31092c507614cd27ad4f913234b"` | Packer binary sha. |
 
 ## Examples
 **Build**
@@ -47,10 +41,15 @@ resources:
     - repository: templates
       type: git
       name: XenitKubernetesService/azure-devops-templates
-      ref: refs/tags/2020.10.0
+      ref: refs/tags/2020.10.2
 
 stages:
-  - template: gitops/build/main.yaml@templates
+  - template: packer/main.yaml@templates
     parameters:
-      serviceName: "podinfo"
+      poolNameTemplate: "xks-{0}"
+      azureSubscriptionTemplate: "azure-{0}-contributor"
+      resourceGroupTemplate: "rg-{0}-we-packer"
+      packerTemplateRepo: "https://github.com/XenitAB/cloud-automation.git"
+      packerTemplateRepoBranch: "packer"
+      packerTemplateFile: "azure/packer/azure-pipelines-agent/ubuntu1804.json"
 ```
