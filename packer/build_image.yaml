@@ -79,7 +79,6 @@ jobs:
             set -e
 
             # Export environment variables for packer
-            export TMPDIR=$(mktemp -d -t ci-XXXXXXXXXX --tmpdir=$(PWD))
             export AZURE_CLIENT_ID=${servicePrincipalId}
             export AZURE_CLIENT_SECRET=${servicePrincipalKey}
             export AZURE_TENANT_ID=${tenantId}
@@ -92,6 +91,7 @@ jobs:
             pip install -U ansible
 
             # Run packer
+            export TMPDIR=$(mktemp -d -t ci-XXXXXXXXXX --tmpdir=$(PWD))
             ./packer build remote-templates/${PACKER_TEMPLATE_FILE}
         env:
           PACKER_TEMPLATE_FILE: ${{ parameters.packerTemplateFile }}
