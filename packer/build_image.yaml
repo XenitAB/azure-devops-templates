@@ -85,5 +85,5 @@ jobs:
             ./packer build remote-templates/${PACKER_TEMPLATE_FILE}
         env:
           PACKER_TEMPLATE_FILE: ${{ parameters.packerTemplateFile }}
-          AZURE_RESOURCE_GROUP: ${{ parameters.resourceGroup }}
+          AZURE_RESOURCE_GROUP_NAME: ${{ parameters.resourceGroup }}
       - ${{ parameters.postBuild }}
