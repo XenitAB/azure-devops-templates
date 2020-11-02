@@ -1,0 +1,53 @@
+parameters:
+  - name: poolNameTemplate
+    type: string
+  - name: sourceBranch
+    type: string
+    default: "refs/heads/master"
+  - name: azureSubscriptionTemplate
+    type: string
+  - name: terraformVersion
+    type: string
+    default: "v0.13.5"
+  - name: terraformFolder
+    type: string
+  - name: environments
+    type: object
+    default:
+      - name: dev
+      - name: qa
+      - name: prod
+
+stages:
+  - ${{ each env in parameters.environments }}:
+    - stage: apply_${{ env.name }}
+      jobs:
+        - deployment: ${{ env.name }}
+          environment: ${{ parameters.environment }}
+          displayName: Apply to ${{ parameters.environment }}
+          strategy:
+            runOnce:
+              deploy:
+                steps:
+                - checkout: self
+                  displayName: Get sources
+
+                - task: DownloadPipelineArtifact@2
+                  displayName: "Download artifact"
+                  inputs:
+                    artifact: "${{ env.name }}"
+                    path: $(System.ArtifactsDirectory)
+
+                - task: AzureCLI@1
+                  displayName: "Apply"
+                  inputs:
+                    azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+                    addSpnToEnvironment: true
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -deploy -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH
+                  env:
+                    TF_FOLDER: ${{ parameters.terraformFolder }}
+                    TF_VERSION: ${{ parameters.terraformVersion }}
+                    ART_PATH: $(Build.ArtifactStagingDirectory)
+                    ENV: ${{ env.name }}
