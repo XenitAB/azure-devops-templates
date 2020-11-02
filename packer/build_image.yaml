@@ -85,6 +85,7 @@ jobs:
             export AZURE_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id')
 
             # Setup ansible
+            pip3 install --user virtualenv
             python3 -m venv .venv
             source .venv/bin/activate
             pip install -U pip
