@@ -63,7 +63,10 @@ stages:
                   echo "Downloaded checksum (${DOWNLOAD_TFLINT_SHA}) for hadolint does not match expected value: ${TFLINT_SHA}"
                   exit 1
               fi
-              mv tflint /usr/bin
+              BIN_DIR=$HOME/.local/bin
+              export PATH=$PATH:$BIN_DIR
+              mkdir -p $BIN_DIR
+              mv tflint $BIN_DIR/tflint
               # Run
               tflint .
             displayName: Terraform Lint
