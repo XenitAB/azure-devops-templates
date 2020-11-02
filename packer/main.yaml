@@ -1,0 +1,85 @@
+parameters:
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-16.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: packerTemplateRepo
+    type: string
+    default: "https://github.com/XenitAB/cloud-automation.git"
+  - name: packerTemplateRepoBranch
+    type: string
+    default: "master"
+  - name: packerTemplateFile
+    type: string
+    default: ""
+  - name: preBuild
+    type: stepList
+    default: []
+  - name: postBuild
+    type: stepList
+    default: []
+  - name: binaries
+    type: object
+    default:
+      packer:
+        tag: "1.6.5"
+        sha: "a49f6408a50c220fe3f1a6192ea21134e2e8f31092c507614cd27ad4f913234b"
+
+stages:
+  - stage: build
+    jobs:
+      - job: image
+        pool:
+          ${{ if not(eq(parameters.poolName, '')) }}:
+            name: ${{ parameters.poolName }}
+          ${{ if not(eq(parameters.poolVmImage, '')) }}:
+            vmImage: ${{ parameters.poolVmImage }}
+        continueOnError: false
+        steps:
+          - ${{ parameters.preBuild }}
+          - bash: |
+              if [ -z "$PACKER_TEMPLATE_FILE" ]; then
+                echo "##vso[task.logissue type=error;]Missing template parameter \"packerTemplateFile\""
+                echo "##vso[task.complete result=Failed;]"
+              fi
+            env:
+              PACKER_TEMPLATE_FILE: ${{ parameters.packerTemplateFile }}
+            displayName: Check for required parameters
+          - bash: |
+              set -ex
+              # Download
+              wget https://releases.hashicorp.com/packer/${PACKER_TAG}/packer_${PACKER_TAG}_linux_amd64.zip
+              DOWNLOAD_PACKER_SHA=$(openssl sha1 -sha256 packer_${PACKER_TAG}_linux_amd64.zip | awk '{print $2}')
+              if [[ "${PACKER_SHA}" != "${PACKER_SHA}" ]]; then
+                  echo "Downloaded checksum (${DOWNLOAD_PACKER_SHA}) for hadolint does not match expected value: ${PACKER_SHA}"
+                  exit 1
+              fi
+              unzip packer_${PACKER_TAG}_linux_amd64.zip
+            displayName: Download packer
+            env:
+              PACKER_TAG: ${{ parameters.binaries.packer.tag }}
+              PACKER_SHA: ${{ parameters.binaries.packer.sha }}
+          - bash: |
+              set -ex
+              git clone -c advice.detachedHead=false --single-branch --branch "${PACKER_TEMPLATE_REPO_BRANCH}" ${PACKER_TEMPLATE_REPO} remote-templates
+            env:
+              PACKER_TEMPLATE_REPO: ${{ parameters.packerTemplateRepo }}
+              PACKER_TEMPLATE_REPO_BRANCH: ${{ parameters.packerTemplateRepoBranch }}
+            displayName: "Checkout packer remote templates"
+          - task: AzureCLI@2
+            displayName: "Run packer"
+            inputs:
+              azureSubscription: ${{ parameters.azureSubscription }}
+              addSpnToEnvironment: true
+              workingDirectory: "."
+              scriptLocation: inlineScript
+              scriptType: bash
+              inlineScript: |
+                set -ex
+                printenv
+                ./packer build remote-templates/${PACKER_TEMPLATE_FILE}
+            env:
+              PACKER_TEMPLATE_FILE: ${{ parameters.packerTemplateFile }}
+          - ${{ parameters.postBuild }}
