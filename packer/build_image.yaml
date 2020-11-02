@@ -8,6 +8,9 @@ parameters:
   - name: azureSubscription
     type: string
     default: ""
+  - name: resourceGroup
+    type: string
+    default: ""
   - name: packerTemplateRepo
     type: string
     default: ""
@@ -75,7 +78,12 @@ jobs:
           inlineScript: |
             set -ex
             printenv
+            export AZURE_CLIENT_ID=${servicePrincipalId}
+            export AZURE_CLIENT_SECRET=${servicePrincipalKey}
+            export AZURE_TENANT_ID=${tenantId}
+            export AZURE_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id')
             ./packer build remote-templates/${PACKER_TEMPLATE_FILE}
         env:
           PACKER_TEMPLATE_FILE: ${{ parameters.packerTemplateFile }}
+          AZURE_RESOURCE_GROUP: ${{ parameters.resourceGroup }}
       - ${{ parameters.postBuild }}

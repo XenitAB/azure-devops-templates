@@ -3,6 +3,8 @@ parameters:
     type: string
   - name: azureSubscriptionTemplate
     type: string
+  - name: resourceGroupTemplate
+    type: string
   - name: packerTemplateRepo
     type: string
     default: "https://github.com/XenitAB/cloud-automation.git"
@@ -38,6 +40,7 @@ stages:
               poolName: ${{ format(parameters.poolNameTemplate, env.name) }}
               environment: ${{ env.name }}
               azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+              resourceGroup: ${{ format(parameters.resourceGroupTemplate, env.name) }}
               packerTemplateRepo: ${{ parameters.packerTemplateRepo }}
               packerTemplateRepoBranch: ${{ parameters.packerTemplateRepoBranch }}
               packerTemplateFile: ${{ parameters.packerTemplateFile }}
