@@ -25,7 +25,7 @@ stages:
       - deployment: ${{ env.name }}
         pool:
           name: ${{ format(parameters.poolNameTemplate, env.name) }}
-        environment: ${{ parameters.environment }}
+        environment: ${{ env.name }}
         displayName: Apply to ${{ parameters.environment }}
         strategy:
           runOnce:
