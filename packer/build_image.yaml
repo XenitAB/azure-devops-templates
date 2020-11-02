@@ -76,12 +76,21 @@ jobs:
           scriptLocation: inlineScript
           scriptType: bash
           inlineScript: |
-            set -ex
-            printenv
+            set -e
+
+            # Export environment variables for packer
             export AZURE_CLIENT_ID=${servicePrincipalId}
             export AZURE_CLIENT_SECRET=${servicePrincipalKey}
             export AZURE_TENANT_ID=${tenantId}
             export AZURE_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id')
+
+            # Setup ansible
+            python3 -m venv .venv
+            source .venv/bin/activate
+            pip install -U pip
+            pip install -U ansible
+
+            # Run packer
             ./packer build remote-templates/${PACKER_TEMPLATE_FILE}
         env:
           PACKER_TEMPLATE_FILE: ${{ parameters.packerTemplateFile }}
