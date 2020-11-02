@@ -71,7 +71,7 @@ stages:
             env:
               TFLINT_TAG: ${{ parameters.binaries.tflint.tag }}
               TFLINT_SHA: ${{ parameters.binaries.tflint.sha }}
-            condition: and(succeeded(), eq(${{ parameters.terraformLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            condition: and(succeeded(), eq(${{ parameters.terraformLint.enable }}, true))
           - task: AzureCLI@1
             inputs:
               azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
@@ -81,8 +81,8 @@ stages:
                 pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -build -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH --opaBlastRadius $OPA_BR
             env:
               OPA_BR: ${{ parameters.opaBlastRadius }}
-              TF_VERSION: ""
-              TF_FOLDER: ""
+              TF_VERSION: ${{ parameters.terraformVersion }}
+              TF_FOLDER: ${{ parameters.terraformFolder }}
               ART_PATH: $(Build.ArtifactStagingDirectory)
               ENV: ${{ env.name }}
             displayName: "Terraform Plan"
