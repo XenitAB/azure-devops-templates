@@ -1,10 +1,6 @@
 parameters:
-  - name: poolVmImage
+  - name: poolNameTemplate
     type: string
-    default: "ubuntu-16.04"
-  - name: poolName
-    type: string
-    default: ""
   - name: sourceBranch
     type: string
     default: "refs/heads/master"
@@ -47,10 +43,7 @@ stages:
     - ${{ each env in parameters.environments }}:
       - job: ${{ env.name }}
         pool:
-          ${{ if not(eq(parameters.poolName, '')) }}:
-            name: ${{ parameters.poolName }}
-          ${{ if not(eq(parameters.poolVmImage, '')) }}:
-            vmImage: ${{ parameters.poolVmImage }}
+          name: ${{ format(parameters.poolNameTemplate, env.name) }}
         steps:
           - ${{ parameters.preBuild }}
           - bash: |
