@@ -21,12 +21,13 @@ parameters:
 stages:
   - ${{ each env in parameters.environments }}:
     - stage: apply_${{ env.name }}
+      displayName: ${{ env.name }}
       jobs:
       - deployment: ${{ env.name }}
         pool:
           name: ${{ format(parameters.poolNameTemplate, env.name) }}
         environment: ${{ env.name }}
-        displayName: Apply to ${{ parameters.environment }}
+        displayName: Terraform Apply
         strategy:
           runOnce:
             deploy:
