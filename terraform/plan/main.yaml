@@ -4,12 +4,6 @@ parameters:
   - name: sourceBranch
     type: string
     default: "refs/heads/master"
-  - name: preBuild
-    type: stepList
-    default: []
-  - name: postBuild
-    type: stepList
-    default: []
   - name: terraformLint
     type: object
     default:
@@ -45,7 +39,6 @@ stages:
         pool:
           name: ${{ format(parameters.poolNameTemplate, env.name) }}
         steps:
-          - ${{ parameters.preBuild }}
           - bash: |
               set -ex
               # Download
@@ -82,7 +75,6 @@ stages:
               ART_PATH: $(Build.ArtifactStagingDirectory)
               ENV: ${{ env.name }}
             displayName: "Terraform Plan"
-          - ${{ parameters.postBuild }}
           - task: PublishPipelineArtifact@0
             inputs:
               targetPath: $(Build.ArtifactStagingDirectory)
