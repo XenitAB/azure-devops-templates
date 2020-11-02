@@ -1,0 +1,94 @@
+parameters:
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-16.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: sourceBranch
+    type: string
+    default: "refs/heads/master"
+  - name: preBuild
+    type: stepList
+    default: []
+  - name: postBuild
+    type: stepList
+    default: []
+  - name: terraformLint
+    type: object
+    default:
+      enable: true
+      ignoreRuleViolations: true
+  - name: binaries
+    type: object
+    default:
+      tflint:
+        tag: "v0.20.3"
+        sha: "e993129a256a8c4303bf883e973a922f63160b6e8b7ab0bb4d33bb0f87b00db2"
+  - name: environments
+    type: object
+    default:
+      - name: dev
+      - name: qa
+      - name: prod
+  - name: azureSubscriptionTemplate
+    type: string
+  - name: terraformVersion
+    type: string
+    default: "v0.13.5"
+  - name: terraformFolder
+    type: string
+  - name: opaBlastRadius
+    type: number
+    default: 0
+stages:
+  - stage: plan
+    jobs:
+    - ${{ each env in parameters.environments }}:
+      - job: ${{ env.name }}
+        pool:
+          ${{ if not(eq(parameters.poolName, '')) }}:
+            name: ${{ parameters.poolName }}
+          ${{ if not(eq(parameters.poolVmImage, '')) }}:
+            vmImage: ${{ parameters.poolVmImage }}
+        steps:
+          - ${{ parameters.preBuild }}
+          - bash: |
+              set -ex
+              # Download
+              wget https://github.com/terraform-linters/tflint/releases/download/${TFLINT_TAG}/tflint_linux_amd64.zip
+              unzip tflint_linux_amd64.zip
+              DOWNLOAD_TFLINT_SHA=$(openssl sha1 -sha256 tflint | awk '{print $2}')
+              if [[ "${TFLINT_SHA}" != "${DOWNLOAD_TFLINT_SHA}" ]]; then
+                  echo "Downloaded checksum (${DOWNLOAD_TFLINT_SHA}) for hadolint does not match expected value: ${TFLINT_SHA}"
+                  exit 1
+              fi
+              mv tflint /usr/bin
+              # Run
+              tflint .
+            displayName: Terraform Lint
+            continueOnError: ${{ parameters.terraformLint.ignoreRuleViolations }}
+            env:
+              TFLINT_TAG: ${{ parameters.binaries.tflint.tag }}
+              TFLINT_SHA: ${{ parameters.binaries.tflint.sha }}
+            condition: and(succeeded(), eq(${{ parameters.terraformLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+          - task: AzureCLI@1
+            inputs:
+              azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+              addSpnToEnvironment: true
+              scriptLocation: inlineScript
+              inlineScript: |
+                pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -build -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH --opaBlastRadius $OPA_BR
+            env:
+              OPA_BR: ${{ parameters.opaBlastRadius }}
+              TF_VERSION: ""
+              TF_FOLDER: ""
+              ART_PATH: $(Build.ArtifactStagingDirectory)
+              ENV: ${{ env.name }}
+            displayName: "Terraform Plan"
+          - ${{ parameters.postBuild }}
+          - task: PublishPipelineArtifact@0
+            inputs:
+              targetPath: $(Build.ArtifactStagingDirectory)
+              artifactName: "${{ env.name }}"
+            displayName: "Publish artifact"
