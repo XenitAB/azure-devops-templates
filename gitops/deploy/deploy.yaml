@@ -31,6 +31,7 @@ jobs:
   - deployment: deploy_${{ parameters.environment }}
     timeoutInMinutes: 20
     displayName: Deploy to ${{ parameters.environment }}
+    condition: succeeded()
     pool:
       name: ${{ parameters.poolName }}
     continueOnError: false

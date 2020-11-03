@@ -41,7 +41,7 @@ stages:
 
   - ${{ each env in parameters.environments }}:
       - stage: deploy_${{ env.name }}
-        condition: and(succeeded(), or(and(eq(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'), eq(${{ env.deployTags }}, false)), and(startsWith(variables['resources.pipeline.ciPipeline.sourceBranch'], 'refs/tags/'), eq(${{ env.deployTags }}, true))))
+        condition: or(and(eq(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'), eq(${{ env.deployTags }}, false)), and(startsWith(variables['resources.pipeline.ciPipeline.sourceBranch'], 'refs/tags/'), eq(${{ env.deployTags }}, true)))
         jobs:
           - template: deploy.yaml
             parameters:
