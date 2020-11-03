@@ -115,6 +115,13 @@ jobs:
                 git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
                 git status
 
+                # Change REPO_URI if using legacy url
+                if echo ${REPO_URI} | grep -Eq '^https://.*\.visualstudio\.com/.*'; then
+                  AZDO_ORG=$(echo $REPO_URI | sed -E "s|https://(.*)\.visualstudio\.com/.*|\1|g")
+                  AZDO_PATH=$(echo $REPO_URI | sed -E "s|https://.*\.visualstudio\.com/(.*)|\1|g")
+                  REPO_URI="https://dev.azure.com/${AZDO_ORG}/${AZDO_PATH}"
+                fi
+
                 while true; do
                   sleep 5
 
@@ -128,12 +135,6 @@ jobs:
                   COMMIT_ID=$(git rev-list -1 HEAD -- $ENV)
 
                   set +e
-                  # Change REPO_URI if using legacy url
-                  if echo ${REPO_URI} | grep -Eq '^https://.*\.visualstudio\.com/.*'; then
-                    AZDO_ORG=$(echo $REPO_URI | sed -E "s|https://(.*)\.visualstudio\.com/.*|\1|g")
-                    AZDO_PATH=$(echo $REPO_URI | sed -E "s|https://.*\.visualstudio\.com/(.*)|\1|g")
-                    REPO_URI="https://dev.azure.com/${AZDO_ORG}/${AZDO_PATH}"
-                  fi
                   RESULT=$(./flux-status-cli --instance ${ENV} --action workload  --git-url ${REPO_URI} --azdo-pat ${TOKEN} --commit-id ${COMMIT_ID})
                   if [ $? -ne 0 ]; then
                     echo $RESULT
