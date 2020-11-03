@@ -28,25 +28,26 @@ parameters:
 stages:
   - stage: push
     jobs:
-    - ${{ each env in parameters.environments }}:
-      - template: push.yaml
-        parameters:
-          poolName: ${{ format(parameters.poolNameTemplate, env.name) }}
-          sourceBranch: ${{ parameters.sourceBranch }}
-          environment: ${{ env.name }}
-          serviceName: ${{ parameters.serviceName }}
-          azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
-          acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
-          imagePathPrefix: ${{ parameters.imagePathPrefix }}
+      - ${{ each env in parameters.environments }}:
+          - template: push.yaml
+            parameters:
+              poolName: ${{ format(parameters.poolNameTemplate, env.name) }}
+              sourceBranch: ${{ parameters.sourceBranch }}
+              environment: ${{ env.name }}
+              serviceName: ${{ parameters.serviceName }}
+              azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+              acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
+              imagePathPrefix: ${{ parameters.imagePathPrefix }}
 
   - ${{ each env in parameters.environments }}:
-    - stage: deploy_${{ env.name }}
-      jobs:
-      - template: deploy.yaml
-        parameters:
-          poolName: ${{ format(parameters.poolNameTemplate, env.name) }}
-          sourceBranch: ${{ parameters.sourceBranch }}
-          environment: ${{ env.name }}
-          deployTags: ${{ env.deployTags }}
-          serviceName: ${{ parameters.serviceName }}
-          imageTagPath: ${{ parameters.imageTagPath }}
+      - stage: deploy_${{ env.name }}
+        condition: and(not(failed()), not(canceled()), or(and(eq(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'), eq(${{ env.deployTags }}, false)), and(startsWith(variables['resources.pipeline.ciPipeline.sourceBranch'], 'refs/tags/'), eq(${{ env.deployTags }}, true))))
+        jobs:
+          - template: deploy.yaml
+            parameters:
+              poolName: ${{ format(parameters.poolNameTemplate, env.name) }}
+              sourceBranch: ${{ parameters.sourceBranch }}
+              environment: ${{ env.name }}
+              deployTags: ${{ env.deployTags }}
+              serviceName: ${{ parameters.serviceName }}
+              imageTagPath: ${{ parameters.imageTagPath }}
