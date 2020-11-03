@@ -67,7 +67,8 @@ stages:
               addSpnToEnvironment: true
               scriptLocation: inlineScript
               inlineScript: |
-                pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -build -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH --opaBlastRadius $OPA_BR
+                set -ex
+                pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -build -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH -opaBlastRadius $OPA_BR
             env:
               OPA_BR: ${{ parameters.opaBlastRadius }}
               TF_VERSION: ${{ parameters.terraformVersion }}
