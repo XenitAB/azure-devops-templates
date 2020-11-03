@@ -54,7 +54,7 @@ jobs:
 
             - bash: |
                 set -ex
-                pip3 install yq
+                pip3 install --user yq
 
                 git checkout master
                 git pull
@@ -88,7 +88,7 @@ jobs:
 
             - bash: |
                 set -ex
-                pip3 install yq
+                pip3 install --user yq
                 wget https://github.com/XenitAB/flux-status/releases/download/${FLUX_STATUS_CLI_TAG}/flux-status-cli
                 DOWNLOAD_FLUX_STATUS_CLI_SHA=$(openssl sha1 -sha256 flux-status-cli | awk '{print $2}')
                 if [[ "${FLUX_STATUS_CLI_SHA}" != "${DOWNLOAD_FLUX_STATUS_CLI_SHA}" ]]; then
@@ -96,7 +96,6 @@ jobs:
                     exit 1
                 fi
                 chmod +x flux-status-cli
-                mv flux-status-cli /usr/bin/
                 wget https://github.com/stedolan/jq/releases/download/${JQ_TAG}/jq-linux64
                 DOWNLOAD_JQ_SHA=$(openssl sha1 -sha256 jq-linux64 | awk '{print $2}')
                 if [[ "${JQ_SHA}" != "${DOWNLOAD_JQ_SHA}" ]]; then
@@ -105,7 +104,6 @@ jobs:
                 fi
                 mv jq-linux64 jq
                 chmod +x jq
-                mv jq /usr/bin/
 
                 git checkout master
                 git pull
@@ -128,14 +126,14 @@ jobs:
                   COMMIT_ID=$(git rev-list -1 HEAD -- $ENV)
 
                   set +e
-                  RESULT=$(flux-status-cli --instance ${ENV} --action workload  --git-url ${REPO_URI} --azdo-pat ${TOKEN} --commit-id ${COMMIT_ID})
+                  RESULT=$(./flux-status-cli --instance ${ENV} --action workload  --git-url ${REPO_URI} --azdo-pat ${TOKEN} --commit-id ${COMMIT_ID})
                   if [ $? -ne 0 ]; then
                     echo $RESULT
                     continue
                   fi
                   set -e
 
-                  STATE=$(echo $RESULT | jq -r .state)
+                  STATE=$(echo $RESULT | ./jq -r .state)
                   echo "Commit status is $STATE"
                   if [ $STATE == "succeeded" ]; then
                     exit 0
