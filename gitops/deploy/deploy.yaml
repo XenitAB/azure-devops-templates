@@ -54,6 +54,7 @@ jobs:
 
             - bash: |
                 set -ex
+                export PATH=$PATH:~/.local/bin
                 pip3 install --user yq
 
                 git checkout master
