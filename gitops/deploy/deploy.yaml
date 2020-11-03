@@ -88,6 +88,7 @@ jobs:
 
             - bash: |
                 set -ex
+                export PATH=$PATH:~/.local/bin
                 pip3 install --user yq
                 wget https://github.com/XenitAB/flux-status/releases/download/${FLUX_STATUS_CLI_TAG}/flux-status-cli
                 DOWNLOAD_FLUX_STATUS_CLI_SHA=$(openssl sha1 -sha256 flux-status-cli | awk '{print $2}')
