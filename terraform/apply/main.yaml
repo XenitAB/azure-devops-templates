@@ -8,7 +8,7 @@ parameters:
     type: string
   - name: terraformVersion
     type: string
-    default: "v0.13.5"
+    default: "0.13.4"
   - name: terraformFolder
     type: string
   - name: environments
