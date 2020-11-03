@@ -52,3 +52,4 @@ stages:
                   TF_VERSION: ${{ parameters.terraformVersion }}
                   ART_PATH: $(Build.ArtifactStagingDirectory)
                   ENV: ${{ env.name }}
+      condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
