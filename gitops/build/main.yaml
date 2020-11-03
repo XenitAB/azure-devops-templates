@@ -75,9 +75,8 @@ stages:
               fi
               mv hadolint-Linux-x86_64 hadolint
               chmod +x hadolint
-              mv hadolint /usr/bin
               # Run
-              hadolint ${DOCKERFILE_PATH}
+              ./hadolint ${DOCKERFILE_PATH}
             displayName: Dockerfile Lint
             continueOnError: ${{ parameters.dockerLint.ignoreRuleViolations }}
             env:
@@ -113,11 +112,10 @@ stages:
               fi
               tar xzvf trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
               chmod +x trivy
-              mv trivy /usr/bin
               # Run
-              trivy --reset --no-progress
-              trivy --exit-code 0 --no-progress --input ${IMAGE_ID}.tar
-              trivy --exit-code 1 --no-progress --ignore-unfixed --input ${IMAGE_ID}.tar
+              ./trivy --reset --no-progress
+              ./trivy --exit-code 0 --no-progress --input ${IMAGE_ID}.tar
+              ./trivy --exit-code 1 --no-progress --ignore-unfixed --input ${IMAGE_ID}.tar
             displayName: Image scan
             continueOnError: ${{ parameters.imageScan.ignoreRuleViolations }}
             env:

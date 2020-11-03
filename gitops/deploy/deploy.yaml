@@ -21,8 +21,8 @@ parameters:
     type: object
     default:
       fluxStatus:
-        tag: "v0.2.0"
-        sha: "024b38bd62e432683d3560ce54718597c51af17f377804ddc26f01ed840b435e"
+        tag: "v0.3.0"
+        sha: "9e32ff239238953119ae96fa8f578896fda0f24c1a1da4d41d4c61a8e2003a04"
       jq:
         tag: "jq-1.6"
         sha: "af986793a515d500ab2d35f8d2aecd656e764504b789b66d7e1a0b727a124c44"
@@ -54,7 +54,8 @@ jobs:
 
             - bash: |
                 set -ex
-                pip3 install yq
+                export PATH=$PATH:~/.local/bin
+                pip3 install --user yq
 
                 git checkout master
                 git pull
@@ -88,7 +89,8 @@ jobs:
 
             - bash: |
                 set -ex
-                pip3 install yq
+                export PATH=$PATH:~/.local/bin
+                pip3 install --user yq
                 wget https://github.com/XenitAB/flux-status/releases/download/${FLUX_STATUS_CLI_TAG}/flux-status-cli
                 DOWNLOAD_FLUX_STATUS_CLI_SHA=$(openssl sha1 -sha256 flux-status-cli | awk '{print $2}')
                 if [[ "${FLUX_STATUS_CLI_SHA}" != "${DOWNLOAD_FLUX_STATUS_CLI_SHA}" ]]; then
@@ -96,7 +98,6 @@ jobs:
                     exit 1
                 fi
                 chmod +x flux-status-cli
-                mv flux-status-cli /usr/bin/
                 wget https://github.com/stedolan/jq/releases/download/${JQ_TAG}/jq-linux64
                 DOWNLOAD_JQ_SHA=$(openssl sha1 -sha256 jq-linux64 | awk '{print $2}')
                 if [[ "${JQ_SHA}" != "${DOWNLOAD_JQ_SHA}" ]]; then
@@ -105,7 +106,6 @@ jobs:
                 fi
                 mv jq-linux64 jq
                 chmod +x jq
-                mv jq /usr/bin/
 
                 git checkout master
                 git pull
@@ -114,6 +114,13 @@ jobs:
                 git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
                 git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
                 git status
+
+                # Change REPO_URI if using legacy url
+                if echo ${REPO_URI} | grep -Eq '^https://.*\.visualstudio\.com/.*'; then
+                  AZDO_ORG=$(echo $REPO_URI | sed -E "s|https://(.*)\.visualstudio\.com/.*|\1|g")
+                  AZDO_PATH=$(echo $REPO_URI | sed -E "s|https://.*\.visualstudio\.com/(.*)|\1|g")
+                  REPO_URI="https://dev.azure.com/${AZDO_ORG}/${AZDO_PATH}"
+                fi
 
                 while true; do
                   sleep 5
@@ -128,14 +135,14 @@ jobs:
                   COMMIT_ID=$(git rev-list -1 HEAD -- $ENV)
 
                   set +e
-                  RESULT=$(flux-status-cli --instance ${ENV} --action workload  --git-url ${REPO_URI} --azdo-pat ${TOKEN} --commit-id ${COMMIT_ID})
+                  RESULT=$(./flux-status-cli --instance ${ENV} --action workload  --git-url ${REPO_URI} --azdo-pat ${TOKEN} --commit-id ${COMMIT_ID})
                   if [ $? -ne 0 ]; then
                     echo $RESULT
                     continue
                   fi
                   set -e
 
-                  STATE=$(echo $RESULT | jq -r .state)
+                  STATE=$(echo $RESULT | ./jq -r .state)
                   echo "Commit status is $STATE"
                   if [ $STATE == "succeeded" ]; then
                     exit 0
