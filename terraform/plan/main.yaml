@@ -29,8 +29,8 @@ parameters:
   - name: terraformFolder
     type: string
   - name: opaBlastRadius
-    type: number
-    default: 50
+    type: string
+    default: "50"
 stages:
   - stage: plan
     jobs:
