@@ -21,8 +21,8 @@ parameters:
     type: object
     default:
       fluxStatus:
-        tag: "v0.2.0"
-        sha: "024b38bd62e432683d3560ce54718597c51af17f377804ddc26f01ed840b435e"
+        tag: "v0.3.0"
+        sha: "9e32ff239238953119ae96fa8f578896fda0f24c1a1da4d41d4c61a8e2003a04"
       jq:
         tag: "jq-1.6"
         sha: "af986793a515d500ab2d35f8d2aecd656e764504b789b66d7e1a0b727a124c44"
