@@ -1,6 +1,7 @@
 parameters:
   - name: poolNameTemplate
     type: string
+    default: ""
   - name: poolVmImage
     type: string
     default: "ubuntu-18.04"
