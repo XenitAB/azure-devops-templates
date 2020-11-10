@@ -1,6 +1,9 @@
 parameters:
   - name: poolNameTemplate
     type: string
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-18.04"
   - name: sourceBranch
     type: string
     default: "refs/heads/master"
@@ -25,7 +28,10 @@ stages:
       jobs:
       - deployment: ${{ env.name }}
         pool:
-          name: ${{ format(parameters.poolNameTemplate, env.name) }}
+          ${{ if not(eq(parameters.poolNameTemplate, '')) }}:
+            name: ${{ format(parameters.poolNameTemplate, env.name) }}
+          ${{ if not(eq(parameters.poolVmImage, '')) }}:
+            vmImage: ${{ parameters.poolVmImage }}
         environment: ${{ env.name }}
         displayName: Terraform Apply
         strategy:
