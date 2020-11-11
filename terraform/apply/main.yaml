@@ -24,39 +24,47 @@ parameters:
 
 stages:
   - ${{ each env in parameters.environments }}:
-    - stage: apply_${{ env.name }}
-      displayName: ${{ env.name }}
-      jobs:
-      - deployment: ${{ env.name }}
-        pool:
-          ${{ if not(eq(parameters.poolNameTemplate, '')) }}:
-            name: ${{ format(parameters.poolNameTemplate, env.name) }}
-          ${{ if not(eq(parameters.poolVmImage, '')) }}:
-            vmImage: ${{ parameters.poolVmImage }}
-        environment: ${{ env.name }}
-        displayName: Terraform Apply
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-              - checkout: self
-                displayName: Get sources
-              - task: DownloadPipelineArtifact@2
-                displayName: "Download artifact"
-                inputs:
-                  artifact: "${{ env.name }}"
-                  path: $(System.ArtifactsDirectory)
-              - task: AzureCLI@1
-                displayName: "Apply"
-                inputs:
-                  azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
-                  addSpnToEnvironment: true
-                  scriptLocation: inlineScript
-                  inlineScript: |
-                    pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -deploy -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH
-                env:
-                  TF_FOLDER: ${{ parameters.terraformFolder }}
-                  TF_VERSION: ${{ parameters.terraformVersion }}
-                  ART_PATH: $(Build.ArtifactStagingDirectory)
-                  ENV: ${{ env.name }}
-      condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+      - stage: apply_${{ env.name }}
+        displayName: ${{ env.name }}
+        jobs:
+          - deployment: ${{ env.name }}
+            variables:
+              - group: terraform-encryption
+            pool:
+              ${{ if not(eq(parameters.poolNameTemplate, '')) }}:
+                name: ${{ format(parameters.poolNameTemplate, env.name) }}
+              ${{ if not(eq(parameters.poolVmImage, '')) }}:
+                vmImage: ${{ parameters.poolVmImage }}
+            environment: ${{ env.name }}
+            displayName: Terraform Apply
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - checkout: self
+                      displayName: Get sources
+                    - task: DownloadPipelineArtifact@2
+                      displayName: "Download artifact"
+                      inputs:
+                        artifact: "${{ env.name }}"
+                        path: $(System.ArtifactsDirectory)
+                    - task: AzureCLI@1
+                      displayName: "Apply"
+                      inputs:
+                        azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+                        addSpnToEnvironment: true
+                        scriptLocation: inlineScript
+                        inlineScript: |
+                          set -e
+                          if [[ "${tfEncPassword}" == "\$(terraformEncryptionSecret)" || -z "${tfEncPassword}" ]]; then
+                            echo "ERROR: You need to set the encryption secret. Define the encryption secret as a variable group terraform-encryption with the secret key terraformEncryptionSecret"
+                            exit 1
+                          fi
+                          pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -deploy -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH
+                      env:
+                        TF_FOLDER: ${{ parameters.terraformFolder }}
+                        TF_VERSION: ${{ parameters.terraformVersion }}
+                        ART_PATH: $(Build.ArtifactStagingDirectory)
+                        ENV: ${{ env.name }}
+                        tfEncPassword: $(terraformEncryptionSecret)
+        condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))

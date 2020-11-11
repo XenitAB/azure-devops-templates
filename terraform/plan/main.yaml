@@ -38,53 +38,60 @@ parameters:
 stages:
   - stage: plan
     jobs:
-    - ${{ each env in parameters.environments }}:
-      - job: ${{ env.name }}
-        pool:
-          ${{ if not(eq(parameters.poolNameTemplate, '')) }}:
-            name: ${{ format(parameters.poolNameTemplate, env.name) }}
-          ${{ if not(eq(parameters.poolVmImage, '')) }}:
-            vmImage: ${{ parameters.poolVmImage }}
-        steps:
-          - bash: |
-              set -ex
-              # Download
-              wget https://github.com/terraform-linters/tflint/releases/download/${TFLINT_TAG}/tflint_linux_amd64.zip
-              unzip tflint_linux_amd64.zip
-              DOWNLOAD_TFLINT_SHA=$(openssl sha1 -sha256 tflint | awk '{print $2}')
-              if [[ "${TFLINT_SHA}" != "${DOWNLOAD_TFLINT_SHA}" ]]; then
-                  echo "Downloaded checksum (${DOWNLOAD_TFLINT_SHA}) for hadolint does not match expected value: ${TFLINT_SHA}"
-                  exit 1
-              fi
-              BIN_DIR=$HOME/.local/bin
-              export PATH=$PATH:$BIN_DIR
-              mkdir -p $BIN_DIR
-              mv tflint $BIN_DIR/tflint
-              # Run
-              tflint .
-            displayName: Terraform Lint
-            continueOnError: ${{ parameters.terraformLint.ignoreRuleViolations }}
-            env:
-              TFLINT_TAG: ${{ parameters.binaries.tflint.tag }}
-              TFLINT_SHA: ${{ parameters.binaries.tflint.sha }}
-            condition: and(succeeded(), eq(${{ parameters.terraformLint.enable }}, true))
-          - task: AzureCLI@1
-            inputs:
-              azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
-              addSpnToEnvironment: true
-              scriptLocation: inlineScript
-              inlineScript: |
-                set -ex
-                pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -build -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH -opaBlastRadius $OPA_BR
-            env:
-              OPA_BR: ${{ parameters.opaBlastRadius }}
-              TF_VERSION: ${{ parameters.terraformVersion }}
-              TF_FOLDER: ${{ parameters.terraformFolder }}
-              ART_PATH: $(Build.ArtifactStagingDirectory)
-              ENV: ${{ env.name }}
-            displayName: "Terraform Plan"
-          - task: PublishPipelineArtifact@0
-            inputs:
-              targetPath: $(Build.ArtifactStagingDirectory)
-              artifactName: "${{ env.name }}"
-            displayName: "Publish artifact"
+      - ${{ each env in parameters.environments }}:
+          - job: ${{ env.name }}
+            variables:
+              - group: terraform-encryption
+            pool:
+              ${{ if not(eq(parameters.poolNameTemplate, '')) }}:
+                name: ${{ format(parameters.poolNameTemplate, env.name) }}
+              ${{ if not(eq(parameters.poolVmImage, '')) }}:
+                vmImage: ${{ parameters.poolVmImage }}
+            steps:
+              - bash: |
+                  set -ex
+                  # Download
+                  wget https://github.com/terraform-linters/tflint/releases/download/${TFLINT_TAG}/tflint_linux_amd64.zip
+                  unzip tflint_linux_amd64.zip
+                  DOWNLOAD_TFLINT_SHA=$(openssl sha1 -sha256 tflint | awk '{print $2}')
+                  if [[ "${TFLINT_SHA}" != "${DOWNLOAD_TFLINT_SHA}" ]]; then
+                      echo "Downloaded checksum (${DOWNLOAD_TFLINT_SHA}) for hadolint does not match expected value: ${TFLINT_SHA}"
+                      exit 1
+                  fi
+                  BIN_DIR=$HOME/.local/bin
+                  export PATH=$PATH:$BIN_DIR
+                  mkdir -p $BIN_DIR
+                  mv tflint $BIN_DIR/tflint
+                  # Run
+                  tflint .
+                displayName: Terraform Lint
+                continueOnError: ${{ parameters.terraformLint.ignoreRuleViolations }}
+                env:
+                  TFLINT_TAG: ${{ parameters.binaries.tflint.tag }}
+                  TFLINT_SHA: ${{ parameters.binaries.tflint.sha }}
+                condition: and(succeeded(), eq(${{ parameters.terraformLint.enable }}, true))
+              - task: AzureCLI@1
+                inputs:
+                  azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+                  addSpnToEnvironment: true
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    set -e
+                    if [[ "${tfEncPassword}" == "\$(terraformEncryptionSecret)" || -z "${tfEncPassword}" ]]; then
+                      echo "ERROR: You need to set the encryption secret. Define the encryption secret as a variable group terraform-encryption with the secret key terraformEncryptionSecret"
+                      exit 1
+                    fi
+                    pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -build -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH -opaBlastRadius $OPA_BR
+                env:
+                  OPA_BR: ${{ parameters.opaBlastRadius }}
+                  TF_VERSION: ${{ parameters.terraformVersion }}
+                  TF_FOLDER: ${{ parameters.terraformFolder }}
+                  ART_PATH: $(Build.ArtifactStagingDirectory)
+                  ENV: ${{ env.name }}
+                  tfEncPassword: $(terraformEncryptionSecret)
+                displayName: "Terraform Plan"
+              - task: PublishPipelineArtifact@0
+                inputs:
+                  targetPath: $(Build.ArtifactStagingDirectory)
+                  artifactName: "${{ env.name }}"
+                displayName: "Publish artifact"
