@@ -148,6 +148,7 @@ stages:
             vmImage: ${{ parameters.poolVmImage }}
         continueOnError: false
         steps:
+          - checkout: none
           - bash: |
               echo "Running this to have something for cd to trigger on if not Pull Request."
             displayName: "cd_trigger"
