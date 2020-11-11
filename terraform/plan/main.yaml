@@ -49,6 +49,18 @@ stages:
                 vmImage: ${{ parameters.poolVmImage }}
             steps:
               - bash: |
+                  if [ -z "$tfEncPassword" ]; then
+                    echo "##vso[task.logissue type=error;]Missing variable \"terraformEncryptionSecret\" from variable group \"terraform-encryption\""
+                    echo "##vso[task.complete result=Failed;]"
+                  fi
+                  if [ "$tfEncPassword" == "\$(terraformEncryptionSecret)" ]; then
+                    echo "##vso[task.logissue type=error;]Missing variable \"terraformEncryptionSecret\" from variable group \"terraform-encryption\""
+                    echo "##vso[task.complete result=Failed;]"
+                  fi
+                env:
+                  tfEncPassword: $(terraformEncryptionSecret)
+                displayName: Check for encryption secret
+              - bash: |
                   set -ex
                   # Download
                   wget https://github.com/terraform-linters/tflint/releases/download/${TFLINT_TAG}/tflint_linux_amd64.zip
@@ -77,10 +89,6 @@ stages:
                   scriptLocation: inlineScript
                   inlineScript: |
                     set -e
-                    if [[ "${tfEncPassword}" == "\$(terraformEncryptionSecret)" || -z "${tfEncPassword}" ]]; then
-                      echo "ERROR: You need to set the encryption secret. Define the encryption secret as a variable group terraform-encryption with the secret key terraformEncryptionSecret"
-                      exit 1
-                    fi
                     pwsh .ci/Invoke-PipelineTask.ps1 -tfFolderName $TF_FOLDER -azureDevOps -build -tfVersion $TF_VERSION -environmentShort $ENV -artifactPath $ART_PATH -opaBlastRadius $OPA_BR
                 env:
                   OPA_BR: ${{ parameters.opaBlastRadius }}
