@@ -41,6 +41,6 @@ stages:
       azureSubscriptionTemplate: "azure-{0}-contributor"
       resourceGroupTemplate: "rg-{0}-we-packer"
       packerTemplateRepo: "https://github.com/XenitAB/cloud-automation.git"
-      packerTemplateRepoBranch: "packer"
+      packerTemplateRepoBranch: "2020.11.9"
       packerTemplateFile: "azure/packer/azure-pipelines-agent/ubuntu1804.json"
 ```
