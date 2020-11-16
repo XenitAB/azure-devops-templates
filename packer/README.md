@@ -9,6 +9,7 @@ The format command is passed the environment name, which can be placed in the st
 | Name | Default | Description |
 | --- | --- | --- |
 | poolNameTemplate | `""` | Pool name template. |
+| poolVmImage | `"ubuntu-18.04"` | Pool vm image (only used if `poolNameTemplate` is empty) |
 | azureSubscriptionTemplate | `""` | Azure subscription name template. |
 | resourceGroupTemplate | `""` | Azure resource group name template. |
 | packerTemplateRepo | `"https://github.com/XenitAB/cloud-automation.git"` | GIT repository to use for packer template. |
@@ -24,24 +25,14 @@ The format command is passed the environment name, which can be placed in the st
 ```yaml
 name: $(Build.BuildId)
 
-trigger:
-  batch: true
-  branches:
-    include:
-      - master
-  tags:
-    include:
-      - "*"
-  paths:
-    include:
-      - "*"
+trigger: none
 
 resources:
   repositories:
     - repository: templates
       type: git
       name: XenitKubernetesService/azure-devops-templates
-      ref: refs/tags/2020.10.2
+      ref: refs/tags/2020.11.9
 
 stages:
   - template: packer/main.yaml@templates

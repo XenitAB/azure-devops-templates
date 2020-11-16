@@ -1,6 +1,9 @@
 parameters:
   - name: poolNameTemplate
     type: string
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-18.04"
   - name: azureSubscriptionTemplate
     type: string
   - name: resourceGroupTemplate
@@ -37,7 +40,8 @@ stages:
       - ${{ each env in parameters.environments }}:
           - template: build_image.yaml
             parameters:
-              poolName: ${{ format(parameters.poolNameTemplate, env.name) }}
+              poolNameTemplate: ${{ parameters.poolNameTemplate }}
+              poolVmImage: ${{ parameters.poolVmImage }}
               environment: ${{ env.name }}
               azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
               resourceGroup: ${{ format(parameters.resourceGroupTemplate, env.name) }}
