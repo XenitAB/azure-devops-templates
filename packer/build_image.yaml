@@ -1,5 +1,8 @@
 parameters:
-  - name: poolName
+  - name: poolNameTemplate
+    type: string
+    default: ""
+  - name: poolVmImage
     type: string
     default: ""
   - name: environment
@@ -34,7 +37,10 @@ jobs:
   - job: build_image_${{ parameters.environment }}
     displayName: Build packer image for ${{ parameters.environment }}
     pool:
-      name: ${{ parameters.poolName }}
+      ${{ if not(eq(parameters.poolNameTemplate, '')) }}:
+        name: ${{ format(parameters.poolNameTemplate, parameters.environment) }}
+      ${{ if not(eq(parameters.poolVmImage, '')) }}:
+        vmImage: ${{ parameters.poolVmImage }}
     continueOnError: false
     steps:
       - ${{ parameters.preBuild }}
