@@ -17,13 +17,11 @@ parameters:
     default:
       - name: dev
         deployTags: false
-        tagLatest: false
+        extraTag: "latest"
       - name: qa
         deployTags: true
-        tagLatest: false
       - name: prod
         deployTags: true
-        tagLatest: false
   - name: imageTagPath
     type: string
     default: ".spec.values.image.tag"

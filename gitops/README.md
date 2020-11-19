@@ -37,7 +37,7 @@ The format command is passed the environment name, which can be placed in the st
 | azureSubscriptionTemplate | `""` | Name of Azure subscription in template format. |
 | acrNameTemplate | `""` | Name of ACr to use in template format. |
 | imagePathPrefix | `""` | Prefix to append to image name before pushing to ACR. |
-| environments | `[{name: dev, deployTags: false, tagLatest: true}, {name: qa, deployTags: true}, {name: prod, deployTags: true}]` | Environments that should be deployed to. |
+| environments | `[{name: dev, deployTags: false, extraTag: "latest"}, {name: qa, deployTags: true}, {name: prod, deployTags: true}]` | Environments that should be deployed to. |
 
 ## Examples
 **Build**
@@ -100,5 +100,5 @@ stages:
       environments:
         - name: dev
           deployTags: false
-          tagLatest: true
+          extraTag: "latest"
 ```

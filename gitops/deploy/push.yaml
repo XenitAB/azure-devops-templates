@@ -6,7 +6,7 @@ parameters:
   serviceName: ""
   acrName: ""
   imagePathPrefix: ""
-  tagLatest: false
+  extraTag: ""
 
 jobs:
   - job: push_${{ parameters.environment }}
@@ -66,10 +66,10 @@ jobs:
             docker load < $ARTIFACT_PATH
             docker tag $(imageId) "${IMAGE_ID_FULL}"
             docker push "${IMAGE_ID_FULL}"
-            if [[ "${{ parameters.tagLatest }}" = "true" ]]
+            if [[ "${{ parameters.extraTag }}" != "" ]]
             then
-              docker tag ${SERVICE_NAME}:latest
-              docker push ${SERVICE_NAME}:latest
+              docker tag ${SERVICE_NAME}:${{ parameters.extraTag }}
+              docker push ${SERVICE_NAME}:${{ parameters.extraTag }}
             fi
         env:
           ARTIFACT_FILE_NAME: $(artifactFileName)
