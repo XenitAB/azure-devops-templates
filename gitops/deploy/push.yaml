@@ -65,6 +65,11 @@ jobs:
             docker load < $ARTIFACT_PATH
             docker tag $(imageId) "${IMAGE_ID_FULL}"
             docker push "${IMAGE_ID_FULL}"
+            if [[ "${{ parameters.environment }}" = "dev" ]]
+            then
+              docker tag ${SERVICE_NAME}:latest
+              docker push ${SERVICE_NAME}:latest
+            fi
         env:
           ARTIFACT_FILE_NAME: $(artifactFileName)
 
