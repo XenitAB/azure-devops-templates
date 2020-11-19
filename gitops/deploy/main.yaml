@@ -17,10 +17,13 @@ parameters:
     default:
       - name: dev
         deployTags: false
+        tagLatest: false
       - name: qa
         deployTags: true
+        tagLatest: false
       - name: prod
         deployTags: true
+        tagLatest: false
   - name: imageTagPath
     type: string
     default: ".spec.values.image.tag"
@@ -35,6 +38,7 @@ stages:
               sourceBranch: ${{ parameters.sourceBranch }}
               environment: ${{ env.name }}
               serviceName: ${{ parameters.serviceName }}
+              tagLatest: ${{ env.tagLatest }}
               azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
               acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
               imagePathPrefix: ${{ parameters.imagePathPrefix }}
