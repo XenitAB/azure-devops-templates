@@ -2,7 +2,7 @@ name: Trigger xenit-home to regenerate docs
 on:
   push:
     branches:
-      - main
+      - master
   
 jobs:
   trigger-docs:
