@@ -19,4 +19,4 @@ jobs:
         -X POST \
         -H "Accept: application/vnd.github.v3+json" \
         https://api.github.com/repos/xenitab/home/actions/workflows/publish-docs.yaml/dispatches \
-        -d '{"ref": "main", "inputs": {"remote_repo": "xenitab/terraform-modules"}}'
+        -d '{"ref": "main", "inputs": {"remote_repo": "xenitab/azure-devops-templates"}}'
