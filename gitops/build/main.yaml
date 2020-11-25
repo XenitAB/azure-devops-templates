@@ -94,7 +94,7 @@ stages:
           - bash: |
               set -ex
 
-              if [[ "${ENABLE_DOCKER_BUILDKIT}" == "true" ]]; then
+              if [[ "${ENABLE_DOCKER_BUILDKIT}" == "True" ]]; then
                 export DOCKER_BUILDKIT=1
               fi
 
