@@ -17,6 +17,7 @@ The format command is passed the environment name, which can be placed in the st
 | dockerfilePath | `"./Dockerfile"` | Path to Dockerfile used in build. |
 | dockerBuildArgs | `""` | Additional build args to append when building docker image. |
 | serviceName | `""` | Name of application or service, will also be the name of the image. |
+| enableDockerBuildkit | `false` | Should [`DOCKER_BUILDKIT=1`](https://docs.docker.com/develop/develop-images/build_enhancements/#to-enable-buildkit-builds) be set when running docker build. |
 | preBuild | `[]` | Steps to run  before Docker build, takes a list of steps. |
 | postBuild | `[]` | Steps to run  after Docker build, takes a list of steps. |
 | dockerLint.enable | `true` | Enable running Docker lint step. |
