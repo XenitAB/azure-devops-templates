@@ -17,6 +17,9 @@ parameters:
   - name: serviceName
     type: string
     default: ""
+  - name: enableDockerBuildkit
+    type: boolean
+    default: false
   - name: preBuild
     type: stepList
     default: []
@@ -90,6 +93,11 @@ stages:
               condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true))
           - bash: |
               set -ex
+
+              if [[ "${ENABLE_DOCKER_BUILDKIT}" == "true" ]]; then
+                export DOCKER_BUILDKIT=1
+              fi
+
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
               docker save --output ${IMAGE_ID}.tar ${IMAGE_ID}
               gzip -c ${IMAGE_ID}.tar > ${ARTIFACT_FILE_NAME}
@@ -98,6 +106,7 @@ stages:
               IMAGE_ID: $(imageId)
               DOCKER_BUILD_ARGS: ${{ parameters.dockerBuildArgs }}
               ARTIFACT_FILE_NAME: $(artifactFileName)
+              ENABLE_DOCKER_BUILDKIT: ${{ parameters.enableDockerBuildkit }}
             displayName: "Build and save image"
             ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
               condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
