@@ -54,6 +54,7 @@ jobs:
             IMAGE_ID=$(imageId)
             IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
             ACR_NAME=${{ parameters.acrName }}
+            EXTRA_TAG=${{ prameters.extraTag }}
 
             ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${ARTIFACT_FILE_NAME}"
             if [[ ! -f "${ARTIFACT_PATH}" ]]
@@ -66,10 +67,10 @@ jobs:
             docker load < $ARTIFACT_PATH
             docker tag $(imageId) "${IMAGE_ID_FULL}"
             docker push "${IMAGE_ID_FULL}"
-            if [[ "${{ parameters.extraTag }}" != "" ]]
+            if [[ "${EXTRA_TAG}" != "" ]]
             then
-              docker tag ${SERVICE_NAME}:${{ parameters.extraTag }}
-              docker push ${SERVICE_NAME}:${{ parameters.extraTag }}
+              docker tag ${SERVICE_NAME}:${EXTRA_TAG}
+              docker push ${SERVICE_NAME}:${EXTRA_TAG}
             fi
         env:
           ARTIFACT_FILE_NAME: $(artifactFileName)
