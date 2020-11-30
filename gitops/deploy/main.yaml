@@ -17,6 +17,7 @@ parameters:
     default:
       - name: dev
         deployTags: false
+        extraTag: "latest"
       - name: qa
         deployTags: true
       - name: prod
@@ -35,6 +36,7 @@ stages:
               sourceBranch: ${{ parameters.sourceBranch }}
               environment: ${{ env.name }}
               serviceName: ${{ parameters.serviceName }}
+              tagLatest: ${{ env.tagLatest }}
               azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
               acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
               imagePathPrefix: ${{ parameters.imagePathPrefix }}
