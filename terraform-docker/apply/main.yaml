@@ -60,7 +60,7 @@ stages:
                         scriptLocation: inlineScript
                         inlineScript: |
                           set -e
-                          make configure-ci
+                          make configure-azdo
                           make plan
                       env:
                         DIR: ${{ parameters.terraformFolder }}

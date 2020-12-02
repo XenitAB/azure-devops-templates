@@ -101,7 +101,12 @@ configure-credentials: check
 	mkdir -p $${PWD}/$(DIR)/.terraform/
 	printenv | grep "ARM_" > $${PWD}/$(DIR)/.terraform/$(ENV).env
 
-configure-ci: check configure-credentials
+configure-azdo: check
+	mkdir -p $${PWD}/$(DIR)/.terraform/
+	echo ARM_CLIENT_ID=$${servicePrincipalId} > $${PWD}/$(DIR)/.terraform/$(ENV).env
+	echo ARM_CLIENT_SECRET=$${servicePrincipalKey} >> $${PWD}/$(DIR)/.terraform/$(ENV).env
+	echo ARM_TENANT_ID=$${tenantId} >> $${PWD}/$(DIR)/.terraform/$(ENV).env
+	echo ARM_SUBSCRIPTION_ID=$$(az account show -o tsv --query 'id') >> $${PWD}/$(DIR)/.terraform/$(ENV).env
 	chown -R 1000:1000 $${PWD}/$(DIR)
 	chown -R 1000:1000 $${HOME}/.azure
 	chown -R 1000:1000 $${PWD}/global.tfvars
