@@ -108,7 +108,7 @@ pre-azdo: check
 	echo ARM_CLIENT_ID=$${servicePrincipalId} > $${PWD}/$(DIR)/.terraform/$(ENV).env
 	echo ARM_CLIENT_SECRET=$${servicePrincipalKey} >> $${PWD}/$(DIR)/.terraform/$(ENV).env
 	echo ARM_TENANT_ID=$${tenantId} >> $${PWD}/$(DIR)/.terraform/$(ENV).env
-	echo ARM_SUBSCRIPTION_ID=$$(az account show -o tsv --query 'id') >> $${PWD}/$(DIR)/.terraform/$(ENV).env
+	echo ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) >> $${PWD}/$(DIR)/.terraform/$(ENV).env
 	sudo chown -R 1000:1000 $${PWD}/$(DIR)
 	sudo chown -R 1000:1000 $(AZURE_CONFIG_DIR)
 	sudo chown -R 1000:1000 $${PWD}/global.tfvars
