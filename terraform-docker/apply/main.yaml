@@ -1,0 +1,68 @@
+parameters:
+  - name: poolNameTemplate
+    type: string
+    default: ""
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-18.04"
+  - name: sourceBranch
+    type: string
+    default: "refs/heads/master"
+  - name: azureSubscriptionTemplate
+    type: string
+  - name: terraformFolder
+    type: string
+  - name: environments
+    type: object
+    default:
+      - name: dev
+      - name: qa
+      - name: prod
+
+stages:
+  - ${{ each env in parameters.environments }}:
+      - stage: apply_${{ env.name }}
+        displayName: ${{ env.name }}
+        condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+        jobs:
+          - deployment: ${{ env.name }}
+            pool:
+              ${{ if not(eq(parameters.poolNameTemplate, '')) }}:
+                name: ${{ format(parameters.poolNameTemplate, env.name) }}
+              ${{ if not(eq(parameters.poolVmImage, '')) }}:
+                vmImage: ${{ parameters.poolVmImage }}
+            environment: ${{ env.name }}
+            displayName: Terraform Apply
+            strategy:
+              runOnce:
+                deploy:
+                  steps:
+                    - checkout: self
+                      displayName: Get sources
+
+                    - bash: |
+                        mkdir -p ${TERRAFORM_PLAN_FOLDER}
+                      env:
+                        TERRAFORM_PLAN_FOLDER: $(Build.Repository.LocalPath)/${{ parameters.terraformFolder }}/.terraform/plan
+                      displayName: Create terraform plan folder
+
+                    - task: DownloadPipelineArtifact@2
+                      displayName: "Download artifact"
+                      inputs:
+                        artifact: "${{ env.name }}.enc"
+                        path: $(Build.Repository.LocalPath)/${{ parameters.terraformFolder }}/.terraform/plans
+
+                    - task: AzureCLI@1
+                      displayName: "Apply"
+                      inputs:
+                        azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+                        addSpnToEnvironment: true
+                        scriptLocation: inlineScript
+                        inlineScript: |
+                          set -e
+                          ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') make pre-azdo
+                          make apply
+                          make post-azdo
+                      env:
+                        DIR: ${{ parameters.terraformFolder }}
+                        ENV: ${{ env.name }}
