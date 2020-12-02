@@ -61,7 +61,7 @@ stages:
                         inlineScript: |
                           set -e
                           ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') make pre-azdo
-                          make plan
+                          make apply
                           make post-azdo
                       env:
                         DIR: ${{ parameters.terraformFolder }}
