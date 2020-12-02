@@ -1,6 +1,6 @@
-# Terraform
+# Terraform (Docker)
 
-The Terraform templates are used to run Terraform in a `dev->qa->prod` environment promotion flow.
+The Terraform templates (using Docker) are used to run Terraform in a `dev->qa->prod` environment promotion flow.
 
 ## Architecture
 
@@ -73,7 +73,7 @@ stages:
 SHELL:=/bin/bash
 
 SUFFIX="tfstate<4 random digits>"
-IMAGE="ghcr.io/xenitab/github-actions/tools:2020.12.2"
+IMAGE="ghcr.io/xenitab/github-actions/tools:2020.12.3"
 ENV?=""
 DIR?=""
 OPA_BLAST_RADIUS := $(if $(OPA_BLAST_RADIUS), $(OPA_BLAST_RADIUS), 50)
@@ -91,6 +91,7 @@ ifeq ($(DIR),"")
 endif
 
 plan: check
+	echo Print working dir: $${PWD}
 	docker run --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) plan $(DIR) $(ENV) $(SUFFIX) $(OPA_BLAST_RADIUS)
 
 apply: check
