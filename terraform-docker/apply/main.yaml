@@ -43,14 +43,14 @@ stages:
                     - bash: |
                         mkdir -p ${TERRAFORM_PLAN_FOLDER}
                       env:
-                        TERRAFORM_PLAN_FOLDER: $(Agent.BuildDirectory)/${{ parameters.terraformFolder }}/.terraform/plan
+                        TERRAFORM_PLAN_FOLDER: $(Build.Repository.LocalPath)/${{ parameters.terraformFolder }}/.terraform/plan
                       displayName: Create terraform plan folder
 
                     - task: DownloadPipelineArtifact@2
                       displayName: "Download artifact"
                       inputs:
                         artifact: "${{ env.name }}.enc"
-                        path: $(Agent.BuildDirectory)/${{ parameters.terraformFolder }}/.terraform/plans
+                        path: $(Build.Repository.LocalPath)/${{ parameters.terraformFolder }}/.terraform/plans
 
                     - task: AzureCLI@1
                       displayName: "Apply"
