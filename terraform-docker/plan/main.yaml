@@ -1,0 +1,51 @@
+parameters:
+  - name: poolNameTemplate
+    type: string
+    default: ""
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-18.04"
+  - name: sourceBranch
+    type: string
+    default: "refs/heads/master"
+  - name: environments
+    type: object
+    default:
+      - name: dev
+      - name: qa
+      - name: prod
+  - name: azureSubscriptionTemplate
+    type: string
+  - name: terraformFolder
+    type: string
+stages:
+  - stage: plan
+    jobs:
+      - ${{ each env in parameters.environments }}:
+          - job: ${{ env.name }}
+            pool:
+              ${{ if not(eq(parameters.poolNameTemplate, '')) }}:
+                name: ${{ format(parameters.poolNameTemplate, env.name) }}
+              ${{ if not(eq(parameters.poolVmImage, '')) }}:
+                vmImage: ${{ parameters.poolVmImage }}
+            steps:
+              - task: AzureCLI@1
+                inputs:
+                  azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+                  addSpnToEnvironment: true
+                  scriptLocation: inlineScript
+                  inlineScript: |
+                    set -e
+                    make prepare
+                    make configure-credentials
+                    make plan
+                env:
+                  DIR: ${{ parameters.terraformFolder }}
+                  ENV: ${{ env.name }}
+                displayName: "Terraform Plan"
+
+              - task: PublishPipelineArtifact@0
+                inputs:
+                  targetPath: $(Agent.BuildDirectory)/${{ parameters.terraformFolder }}/.terraform/plan
+                  artifactName: "${{ env.name }}.enc"
+                displayName: "Publish artifact"
