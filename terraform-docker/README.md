@@ -107,7 +107,7 @@ configure-azdo: check
 	echo ARM_CLIENT_SECRET=$${servicePrincipalKey} >> $${PWD}/$(DIR)/.terraform/$(ENV).env
 	echo ARM_TENANT_ID=$${tenantId} >> $${PWD}/$(DIR)/.terraform/$(ENV).env
 	echo ARM_SUBSCRIPTION_ID=$$(az account show -o tsv --query 'id') >> $${PWD}/$(DIR)/.terraform/$(ENV).env
-	chown -R 1000:1000 $${PWD}/$(DIR)
-	chown -R 1000:1000 $${HOME}/.azure
-	chown -R 1000:1000 $${PWD}/global.tfvars
+	sudo chown -R 1000:1000 $${PWD}/$(DIR)
+	sudo chown -R 1000:1000 $${HOME}/.azure
+	sudo chown -R 1000:1000 $${PWD}/global.tfvars
 ```
