@@ -48,6 +48,6 @@ stages:
 
               - task: PublishPipelineArtifact@0
                 inputs:
-                  targetPath: $(Agent.BuildDirectory)/${{ parameters.terraformFolder }}/.terraform/plan
+                  targetPath: $(Agent.BuildDirectory)/${{ parameters.terraformFolder }}/.terraform/plans
                   artifactName: "${{ env.name }}.enc"
                 displayName: "Publish artifact"
