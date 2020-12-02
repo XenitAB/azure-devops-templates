@@ -36,7 +36,7 @@ stages:
                   scriptLocation: inlineScript
                   inlineScript: |
                     set -e
-                    make pre-azdo
+                    ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') make pre-azdo
                     make prepare
                     make plan
                     make post-azdo
