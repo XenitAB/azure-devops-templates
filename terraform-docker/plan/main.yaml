@@ -36,9 +36,10 @@ stages:
                   scriptLocation: inlineScript
                   inlineScript: |
                     set -e
-                    make configure-azdo
+                    make pre-azdo
                     make prepare
                     make plan
+                    make post-azdo
                 env:
                   DIR: ${{ parameters.terraformFolder }}
                   ENV: ${{ env.name }}
