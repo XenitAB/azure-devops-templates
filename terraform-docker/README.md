@@ -111,7 +111,7 @@ pre-azdo: check
 	sudo chown -R 1000:1000 $(AZURE_CONFIG_DIR)
 	sudo chown -R 1000:1000 $${PWD}/global.tfvars
 
-pre-azdo: check
+post-azdo: check
 	sudo chown -R $$(id -u):$$(id -g) $${PWD}/$(DIR)
 	sudo chown -R $$(id -u):$$(id -g) $(AZURE_CONFIG_DIR)
 	sudo chown -R $$(id -u):$$(id -g) $${PWD}/global.tfvars
