@@ -40,7 +40,6 @@ stages:
                     make prepare
                     make plan
                     make post-azdo
-                    find .
                 env:
                   DIR: ${{ parameters.terraformFolder }}
                   ENV: ${{ env.name }}
