@@ -27,6 +27,7 @@ Configure Build Service to have permission to push changes to the template repos
 - [Project Name] Build Service ([org name]):
   - Contribute: `Allow`
   - Create branch: `Allow`
+  - Force push (rewrite history, delete branches and tags): `Allow`
 
 ### Adding Azure Pipelines for repository syncronization
 
