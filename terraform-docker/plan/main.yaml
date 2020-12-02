@@ -36,6 +36,7 @@ stages:
                   scriptLocation: inlineScript
                   inlineScript: |
                     set -e
+                    make configure-ci
                     make prepare
                     make configure-credentials
                     make plan
