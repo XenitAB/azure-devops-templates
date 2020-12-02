@@ -60,7 +60,6 @@ stages:
                         scriptLocation: inlineScript
                         inlineScript: |
                           set -e
-                          make prepare
                           make configure-credentials
                           make plan
                       env:
