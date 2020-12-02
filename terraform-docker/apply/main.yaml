@@ -61,7 +61,6 @@ stages:
                         inlineScript: |
                           set -e
                           make configure-ci
-                          make configure-credentials
                           make plan
                       env:
                         DIR: ${{ parameters.terraformFolder }}

@@ -100,4 +100,9 @@ prepare: check
 configure-credentials: check
 	mkdir -p $${PWD}/$(DIR)/.terraform/
 	printenv | grep "ARM_" > $${PWD}/$(DIR)/.terraform/$(ENV).env
+
+configure-ci: check configure-credentials
+	chown -R 1000:1000 $${PWD}/$(DIR)
+	chown -R 1000:1000 $${HOME}/.azure
+	chown -R 1000:1000 $${PWD}/global.tfvars
 ```
