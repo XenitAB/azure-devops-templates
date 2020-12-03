@@ -1,0 +1,46 @@
+parameters:
+  - name: poolNameTemplate
+    type: string
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-18.04"
+  - name: azureSubscriptionTemplate
+    type: string
+  - name: resourceGroupTemplate
+    type: string
+  - name: packerTemplateRepo
+    type: string
+    default: "https://github.com/XenitAB/packer-templates.git"
+  - name: packerTemplateRepoBranch
+    type: string
+    default: "main"
+  - name: packerTemplateFile
+    type: string
+    default: ""
+  - name: preBuild
+    type: stepList
+    default: []
+  - name: postBuild
+    type: stepList
+    default: []
+  - name: environments
+    type: object
+    default:
+      - name: prod
+
+stages:
+  - stage: build
+    jobs:
+      - ${{ each env in parameters.environments }}:
+          - template: build_image.yaml
+            parameters:
+              poolNameTemplate: ${{ parameters.poolNameTemplate }}
+              poolVmImage: ${{ parameters.poolVmImage }}
+              environment: ${{ env.name }}
+              azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+              resourceGroup: ${{ format(parameters.resourceGroupTemplate, env.name) }}
+              packerTemplateRepo: ${{ parameters.packerTemplateRepo }}
+              packerTemplateRepoBranch: ${{ parameters.packerTemplateRepoBranch }}
+              packerTemplateFile: ${{ parameters.packerTemplateFile }}
+              preBuild: ${{ parameters.preBuild }}
+              postBuild: ${{ parameters.postBuild }}

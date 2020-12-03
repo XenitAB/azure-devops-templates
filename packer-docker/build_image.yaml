@@ -1,0 +1,71 @@
+parameters:
+  - name: poolNameTemplate
+    type: string
+    default: ""
+  - name: poolVmImage
+    type: string
+    default: ""
+  - name: environment
+    type: string
+    default: ""
+  - name: azureSubscription
+    type: string
+    default: ""
+  - name: resourceGroup
+    type: string
+    default: ""
+  - name: packerTemplateRepo
+    type: string
+    default: ""
+  - name: packerTemplateRepoBranch
+    type: string
+    default: ""
+  - name: packerTemplateFile
+    type: string
+    default: ""
+  - name: preBuild
+    type: stepList
+    default: []
+  - name: postBuild
+    type: stepList
+    default: []
+
+jobs:
+  - job: build_image_${{ parameters.environment }}
+    displayName: Build packer image for ${{ parameters.environment }}
+    pool:
+      ${{ if not(eq(parameters.poolNameTemplate, '')) }}:
+        name: ${{ format(parameters.poolNameTemplate, parameters.environment) }}
+      ${{ if not(eq(parameters.poolVmImage, '')) }}:
+        vmImage: ${{ parameters.poolVmImage }}
+    continueOnError: false
+    steps:
+      - ${{ parameters.preBuild }}
+      - bash: |
+          if [ -z "$PACKER_TEMPLATE_FILE" ]; then
+            echo "##vso[task.logissue type=error;]Missing template parameter \"packerTemplateFile\""
+            echo "##vso[task.complete result=Failed;]"
+          fi
+        env:
+          PACKER_TEMPLATE_FILE: ${{ parameters.packerTemplateFile }}
+        displayName: Check for required parameters
+      - task: AzureCLI@2
+        displayName: "Run packer"
+        inputs:
+          azureSubscription: ${{ parameters.azureSubscription }}
+          addSpnToEnvironment: true
+          workingDirectory: "."
+          scriptLocation: inlineScript
+          scriptType: bash
+          inlineScript: |
+            set -e
+            AZURE_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') make pre-azdo
+            make build
+            make post-azdo
+        env:
+          TEMPLATE_FILE: ${{ parameters.packerTemplateFile }}
+          RESOURCE_GROUP: ${{ parameters.resourceGroup }}
+          GIT_REPO: ${{ parameters.packerTemplateRepo }}
+          GIT_BRANCH: ${{ parameters.packerTemplateRepoBranch }}
+          ENV: ${{ parameters.environment }}
+      - ${{ parameters.postBuild }}
