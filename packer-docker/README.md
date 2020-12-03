@@ -53,13 +53,13 @@ stages:
 ```makefile
 SHELL:=/bin/bash
 
-IMAGE="ghcr.io/xenitab/github-actions/tools:2020.12.5"
+IMAGE="ghcr.io/xenitab/github-actions/tools:2020.12.6"
 ENV?=""
 GIT_REPO?=""
 GIT_BRANCH?=""
 TEMPLATE_FILE?=""
 AZURE_CONFIG_DIR := $(if $(AZURE_CONFIG_DIR), $(AZURE_CONFIG_DIR), "$${HOME}/.azure")
-ARM_SUBSCRIPTION_ID?=""
+AZURE_SUBSCRIPTION_ID?=""
 TEMP_DIRECTORY := $(if $(AGENT_TEMPDIRECTORY), $(AGENT_TEMPDIRECTORY), "/tmp")
 RESOURCE_GROUP?=""
 
@@ -88,11 +88,12 @@ pre-azdo: check
 	echo AZURE_CLIENT_ID=$${servicePrincipalId} > $(TEMP_DIRECTORY)/$(ENV).env
 	echo AZURE_CLIENT_SECRET=$${servicePrincipalKey} >> $(TEMP_DIRECTORY)/$(ENV).env
 	echo AZURE_TENANT_ID=$${tenantId} >> $(TEMP_DIRECTORY)/$(ENV).env
-	echo AZURE_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) >> $(TEMP_DIRECTORY)/$(ENV).env
+	echo AZURE_SUBSCRIPTION_ID=$(AZURE_SUBSCRIPTION_ID) >> $(TEMP_DIRECTORY)/$(ENV).env
 	sudo chown -R 1000:1000 $(AZURE_CONFIG_DIR)
 	sudo chown -R 1000:1000 $(TEMP_DIRECTORY)/$(ENV).env
 
 post-azdo: check
 	sudo chown -R $$(id -u):$$(id -g) $(AZURE_CONFIG_DIR)
 	sudo chown -R $$(id -u):$$(id -g) $(TEMP_DIRECTORY)/$(ENV).env
+
 ```
