@@ -59,7 +59,7 @@ jobs:
           scriptType: bash
           inlineScript: |
             set -e
-            make pre-azdo
+            AZURE_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') make pre-azdo
             make build
             make post-azdo
         env:
