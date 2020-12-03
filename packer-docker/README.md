@@ -95,5 +95,4 @@ pre-azdo: check
 post-azdo: check
 	sudo chown -R $$(id -u):$$(id -g) $(AZURE_CONFIG_DIR)
 	sudo chown -R $$(id -u):$$(id -g) $(TEMP_DIRECTORY)/$(ENV).env
-
 ```
