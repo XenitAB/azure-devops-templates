@@ -60,9 +60,24 @@ stages:
                         scriptLocation: inlineScript
                         inlineScript: |
                           set -e
-                          ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') make pre-azdo
+
+                          # pre-azdo
+                          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+                          mkdir -p ${PWD}/${DIR}/.terraform/
+                          echo ARM_CLIENT_ID=$${servicePrincipalId} > ${PWD}/${DIR}/.terraform/$(ENV).env
+                          echo ARM_CLIENT_SECRET=$${servicePrincipalKey} >> ${PWD}/${DIR}/.terraform/$(ENV).env
+                          echo ARM_TENANT_ID=$${tenantId} >> ${PWD}/${DIR}/.terraform/$(ENV).env
+                          echo ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') >> ${PWD}/${DIR}/.terraform/$(ENV).env
+                          sudo chown -R 1000:1000 ${PWD}/${DIR}
+                          sudo chown -R 1000:1000 ${AZURE_CONFIG_DIR}
+                          sudo chown -R 1000:1000 ${PWD}/global.tfvars
+
                           make apply
-                          make post-azdo
+
+                          # post-azdo
+                          sudo chown -R $(id -u):$(id -g) ${PWD}/${DIR}
+                          sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
+                          sudo chown -R $(id -u):$(id -g) ${PWD}/global.tfvars
                       env:
                         DIR: ${{ parameters.terraformFolder }}
                         ENV: ${{ env.name }}
