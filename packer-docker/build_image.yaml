@@ -58,10 +58,26 @@ jobs:
           scriptLocation: inlineScript
           scriptType: bash
           inlineScript: |
+            # pre-azdo
             set -e
-            AZURE_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') make pre-azdo
+            AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+            TEMP_DIRECTORY="${AGENT_TEMPDIRECTORY:-/tmp}"
+            echo AZURE_CLIENT_ID=${servicePrincipalId} > ${TEMP_DIRECTORY}/${ENV}.env
+            echo AZURE_CLIENT_SECRET=${servicePrincipalKey} >> ${TEMP_DIRECTORY}/${ENV}.env
+            echo AZURE_TENANT_ID=${tenantId} >> ${TEMP_DIRECTORY}/${ENV}.env
+            echo AZURE_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') >> ${TEMP_DIRECTORY}/${ENV}.env
+            set +e
+            sudo chown -R 1000:1000 ${AZURE_CONFIG_DIR}
+            sudo chown -R 1000:1000 ${TEMP_DIRECTORY}/${ENV}.env
+
             make build
-            make post-azdo
+            ERROR_CODE=$?
+
+            # post-azdo
+            sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
+            sudo chown -R $(id -u):$(id -g) ${TEMP_DIRECTORY}/${ENV}.env
+
+            exit $ERROR_CODE
         env:
           TEMPLATE_FILE: ${{ parameters.packerTemplateFile }}
           RESOURCE_GROUP: ${{ parameters.resourceGroup }}

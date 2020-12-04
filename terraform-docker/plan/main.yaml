@@ -35,11 +35,41 @@ stages:
                   addSpnToEnvironment: true
                   scriptLocation: inlineScript
                   inlineScript: |
+                    # pre-azdo
                     set -e
-                    ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') make pre-azdo
+                    AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+                    mkdir -p ${PWD}/${DIR}/.terraform/
+                    echo ARM_CLIENT_ID=${servicePrincipalId} > ${PWD}/${DIR}/.terraform/${ENV}.env
+                    echo ARM_CLIENT_SECRET=${servicePrincipalKey} >> ${PWD}/${DIR}/.terraform/${ENV}.env
+                    echo ARM_TENANT_ID=${tenantId} >> ${PWD}/${DIR}/.terraform/${ENV}.env
+                    echo ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') >> ${PWD}/${DIR}/.terraform/${ENV}.env
+                    set +e
+                    sudo chown -R 1000:1000 ${PWD}/${DIR}
+                    sudo chown -R 1000:1000 ${AZURE_CONFIG_DIR}
+                    sudo chown -R 1000:1000 ${PWD}/global.tfvars
+
                     make prepare
-                    make plan
-                    make post-azdo
+                    PREPARE_ERROR_CODE=$?
+                    if [[ ${PREPARE_ERROR_CODE} = 0 ]]; then
+                      make plan
+                      PLAN_ERROR_CODE=$?
+                    fi
+
+                    # post-azdo
+                    sudo chown -R $(id -u):$(id -g) ${PWD}/${DIR}
+                    sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
+                    sudo chown -R $(id -u):$(id -g) ${PWD}/global.tfvars
+
+                    if [[ ${PREPARE_ERROR_CODE} != 0 ]]; then
+                      echo "ERROR: PREPARE failed."
+                      exit ${PREPARE_ERROR_CODE}
+                    elif [[ ${PLAN_ERROR_CODE} != 0 ]]; then
+                      echo "ERROR: PLAN failed."
+                      exit ${PLAN_ERROR_CODE}
+                    else
+                      echo "INFO: Both PREPARE and PLAN completed successfully."
+                      exit 0
+                    fi
                 env:
                   DIR: ${{ parameters.terraformFolder }}
                   ENV: ${{ env.name }}

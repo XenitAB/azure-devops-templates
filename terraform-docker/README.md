@@ -78,7 +78,6 @@ ENV?=""
 DIR?=""
 OPA_BLAST_RADIUS := $(if $(OPA_BLAST_RADIUS), $(OPA_BLAST_RADIUS), 50)
 AZURE_CONFIG_DIR := $(if $(AZURE_CONFIG_DIR), $(AZURE_CONFIG_DIR), "$${HOME}/.azure")
-ARM_SUBSCRIPTION_ID?=""
 
 check:
 ifeq ($(ENV),"")
@@ -99,23 +98,4 @@ apply: check
 
 prepare: check
 	docker run --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) prepare $(DIR) $(ENV) $(SUFFIX)
-
-configure-credentials: check
-	mkdir -p $${PWD}/$(DIR)/.terraform/
-	printenv | grep "ARM_" > $${PWD}/$(DIR)/.terraform/$(ENV).env
-
-pre-azdo: check
-	mkdir -p $${PWD}/$(DIR)/.terraform/
-	echo ARM_CLIENT_ID=$${servicePrincipalId} > $${PWD}/$(DIR)/.terraform/$(ENV).env
-	echo ARM_CLIENT_SECRET=$${servicePrincipalKey} >> $${PWD}/$(DIR)/.terraform/$(ENV).env
-	echo ARM_TENANT_ID=$${tenantId} >> $${PWD}/$(DIR)/.terraform/$(ENV).env
-	echo ARM_SUBSCRIPTION_ID=$(ARM_SUBSCRIPTION_ID) >> $${PWD}/$(DIR)/.terraform/$(ENV).env
-	sudo chown -R 1000:1000 $${PWD}/$(DIR)
-	sudo chown -R 1000:1000 $(AZURE_CONFIG_DIR)
-	sudo chown -R 1000:1000 $${PWD}/global.tfvars
-
-post-azdo: check
-	sudo chown -R $$(id -u):$$(id -g) $${PWD}/$(DIR)
-	sudo chown -R $$(id -u):$$(id -g) $(AZURE_CONFIG_DIR)
-	sudo chown -R $$(id -u):$$(id -g) $${PWD}/global.tfvars
 ```
