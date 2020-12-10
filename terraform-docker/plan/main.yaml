@@ -35,6 +35,13 @@ stages:
                   addSpnToEnvironment: true
                   scriptLocation: inlineScript
                   inlineScript: |
+                    if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
+                      echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
+                    else
+                      export OPA_BLAST_RADIUS=50
+                      echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
+                    fi
+
                     # pre-azdo
                     set -e
                     AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
@@ -73,6 +80,7 @@ stages:
                 env:
                   DIR: ${{ parameters.terraformFolder }}
                   ENV: ${{ env.name }}
+                  OPA_BLAST_RADIUS: $(opaBlastRadius)
                 displayName: "Terraform Plan"
 
               - task: PublishPipelineArtifact@0
