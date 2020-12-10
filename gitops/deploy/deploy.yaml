@@ -72,8 +72,16 @@ jobs:
 
                 if [[ "${TAG_IS_FULL_NAME}" == "True" ]]; then
                   CURRENT_IMAGE_AND_TAG=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
-                  CURRENT_NAME=$(echo ${CURRENT_TAG_FULL_NAME} | awk -F':' '{print $1}')
-                  CURRENT_TAG=$(echo ${CURRENT_TAG_FULL_NAME} | awk -F':' '{print $2}')
+                  CURRENT_NAME=$(echo "${CURRENT_IMAGE_AND_TAG}" | awk -F':' '{print $1}')
+                  if [[ -z ${CURRENT_NAME} ]]; then
+                    echo "ERROR: Unable to get CURRENT_NAME"
+                    exit 1
+                  fi
+                  CURRENT_TAG=$(echo "${CURRENT_IMAGE_AND_TAG}" | awk -F':' '{print $2}')
+                  if [[ -z ${CURRENT_TAG} ]]; then
+                    echo "ERROR: Unable to get CURRENT_TAG"
+                    exit 1
+                  fi
                   NEW_IMAGE_AND_TAG="${CURRENT_NAME}:${NEW_TAG}"
                 else
                   CURRENT_TAG=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
