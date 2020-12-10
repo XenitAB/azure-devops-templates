@@ -58,6 +58,13 @@ jobs:
           scriptLocation: inlineScript
           scriptType: bash
           inlineScript: |
+            if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
+              echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
+            else
+              export OPA_BLAST_RADIUS=50
+              echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
+            fi
+
             # pre-azdo
             set -e
             AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
@@ -84,4 +91,5 @@ jobs:
           GIT_REPO: ${{ parameters.packerTemplateRepo }}
           GIT_BRANCH: ${{ parameters.packerTemplateRepoBranch }}
           ENV: ${{ parameters.environment }}
+          OPA_BLAST_RADIUS: $(opaBlastRadius)
       - ${{ parameters.postBuild }}
