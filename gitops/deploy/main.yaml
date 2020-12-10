@@ -61,3 +61,5 @@ stages:
               imageTagPath: ${{ parameters.imageTagPath }}
               gitopsRepoBranch: ${{ parameters.gitopsRepoBranch }}
               tagIsFullName: ${{ parameters.tagIsFullName }}
+              acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
+              imagePathPrefix: ${{ parameters.imagePathPrefix }}
