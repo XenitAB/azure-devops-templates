@@ -154,10 +154,20 @@ jobs:
                   sleep 5
 
                   git pull origin ${GITOPS_REPO_BRANCH}
-                  CURRENT_TAG=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
-                  if [ "${CURRENT_TAG}" != "${NEW_TAG}" ]; then
-                    echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is no longer the expected value ${NEW_TAG}"
-                    exit 1
+
+                  if [[ "${TAG_IS_FULL_NAME}" == "True" ]]; then
+                    CURRENT_IMAGE_ID_FULL=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
+                    NEW_IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${SERVICE_NAME}:${NEW_TAG}"
+                    if [ "${CURRENT_IMAGE_ID_FULL}" != "${NEW_IMAGE_ID_FULL}" ]; then
+                      echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is no longer the expected value of ${NEW_IMAGE_ID_FULL}"
+                      exit 0
+                    fi
+                  else
+                    CURRENT_TAG=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
+                    if [ "${CURRENT_TAG}" != "${NEW_TAG}" ]; then
+                      echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is no longer the expected value ${NEW_TAG}"
+                      exit 1
+                    fi
                   fi
 
                   COMMIT_ID=$(git rev-list -1 HEAD -- $ENV)
@@ -193,3 +203,6 @@ jobs:
                 JQ_TAG: ${{ parameters.binaries.jq.tag }}
                 JQ_SHA: ${{ parameters.binaries.jq.sha }}
                 GITOPS_REPO_BRANCH: ${{ parameters.gitopsRepoBranch }}
+                TAG_IS_FULL_NAME: ${{ parameters.tagIsFullName }}
+                ACR_NAME: ${{ parameters.acrName }}
+                IMAGE_PATH_PREFIX: ${{ parameters.imagePathPrefix }}
