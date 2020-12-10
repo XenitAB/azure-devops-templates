@@ -60,3 +60,4 @@ stages:
               serviceName: ${{ parameters.serviceName }}
               imageTagPath: ${{ parameters.imageTagPath }}
               gitopsRepoBranch: ${{ parameters.gitopsRepoBranch }}
+              tagIsFullName: ${{ parameters.tagIsFullName }}
