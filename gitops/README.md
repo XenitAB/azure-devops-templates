@@ -38,6 +38,7 @@ The format command is passed the environment name, which can be placed in the st
 | azureSubscriptionTemplate | `""` | Name of Azure subscription in template format. |
 | acrNameTemplate | `""` | Name of ACr to use in template format. |
 | imagePathPrefix | `""` | Prefix to append to image name before pushing to ACR. |
+| gitopsRepoBranch | `"master"` | The branch used for the GitOps repository. |
 | environments | `[{name: dev, deployTags: false, extraTag: "latest"}, {name: qa, deployTags: true}, {name: prod, deployTags: true}]` | Environments that should be deployed to. |
 
 ## Examples

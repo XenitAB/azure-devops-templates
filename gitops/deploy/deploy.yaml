@@ -17,6 +17,9 @@ parameters:
   - name: imageTagPath
     type: string
     default: ""
+  - name: gitopsRepoBranch
+    type: string
+    default: ""
   - name: binaries
     type: object
     default:
@@ -56,10 +59,10 @@ jobs:
                 export PATH=$PATH:~/.local/bin
                 pip3 install --user yq
 
-                git checkout master
+                git checkout ${GITOPS_REPO_BRANCH}
                 git pull
                 git fetch -p
-                git reset --hard origin/master
+                git reset --hard origin/${GITOPS_REPO_BRANCH}
                 git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
                 git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
                 git status
@@ -75,7 +78,7 @@ jobs:
                 git add ${ENV}/${SERVICE_NAME}.yaml
                 git status
                 git commit -m "${ENV}/${SERVICE_NAME}.yaml - changed image tag from ${CURRENT_TAG} to ${NEW_TAG}"
-                git pull --rebase origin master
+                git pull --rebase origin ${GITOPS_REPO_BRANCH}
                 git push origin
               displayName: "Change image in GitOps repo"
               env:
@@ -85,6 +88,7 @@ jobs:
                 TAG_PATH: ${{ parameters.imageTagPath }}
                 PROJECT_NAME: $(System.TeamProject)
                 REPO_NAME: $(Build.Repository.Name)
+                GITOPS_REPO_BRANCH: ${{ parameters.gitopsRepoBranch }}
 
             - bash: |
                 set -ex
@@ -106,10 +110,10 @@ jobs:
                 mv jq-linux64 jq
                 chmod +x jq
 
-                git checkout master
+                git checkout ${GITOPS_REPO_BRANCH}
                 git pull
                 git fetch -p
-                git reset --hard origin/master
+                git reset --hard origin/${GITOPS_REPO_BRANCH}
                 git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
                 git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
                 git status
@@ -124,7 +128,7 @@ jobs:
                 while true; do
                   sleep 5
 
-                  git pull origin master
+                  git pull origin ${GITOPS_REPO_BRANCH}
                   CURRENT_TAG=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
                   if [ "${CURRENT_TAG}" != "${NEW_TAG}" ]; then
                     echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is no longer the expected value ${NEW_TAG}"
@@ -163,3 +167,4 @@ jobs:
                 FLUX_STATUS_CLI_SHA: ${{ parameters.binaries.fluxStatus.sha }}
                 JQ_TAG: ${{ parameters.binaries.jq.tag }}
                 JQ_SHA: ${{ parameters.binaries.jq.sha }}
+                GITOPS_REPO_BRANCH: ${{ parameters.gitopsRepoBranch }}

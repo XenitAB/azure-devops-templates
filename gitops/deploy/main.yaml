@@ -12,6 +12,9 @@ parameters:
     type: string
   - name: imagePathPrefix
     type: string
+  - name: gitopsRepoBranch
+    type: string
+    default: "master"
   - name: environments
     type: object
     default:
@@ -53,3 +56,4 @@ stages:
               deployTags: ${{ env.deployTags }}
               serviceName: ${{ parameters.serviceName }}
               imageTagPath: ${{ parameters.imageTagPath }}
+              gitopsRepoBranch: ${{ parameters.gitopsRepoBranch }}
