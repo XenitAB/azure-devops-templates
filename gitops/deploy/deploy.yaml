@@ -77,26 +77,23 @@ jobs:
                 git status
 
                 if [[ "${TAG_IS_FULL_NAME}" == "True" ]]; then
-                  CURRENT_IMAGE_AND_TAG=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
-                  CURRENT_TAG=$(echo "${CURRENT_IMAGE_AND_TAG}" | awk -F':' '{print $2}')
-                  if [[ -z ${CURRENT_TAG} ]]; then
-                    echo "ERROR: Unable to get CURRENT_TAG"
-                    exit 1
+                  CURRENT_IMAGE_ID_FULL=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
+                  NEW_IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${SERVICE_NAME}:${NEW_TAG}"
+                  if [ "${CURRENT_IMAGE_ID_FULL}" == "${NEW_IMAGE_ID_FULL}" ]; then
+                    echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is already ${NEW_IMAGE_ID_FULL}"
+                    exit 0
                   fi
-                  IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${SERVICE_NAME}:${NEW_TAG}
+
+                  echo "Changing image tag from ${CURRENT_IMAGE_ID_FULL} to ${NEW_IMAGE_ID_FULL} for ${ENV}/${SERVICE_NAME}.yaml"
+                  yq --in-place -Y "${TAG_PATH}=\"${NEW_IMAGE_ID_FULL}\"" ${ENV}/${SERVICE_NAME}.yaml
                 else
                   CURRENT_TAG=$(yq -r "${TAG_PATH}" ${ENV}/${SERVICE_NAME}.yaml)
-                fi
+                  if [ "${CURRENT_TAG}" == "${NEW_TAG}" ]; then
+                    echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is already ${NEW_TAG}"
+                    exit 0
+                  fi
 
-                if [ "${CURRENT_TAG}" == "${NEW_TAG}" ]; then
-                  echo "Image tag for ${ENV}/${SERVICE_NAME}.yaml is already ${NEW_TAG}"
-                  exit 0
-                fi
-
-                echo "Changing image tag from ${CURRENT_TAG} to ${NEW_TAG} for ${ENV}/${SERVICE_NAME}.yaml"
-                if [[ "${TAG_IS_FULL_NAME}" == "True" ]]; then
-                  yq --in-place -Y "${TAG_PATH}=\"${IMAGE_ID_FULL}\"" ${ENV}/${SERVICE_NAME}.yaml
-                else
+                  echo "Changing image tag from ${CURRENT_TAG} to ${NEW_TAG} for ${ENV}/${SERVICE_NAME}.yaml"
                   yq --in-place -Y "${TAG_PATH}=\"${NEW_TAG}\"" ${ENV}/${SERVICE_NAME}.yaml
                 fi
 
