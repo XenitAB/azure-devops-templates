@@ -26,6 +26,9 @@ parameters:
   - name: postBuild
     type: stepList
     default: []
+  - name: services
+    type: object
+    default: []
   - name: dockerLint
     type: object
     default:
@@ -54,6 +57,9 @@ stages:
             name: ${{ parameters.poolName }}
           ${{ if not(eq(parameters.poolVmImage, '')) }}:
             vmImage: ${{ parameters.poolVmImage }}
+        ${{ if not(eq(length(parameters.services), 0)) }}:
+          services:
+            ${{ parameters.services }}
         continueOnError: false
         steps:
           - bash: |
