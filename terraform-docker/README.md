@@ -20,6 +20,8 @@ The format command is passed the environment name, which can be placed in the st
 | environments              | `[{name: dev}, {name: qa}, {name: prod}]` | Environments that should be deployed to.       |
 | azureSubscriptionTemplate | `""`                                      | Name of Azure subscription in template format. |
 | terraformFolder           | `""`                                      | Path to Terraform directory.                   |
+| validateEnabled           | `true`                                    | Should `make validate` run during plan?        |
+
 
 ## Apply
 
@@ -73,7 +75,7 @@ stages:
 SHELL:=/bin/bash
 
 SUFFIX="tfstate<4 random digits>"
-IMAGE="ghcr.io/xenitab/github-actions/tools:2020.12.3"
+IMAGE="ghcr.io/xenitab/github-actions/tools:2021.03.1"
 ENV?=""
 DIR?=""
 OPA_BLAST_RADIUS := $(if $(OPA_BLAST_RADIUS), $(OPA_BLAST_RADIUS), 50)
@@ -90,12 +92,20 @@ ifeq ($(DIR),"")
 endif
 
 plan: check
-	echo Print working dir: $${PWD}
 	docker run --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) plan $(DIR) $(ENV) $(SUFFIX) $(OPA_BLAST_RADIUS)
 
 apply: check
 	docker run --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) apply $(DIR) $(ENV) $(SUFFIX)
 
+validate: check
+	docker run -it --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) validate $(DIR) $(ENV) $(SUFFIX)
+
 prepare: check
 	docker run --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) prepare $(DIR) $(ENV) $(SUFFIX)
+
+destroy: check
+	docker run -it --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) destroy $(DIR) $(ENV) $(SUFFIX)
+
+state-remove: check
+	docker run -it --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) state-remove $(DIR) $(ENV) $(SUFFIX)
 ```

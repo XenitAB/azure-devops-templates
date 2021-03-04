@@ -18,6 +18,9 @@ parameters:
     type: string
   - name: terraformFolder
     type: string
+  - name: validateEnabled
+    type: boolean
+    default: true
 stages:
   - stage: plan
     jobs:
@@ -55,9 +58,24 @@ stages:
                     sudo chown -R 1000:1000 ${AZURE_CONFIG_DIR}
                     sudo chown -R 1000:1000 ${PWD}/global.tfvars
 
+                    PREPARE_ERROR_CODE=0
                     make prepare
                     PREPARE_ERROR_CODE=$?
-                    if [[ ${PREPARE_ERROR_CODE} = 0 ]]; then
+
+                    VALIDATE_ERROR_CODE=0
+                    GIT_STATUS_CODE=0
+                    if [[ "${VALIDATE_ENABLED}" == "True" ]]; then
+                      make validate
+                      VALIDATE_ERROR_CODE=$?
+
+                      if [[ $(git status --porcelain) ]]; then
+                        git diff
+                        echo 'run make validate and commit changes'
+                        GIT_STATUS_CODE=1
+                      fi
+                    fi
+
+                    if [[ ${PREPARE_ERROR_CODE} = 0 && ${VALIDATE_ERROR_CODE} = 0 && ${GIT_STATUS_CODE} = 0 ]]; then
                       make plan
                       PLAN_ERROR_CODE=$?
                     fi
@@ -70,17 +88,24 @@ stages:
                     if [[ ${PREPARE_ERROR_CODE} != 0 ]]; then
                       echo "ERROR: PREPARE failed."
                       exit ${PREPARE_ERROR_CODE}
+                    elif [[ ${VALIDATE_ERROR_CODE} != 0 ]]; then
+                      echo "ERROR: VALIDATE failed."
+                      exit ${VALIDATE_ERROR_CODE}
+                    elif [[ ${GIT_STATUS_CODE} != 0 ]]; then
+                      echo "ERROR: git status not clean. Run make validate and commit changes."
+                      exit ${GIT_STATUS_CODE}
                     elif [[ ${PLAN_ERROR_CODE} != 0 ]]; then
                       echo "ERROR: PLAN failed."
                       exit ${PLAN_ERROR_CODE}
                     else
-                      echo "INFO: Both PREPARE and PLAN completed successfully."
+                      echo "INFO: Completed successfully."
                       exit 0
                     fi
                 env:
                   DIR: ${{ parameters.terraformFolder }}
                   ENV: ${{ env.name }}
                   OPA_BLAST_RADIUS: $(opaBlastRadius)
+                  VALIDATE_ENABLED: ${{ parameters.validateEnabled }}
                 displayName: "Terraform Plan"
 
               - task: PublishPipelineArtifact@0
