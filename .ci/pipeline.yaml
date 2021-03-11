@@ -5,7 +5,7 @@ schedules:
     displayName: Hourly Sync
     branches:
       include:
-        - master
+        - main
 
 pool:
   vmImage: "Ubuntu 16.04"
@@ -15,15 +15,15 @@ steps:
     persistCredentials: true
   - script: |
       set -e
-      git checkout master
+      git checkout main
       git pull
       git fetch -p
-      git reset --hard origin/master
+      git reset --hard origin/main
       git config --global pull.rebase true
       git config --global user.email "azure-pipelines@$(System.TeamProject).$(Build.Repository.Name)"
       git config --global user.name "Azure Pipelines ($(System.TeamProject) $(Build.Repository.Name))"
       git remote add upstream https://github.com/XenitAB/azure-devops-templates
-      git pull upstream master
-      git push origin master
+      git pull upstream main
+      git push origin main
       git fetch upstream --tags --prune
       git push origin --tags refs/remotes/upstream/*:refs/heads/* --prune
