@@ -23,7 +23,7 @@ jobs:
           git reset --hard origin/${PR_BRANCH}
           git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
           git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
-          docker run -v $(pwd):/workspace ghcr.io/xenitab/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} status --token ${TOKEN}
+          docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} status --token ${TOKEN}
         env:
           GITOPS_PROMOTION_TAG: ${{ parameters.gitopsPromotionTag }}
           PROJECT_NAME: $(System.TeamProject)
