@@ -3,7 +3,7 @@ parameters:
     type: string
   - name: gitopsPromotionTag
     type: string
-    default: "0.0.1"
+    default: "v0.0.1"
 
 jobs:
   - job: Promote
