@@ -1,6 +1,10 @@
 parameters:
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-16.04"
   - name: poolName
     type: string
+    default: ""
   - name: gitopsPromotionTag
     type: string
     default: "v0.0.1"
@@ -8,7 +12,10 @@ parameters:
 jobs:
   - job: Promote
     pool:
-      name: ${{ parameters.poolName }}
+      ${{ if not(eq(parameters.poolName, '')) }}:
+        name: ${{ parameters.poolName }}
+      ${{ if not(eq(parameters.poolVmImage, '')) }}:
+        vmImage: ${{ parameters.poolVmImage }}
     steps:
       - checkout: self
         persistCredentials: true
