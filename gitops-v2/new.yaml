@@ -29,7 +29,7 @@ jobs:
       - bash: |
           git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
           git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
-          docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} new --token ${TOKEN} --group ${GROUP} --app ${APP} --tag ${TAG}
+          docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} new --token ${TOKEN} --group ${GROUP} --app ${APP} --tag ${TAG:0:7}
         env:
           GITOPS_PROMOTION_TAG: ${{ parameters.gitopsPromotionTag }}
           PROJECT_NAME: $(System.TeamProject)
