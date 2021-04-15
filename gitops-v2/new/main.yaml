@@ -42,9 +42,11 @@ jobs:
         persistCredentials: true
         displayName: Get sources
       - bash: |
+          echo ${PIPELINES}
           echo ${TAG}
         env:
           TAG: ${{ parameters.tag }}
+          PIPELINES: ${{ parameters.pipelines }}
         displayName: Debug
   #- template: ./push.yaml
   #  parameters:
