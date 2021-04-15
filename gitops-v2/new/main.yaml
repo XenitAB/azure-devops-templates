@@ -34,12 +34,9 @@ jobs:
           acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
           imagePathPrefix: ${{ parameters.imagePathPrefix }}
 
-  #- template: new.yaml
-  #  parameters:
-  #    poolVmImage: ${{ parameters.poolVmImage }}
-  #    poolName: ${{ parameters.poolName }}
-  #    gitopsPromotionTag: ${{ parameters.gitopsPromotionTag }}
-  #    group: ${{ parameters.group }}
-
-
-
+  - template: new.yaml
+    parameters:
+      poolVmImage: ${{ parameters.poolVmImage }}
+      poolName: ${{ parameters.poolName }}
+      gitopsPromotionTag: ${{ parameters.gitopsPromotionTag }}
+      group: ${{ parameters.group }}
