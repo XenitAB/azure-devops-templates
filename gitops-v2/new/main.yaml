@@ -28,6 +28,7 @@ parameters:
     type: string
   - name: pipelines
     type: object
+    default: []
 
 jobs:
   - template: ./push.yaml

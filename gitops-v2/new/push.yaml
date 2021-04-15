@@ -22,6 +22,8 @@ parameters:
     type: string
     default: ""
   - name: pipelines
+    type: object
+    default: []
 
 jobs:
   - job: push_${{ parameters.environment }}

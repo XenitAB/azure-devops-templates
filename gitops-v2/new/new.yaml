@@ -12,6 +12,7 @@ parameters:
     type: string
   - name: pipelines
     type: object
+    default: []
 
 jobs:
   - job: New
