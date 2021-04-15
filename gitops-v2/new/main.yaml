@@ -46,7 +46,7 @@ jobs:
           echo ${TAG}
         env:
           TAG: ${{ parameters.tag }}
-          PIPELINES: ${{ parameters.pipelines }}
+          PIPELINES: $( coalesce(parameters.pipelines) )
         displayName: Debug
   #- template: ./push.yaml
   #  parameters:
