@@ -14,12 +14,9 @@ parameters:
   - name: imagePathPrefix
     type: string
     default: ""
-  - name: extraTag
-    type: string
-    default: ""
   - name: gitopsPromotionTag
     type: string
-    default: "v0.0.1"
+    default: "v0.0.2"
   - name: group
     type: string
 
