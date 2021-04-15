@@ -10,9 +10,6 @@ parameters:
     default: "v0.0.1"
   - name: group
     type: string
-  - name: pipelines
-    type: object
-    default: []
 
 jobs:
   - job: New
