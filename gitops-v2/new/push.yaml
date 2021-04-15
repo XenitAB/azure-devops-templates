@@ -7,8 +7,6 @@ parameters:
     default: ""
   - name: environment
     type: string
-  - name: sourceBranch
-    type: string
   - name: azureSubscription
     type: string
   - name: serviceName
@@ -27,7 +25,6 @@ parameters:
 
 jobs:
   - job: push_${{ parameters.environment }}
-    #condition: and(succeeded(), eq(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'))
     displayName: Push image to ${{ parameters.environment }}
     pool:
       ${{ if not(eq(parameters.poolName, '')) }}:
@@ -45,15 +42,15 @@ jobs:
         displayName: "Create image id"
         env:
           SERVICE_NAME: ${{ parameters.serviceName }}
-          SOURCE_VERSION: coalesce(parameters.pipelines).sourceCommit
+          SOURCE_VERSION: ${{ coalesce(parameters.pipelines).sourceCommit }}
 
       - task: DownloadPipelineArtifact@2
         displayName: "Download container artifact"
         inputs:
           buildType: "specific"
-          project: "coalesce(parameters.pipelines).projectID"
-          definition: "coalesce(parameters.pipelines).pipelineID"
-          runId: "coalesce(parameters.pipelines).runID"
+          project: "${{ coalesce(parameters.pipelines).projectID }}"
+          definition: "${{ coalesce(parameters.pipelines).pipelineID }}"
+          runId: "${{ coalesce(parameters.pipelines).runID }}"
           runVersion: "specific"
           preferTriggeringPipeline: true
           targetPath: "$(Pipeline.Workspace)"

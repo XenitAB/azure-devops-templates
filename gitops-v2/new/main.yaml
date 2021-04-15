@@ -7,8 +7,6 @@ parameters:
     default: ""
   - name: environment
     type: string
-  - name: sourceBranch
-    type: string
   - name: azureSubscription
     type: string
   - name: serviceName
@@ -33,7 +31,6 @@ parameters:
 jobs:
   - template: ./push.yaml
     parameters:
-      sourceBranch: ${{ parameters.sourceBranch }}
       environment: ${{ parameters.environment }}
       serviceName: ${{ parameters.serviceName }}
       azureSubscription: ${{ parameters.azureSubscription }}
