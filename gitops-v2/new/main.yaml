@@ -23,19 +23,11 @@ parameters:
   - name: group
     type: string
 
-stages:
-  - stage: push
-    jobs:
-      - ${{ each env in parameters.environments }}:
-          - template: ./push.yaml
-            parameters:
-              environment: ${{ env.name }}
-              azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
-              acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
-              imagePathPrefix: ${{ parameters.imagePathPrefix }}
-
-  #- template: ./new.yaml
-  #  parameters:
-  #    gitopsPromotionTag: ${{ parameters.gitopsPromotionTag }}
-  #    group: ${{ parameters.group }}
-  #    pipelines: ${{ parameters.pipelines }}
+jobs:
+  - ${{ each env in parameters.environments }}:
+      - template: ./push.yaml
+        parameters:
+          environment: ${{ env.name }}
+          azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+          acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
+          imagePathPrefix: ${{ parameters.imagePathPrefix }}
