@@ -1,0 +1,7 @@
+environments:
+  - name: dev
+    auto: true
+  - name: qa
+    auto: true
+  - name: prod
+    auto: false
