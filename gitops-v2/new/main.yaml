@@ -27,6 +27,7 @@ parameters:
   - name: group
     type: string
   - name: pipelines
+    type: object
 
 jobs:
   - template: ./push.yaml
