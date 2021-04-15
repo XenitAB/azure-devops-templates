@@ -31,6 +31,7 @@ parameters:
     type: string
 
 jobs:
+- ${{ each pipeline in parameters.pipelines }}:
   - job: New
     pool:
       ${{ if not(eq(parameters.poolName, '')) }}:
@@ -42,11 +43,9 @@ jobs:
         persistCredentials: true
         displayName: Get sources
       - bash: |
-          echo ${PIPELINES}
-          echo ${TAG}
+          echo ${PIPELINE}
         env:
-          TAG: ${{ parameters.tag }}
-          PIPELINES: ${{ coalesce(parameters.pipelines, "test") }}
+          PIPELINE: ${{ pipeline.sourceCommit }}
         displayName: Debug
   #- template: ./push.yaml
   #  parameters:
