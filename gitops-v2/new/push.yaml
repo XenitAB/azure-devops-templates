@@ -42,7 +42,7 @@ jobs:
         displayName: "Create image id"
         env:
           SERVICE_NAME: ${{ parameters.serviceName }}
-          SOURCE_VERSION: ${{ coalesce(parameters.pipelines).sourceCommit }}
+          SOURCE_VERSION: ${{ coalesce(parameters.pipelines) }}
 
       - task: DownloadPipelineArtifact@2
         displayName: "Download container artifact"
