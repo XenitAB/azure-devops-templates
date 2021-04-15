@@ -5,11 +5,11 @@ parameters:
   - name: poolName
     type: string
     default: ""
-  - name: environment
+  - name: environments
+    type: object
+  - name: azureSubscriptionTemplate
     type: string
-  - name: azureSubscription
-    type: string
-  - name: acrName
+  - name: acrNameTemplate
     type: string
   - name: imagePathPrefix
     type: string
@@ -23,13 +23,17 @@ parameters:
   - name: group
     type: string
 
-jobs:
-  - template: ./push.yaml
-    parameters:
-      environment: ${{ parameters.environment }}
-      azureSubscription: ${{ parameters.azureSubscription }}
-      acrName: ${{ parameters.acrName }}
-      imagePathPrefix: ${{ parameters.imagePathPrefix }}
+stages:
+  - stage: push
+    jobs:
+      - ${{ each env in parameters.environments }}:
+          - template: ./push.yaml
+            parameters:
+              environment: ${{ env.name }}
+              azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+              acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
+              imagePathPrefix: ${{ parameters.imagePathPrefix }}
+
   #- template: ./new.yaml
   #  parameters:
   #    gitopsPromotionTag: ${{ parameters.gitopsPromotionTag }}

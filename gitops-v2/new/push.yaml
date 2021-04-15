@@ -40,13 +40,10 @@ jobs:
 
           PROJECT_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PROJECTID"
           PROJECT_ID="${!PROJECT_ID_KEY}"
-          echo $PROJECT_ID
           PIPELINE_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PIPELINEID"
           PIPELINE_ID="${!PIPELINE_ID_KEY}"
-          echo $PIPELINE_ID
           RUN_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_RUNID"
           RUN_ID="${!RUN_ID_KEY}"
-          echo $RUN_ID
           echo "##vso[task.setvariable variable=projectId]$PROJECT_ID"
           echo "##vso[task.setvariable variable=pipelineId]$PIPELINE_ID"
           echo "##vso[task.setvariable variable=runId]$RUN_ID"
