@@ -25,9 +25,10 @@ parameters:
 
 jobs:
   - ${{ each env in parameters.environments }}:
-      - template: ./push.yaml
+      - template: push.yaml
         parameters:
           environment: ${{ env.name }}
           azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
           acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
           imagePathPrefix: ${{ parameters.imagePathPrefix }}
+
