@@ -31,6 +31,8 @@ jobs:
       - bash: |
           set -e
 
+          SOURCE_VERSION_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCECOMMIT"
+          SOURCE_VERSION="${!SOURCE_VERSION_KEY}"
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
           ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
           echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
@@ -48,7 +50,7 @@ jobs:
           echo "##vso[task.setvariable variable=projectId]$PROJECT_ID"
           echo "##vso[task.setvariable variable=pipelineId]$PIPELINE_ID"
           echo "##vso[task.setvariable variable=runId]$RUN_ID"
-        displayName: "Create image id"
+        displayName: "Calculate artifact variables"
         env:
           SERVICE_NAME: $(resources.triggeringAlias)
 
