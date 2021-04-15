@@ -48,9 +48,9 @@ jobs:
         displayName: "Download container artifact"
         inputs:
           buildType: "specific"
-          project: "${{ coalesce(parameters.pipelines).projectID }}"
-          definition: "${{ coalesce(parameters.pipelines).pipelineID }}"
-          runId: "${{ coalesce(parameters.pipelines).runID }}"
+          project: "${{ coalesce(parameters.pipelines) }}"
+          definition: "${{ coalesce(parameters.pipelines) }}"
+          runId: "${{ coalesce(parameters.pipelines) }}"
           runVersion: "specific"
           preferTriggeringPipeline: true
           targetPath: "$(Pipeline.Workspace)"
