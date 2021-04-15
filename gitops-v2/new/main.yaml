@@ -27,16 +27,33 @@ parameters:
   - name: pipelines
     type: object
     default: []
+  - name: tag
+    type: string
 
 jobs:
-  - template: ./push.yaml
-    parameters:
-      environment: ${{ parameters.environment }}
-      serviceName: ${{ parameters.serviceName }}
-      azureSubscription: ${{ parameters.azureSubscription }}
-      acrName: ${{ parameters.acrName }}
-      imagePathPrefix: ${{ parameters.imagePathPrefix }}
-      pipelines: ${{ parameters.pipelines }}
+  - job: New
+    pool:
+      ${{ if not(eq(parameters.poolName, '')) }}:
+        name: ${{ parameters.poolName }}
+      ${{ if not(eq(parameters.poolVmImage, '')) }}:
+        vmImage: ${{ parameters.poolVmImage }}
+    steps:
+      - checkout: self
+        persistCredentials: true
+        displayName: Get sources
+      - bash: |
+          echo ${TAG}
+        env:
+          TAG: ${{ parameters.tag }}
+        displayName: Debug
+  #- template: ./push.yaml
+  #  parameters:
+  #    environment: ${{ parameters.environment }}
+  #    serviceName: ${{ parameters.serviceName }}
+  #    azureSubscription: ${{ parameters.azureSubscription }}
+  #    acrName: ${{ parameters.acrName }}
+  #    imagePathPrefix: ${{ parameters.imagePathPrefix }}
+  #    pipelines: ${{ parameters.pipelines }}
   #- template: ./new.yaml
   #  parameters:
   #    gitopsPromotionTag: ${{ parameters.gitopsPromotionTag }}
