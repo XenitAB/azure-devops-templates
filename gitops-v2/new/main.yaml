@@ -1,0 +1,39 @@
+parameters:
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-16.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: environments
+    type: object
+  - name: azureSubscriptionTemplate
+    type: string
+  - name: acrNameTemplate
+    type: string
+  - name: imagePathPrefix
+    type: string
+    default: ""
+  - name: gitopsPromotionTag
+    type: string
+    default: "v0.0.2"
+  - name: group
+    type: string
+
+jobs:
+  - ${{ each env in parameters.environments }}:
+      - template: push.yaml
+        parameters:
+          poolVmImage: ${{ parameters.poolVmImage }}
+          poolName: ${{ parameters.poolName }}
+          environment: ${{ env.name }}
+          azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+          acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
+          imagePathPrefix: ${{ parameters.imagePathPrefix }}
+
+  - template: new.yaml
+    parameters:
+      poolVmImage: ${{ parameters.poolVmImage }}
+      poolName: ${{ parameters.poolName }}
+      gitopsPromotionTag: ${{ parameters.gitopsPromotionTag }}
+      group: ${{ parameters.group }}

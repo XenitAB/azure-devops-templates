@@ -1,0 +1,100 @@
+parameters:
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-16.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: environment
+    type: string
+  - name: azureSubscription
+    type: string
+  - name: acrName
+    type: string
+  - name: imagePathPrefix
+    type: string
+    default: ""
+  - name: extraTag
+    type: string
+    default: ""
+
+jobs:
+  - job: push_${{ parameters.environment }}
+    displayName: Push image to ${{ parameters.environment }}
+    pool:
+      ${{ if not(eq(parameters.poolName, '')) }}:
+        name: ${{ parameters.poolName }}
+      ${{ if not(eq(parameters.poolVmImage, '')) }}:
+        vmImage: ${{ parameters.poolVmImage }}
+    continueOnError: false
+    steps:
+      - bash: |
+          set -e
+
+          SOURCE_VERSION_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCECOMMIT"
+          SOURCE_VERSION="${!SOURCE_VERSION_KEY}"
+          IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
+          ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
+          echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
+          echo "##vso[task.setvariable variable=artifactFileName]$ARTIFACT_FILE_NAME"
+
+          PROJECT_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PROJECTID"
+          PROJECT_ID="${!PROJECT_ID_KEY}"
+          PIPELINE_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PIPELINEID"
+          PIPELINE_ID="${!PIPELINE_ID_KEY}"
+          RUN_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_RUNID"
+          RUN_ID="${!RUN_ID_KEY}"
+          echo "##vso[task.setvariable variable=projectId]$PROJECT_ID"
+          echo "##vso[task.setvariable variable=pipelineId]$PIPELINE_ID"
+          echo "##vso[task.setvariable variable=runId]$RUN_ID"
+        displayName: "Calculate artifact variables"
+        env:
+          SERVICE_NAME: $(resources.triggeringAlias)
+
+      - task: DownloadPipelineArtifact@2
+        displayName: "Download container artifact"
+        inputs:
+          buildType: "specific"
+          project: "$(projectId)"
+          definition: "$(pipelineId)"
+          runId: "$(runId)"
+          runVersion: "specific"
+          preferTriggeringPipeline: true
+          targetPath: "$(Pipeline.Workspace)"
+
+      - task: AzureCLI@2
+        displayName: "Push image to ACR"
+        inputs:
+          azureSubscription: ${{ parameters.azureSubscription }}
+          addSpnToEnvironment: true
+          workingDirectory: "."
+          scriptLocation: inlineScript
+          scriptType: bash
+          inlineScript: |
+            set -ex
+
+            WORKSPACE=$(Pipeline.Workspace)
+            SERVICE_NAME=$(resources.triggeringAlias)
+            IMAGE_ID=$(imageId)
+            IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
+            ACR_NAME=${{ parameters.acrName }}
+            EXTRA_TAG=${{ parameters.extraTag }}
+
+            ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${ARTIFACT_FILE_NAME}"
+            if [[ ! -f "${ARTIFACT_PATH}" ]]
+            then
+                echo "Missing artifact file ($ARTIFACT_PATH) from CI pipeline, did you trigger this pipeline manually?"
+                exit 1
+            fi
+            IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${IMAGE_ID}"
+            az acr login -n "${ACR_NAME}"
+            docker load < $ARTIFACT_PATH
+            docker tag $(imageId) "${IMAGE_ID_FULL}"
+            docker push "${IMAGE_ID_FULL}"
+            if [[ "${EXTRA_TAG}" != "" ]]
+            then
+              docker tag ${SERVICE_NAME}:${EXTRA_TAG}
+              docker push ${SERVICE_NAME}:${EXTRA_TAG}
+            fi
+        env:
+          ARTIFACT_FILE_NAME: $(artifactFileName)

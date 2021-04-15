@@ -1,0 +1,164 @@
+parameters:
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-16.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: sourceBranch
+    type: string
+    default: "refs/heads/main"
+  - name: dockerfilePath
+    type: string
+    default: "./Dockerfile"
+  - name: dockerBuildArgs
+    type: string
+    default: ""
+  - name: serviceName
+    type: string
+    default: ""
+  - name: enableDockerBuildkit
+    type: boolean
+    default: false
+  - name: preBuild
+    type: stepList
+    default: []
+  - name: postBuild
+    type: stepList
+    default: []
+  - name: dockerLint
+    type: object
+    default:
+      enable: true
+      ignoreRuleViolations: true
+  - name: imageScan
+    type: object
+    default:
+      enable: true
+      ignoreRuleViolations: true
+  - name: binaries
+    type: object
+    default:
+      hadolint:
+        tag: "v1.18.0"
+        sha: "f9bc9de12438b463ca84e77fde70b07b155d4da07ca21bc3f4354a62c6199db4"
+      trivy:
+        tag: "v0.12.0"
+        sha: "4003d993d4b6b5673d4ef6e216578e8ac2bf6b439201a8e748a75fc68430c3f5"
+
+stages:
+  - stage: build
+    jobs:
+      - job: image
+        pool:
+          ${{ if not(eq(parameters.poolName, '')) }}:
+            name: ${{ parameters.poolName }}
+          ${{ if not(eq(parameters.poolVmImage, '')) }}:
+            vmImage: ${{ parameters.poolVmImage }}
+        continueOnError: false
+        steps:
+          - bash: |
+              set -e
+              IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
+              ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
+              echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
+              echo "##vso[task.setvariable variable=artifactFileName]$ARTIFACT_FILE_NAME"
+            displayName: "Create image id"
+            env:
+              SERVICE_NAME: ${{ parameters.serviceName }}
+              SOURCE_VERSION: $(Build.SourceVersion)
+          - ${{ parameters.preBuild }}
+          - bash: |
+              set -ex
+              # Download
+              wget https://github.com/hadolint/hadolint/releases/download/${HADOLINT_TAG}/hadolint-Linux-x86_64
+              DOWNLOAD_HADOLINT_SHA=$(openssl sha1 -sha256 hadolint-Linux-x86_64 | awk '{print $2}')
+              if [[ "${HADOLINT_SHA}" != "${HADOLINT_SHA}" ]]; then
+                  echo "Downloaded checksum (${DOWNLOAD_HADOLINT_SHA}) for hadolint does not match expected value: ${HADOLINT_SHA}"
+                  exit 1
+              fi
+              mv hadolint-Linux-x86_64 hadolint
+              chmod +x hadolint
+              # Run
+              ./hadolint ${DOCKERFILE_PATH}
+            displayName: Dockerfile Lint
+            continueOnError: ${{ parameters.dockerLint.ignoreRuleViolations }}
+            env:
+              HADOLINT_TAG: ${{ parameters.binaries.hadolint.tag }}
+              HADOLINT_SHA: ${{ parameters.binaries.hadolint.sha }}
+              DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
+            # IF needed to apply different conditions if pull request or not
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+              condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true))
+          - bash: |
+              set -ex
+
+              if [[ "${ENABLE_DOCKER_BUILDKIT}" == "True" ]]; then
+                export DOCKER_BUILDKIT=1
+              fi
+
+              docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} ${DOCKER_BUILD_ARGS} .
+              docker save --output ${IMAGE_ID}.tar ${IMAGE_ID}
+              gzip -c ${IMAGE_ID}.tar > ${ARTIFACT_FILE_NAME}
+            env:
+              DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
+              IMAGE_ID: $(imageId)
+              DOCKER_BUILD_ARGS: ${{ parameters.dockerBuildArgs }}
+              ARTIFACT_FILE_NAME: $(artifactFileName)
+              ENABLE_DOCKER_BUILDKIT: ${{ parameters.enableDockerBuildkit }}
+            displayName: "Build and save image"
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+          - bash: |
+              set -ex
+              # Download
+              wget https://github.com/aquasecurity/trivy/releases/download/${TRIVY_TAG}/trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
+              DOWNLOAD_TRIVY_SHA=$(openssl sha1 -sha256 trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz | awk '{print $2}')
+              if [[ "${TRIVY_SHA}" != "${TRIVY_SHA}" ]]; then
+                  echo "Downloaded checksum (${DOWNLOAD_TRIVY_SHA}) for trivy does not match expected value: ${TRIVY_SHA}"
+                  exit 1
+              fi
+              tar xzvf trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
+              chmod +x trivy
+              # Run
+              ./trivy --reset --no-progress
+              ./trivy --exit-code 0 --no-progress --input ${IMAGE_ID}.tar
+              ./trivy --exit-code 1 --no-progress --ignore-unfixed --input ${IMAGE_ID}.tar
+            displayName: Image scan
+            continueOnError: ${{ parameters.imageScan.ignoreRuleViolations }}
+            env:
+              TRIVY_TAG: ${{ parameters.binaries.trivy.tag }}
+              TRIVY_SHA: ${{ parameters.binaries.trivy.sha }}
+              IMAGE_ID: $(imageId)
+            # IF needed to apply different conditions if pull request or not
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+              condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true))
+          - ${{ parameters.postBuild }}
+          - task: PublishPipelineArtifact@1
+            displayName: "Publish Azure Pipelines Artifact"
+            inputs:
+              targetPath: $(artifactFileName)
+              artifactName: ${{ parameters.serviceName }}
+            condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'), ne(variables['Build.Reason'], 'PullRequest'))
+
+  # Stage needed to trigger CD, since it can't identify if the build reason is pull request or not
+  - stage: cd_trigger
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    dependsOn: build
+    jobs:
+      - job: cd_trigger
+        pool:
+          ${{ if not(eq(parameters.poolName, '')) }}:
+            name: ${{ parameters.poolName }}
+          ${{ if not(eq(parameters.poolVmImage, '')) }}:
+            vmImage: ${{ parameters.poolVmImage }}
+        continueOnError: false
+        steps:
+          - checkout: none
+          - bash: |
+              echo "Running this to have something for cd to trigger on if not Pull Request."
+            displayName: "cd_trigger"

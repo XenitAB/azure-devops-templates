@@ -1,0 +1,21 @@
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Provider
+metadata:
+  name: azdo-tenant
+spec:
+  type: azuredevops
+  address: http://azdo-proxy.flux-system.svc.cluster.local/kubecon/tenant/_git/gitops
+  secretRef:
+    name: flux
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta1
+kind: Alert
+metadata:
+  name: apps
+spec:
+  eventSeverity: info
+  providerRef:
+    name: azdo-tenant
+  eventSources:
+    - kind: Kustomization
+      name: apps-qa

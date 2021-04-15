@@ -1,0 +1,32 @@
+parameters:
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-16.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: gitopsPromotionTag
+    type: string
+    default: "v0.0.2"
+
+jobs:
+  - job: Promote
+    pool:
+      ${{ if not(eq(parameters.poolName, '')) }}:
+        name: ${{ parameters.poolName }}
+      ${{ if not(eq(parameters.poolVmImage, '')) }}:
+        vmImage: ${{ parameters.poolVmImage }}
+    steps:
+      - checkout: self
+        persistCredentials: true
+        displayName: Get sources
+      - bash: |
+          git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
+          git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
+          docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} promote --token ${TOKEN}
+        env:
+          GITOPS_PROMOTION_TAG: ${{ parameters.gitopsPromotionTag }}
+          PROJECT_NAME: $(System.TeamProject)
+          REPO_NAME: $(Build.Repository.Name)
+          TOKEN: $(System.AccessToken)
+        displayName: GitOps Promotion
