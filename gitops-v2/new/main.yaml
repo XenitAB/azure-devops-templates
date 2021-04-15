@@ -9,8 +9,6 @@ parameters:
     type: string
   - name: azureSubscription
     type: string
-  - name: serviceName
-    type: string
   - name: acrName
     type: string
   - name: imagePathPrefix
@@ -24,41 +22,14 @@ parameters:
     default: "v0.0.1"
   - name: group
     type: string
-  - name: pipelines
-    type: object
-    default: []
-  - name: tag
-    type: string
 
 jobs:
-  - job: New
-    pool:
-      ${{ if not(eq(parameters.poolName, '')) }}:
-        name: ${{ parameters.poolName }}
-      ${{ if not(eq(parameters.poolVmImage, '')) }}:
-        vmImage: ${{ parameters.poolVmImage }}
-    steps:
-      - checkout: self
-        persistCredentials: true
-        displayName: Get sources
-      - ${{ each pipeline in parameters.pipelines }}:
-        - bash: |
-            echo "test test test"
-            echo ${PIPELINE}
-            echo ${SOURCE_COMMIT}
-            env
-          env:
-            PIPELINE: ${{ pipeline }}
-            SOURCE_COMMIT: ${{ pipeline.sourceCommit }}
-          displayName: Debug
-  #- template: ./push.yaml
-  #  parameters:
-  #    environment: ${{ parameters.environment }}
-  #    serviceName: ${{ parameters.serviceName }}
-  #    azureSubscription: ${{ parameters.azureSubscription }}
-  #    acrName: ${{ parameters.acrName }}
-  #    imagePathPrefix: ${{ parameters.imagePathPrefix }}
-  #    pipelines: ${{ parameters.pipelines }}
+  - template: ./push.yaml
+    parameters:
+      environment: ${{ parameters.environment }}
+      azureSubscription: ${{ parameters.azureSubscription }}
+      acrName: ${{ parameters.acrName }}
+      imagePathPrefix: ${{ parameters.imagePathPrefix }}
   #- template: ./new.yaml
   #  parameters:
   #    gitopsPromotionTag: ${{ parameters.gitopsPromotionTag }}

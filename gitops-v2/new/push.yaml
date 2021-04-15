@@ -9,8 +9,6 @@ parameters:
     type: string
   - name: azureSubscription
     type: string
-  - name: serviceName
-    type: string
   - name: acrName
     type: string
   - name: imagePathPrefix
@@ -19,9 +17,6 @@ parameters:
   - name: extraTag
     type: string
     default: ""
-  - name: pipelines
-    type: object
-    default: []
 
 jobs:
   - job: push_${{ parameters.environment }}
@@ -35,22 +30,35 @@ jobs:
     steps:
       - bash: |
           set -e
+
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
           ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
           echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
           echo "##vso[task.setvariable variable=artifactFileName]$ARTIFACT_FILE_NAME"
+
+          PROJECT_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PROJECTID"
+          PROJECT_ID="${!PROJECT_ID_KEY}"
+          echo $PROJECT_ID
+          PIPELINE_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PIPELINEID"
+          PIPELINE_ID="${!PIPELINE_ID_KEY}"
+          echo $PIPELINE_ID
+          RUN_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_RUNID"
+          RUN_ID="${!RUN_ID_KEY}"
+          echo $RUN_ID
+          echo "##vso[task.setvariable variable=projectId]$PROJECT_ID"
+          echo "##vso[task.setvariable variable=pipelineId]$PIPELINE_ID"
+          echo "##vso[task.setvariable variable=runId]$RUN_ID"
         displayName: "Create image id"
         env:
-          SERVICE_NAME: ${{ parameters.serviceName }}
-          SOURCE_VERSION: ${{ coalesce(parameters.pipelines) }}
+          SERVICE_NAME: $(resources.triggeringAlias)
 
       - task: DownloadPipelineArtifact@2
         displayName: "Download container artifact"
         inputs:
           buildType: "specific"
-          project: "${{ coalesce(parameters.pipelines) }}"
-          definition: "${{ coalesce(parameters.pipelines) }}"
-          runId: "${{ coalesce(parameters.pipelines) }}"
+          project: "$(projectId)"
+          definition: "$(pipelineId)"
+          runId: "$(runId)"
           runVersion: "specific"
           preferTriggeringPipeline: true
           targetPath: "$(Pipeline.Workspace)"
@@ -67,7 +75,7 @@ jobs:
             set -ex
 
             WORKSPACE=$(Pipeline.Workspace)
-            SERVICE_NAME=${{ parameters.serviceName }}
+            SERVICE_NAME=$(resources.triggeringAlias)
             IMAGE_ID=$(imageId)
             IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
             ACR_NAME=${{ parameters.acrName }}
