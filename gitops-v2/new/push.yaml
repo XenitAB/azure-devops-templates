@@ -21,10 +21,11 @@ parameters:
   - name: extraTag
     type: string
     default: ""
+  - name: pipelines
 
 jobs:
   - job: push_${{ parameters.environment }}
-    condition: and(succeeded(), eq(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'))
+    #condition: and(succeeded(), eq(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'))
     displayName: Push image to ${{ parameters.environment }}
     pool:
       ${{ if not(eq(parameters.poolName, '')) }}:
@@ -42,15 +43,15 @@ jobs:
         displayName: "Create image id"
         env:
           SERVICE_NAME: ${{ parameters.serviceName }}
-          SOURCE_VERSION: $(resources.pipeline.ciPipeline.sourceCommit)
+          SOURCE_VERSION: coalesce(parameters.pipelines).sourceCommit
 
       - task: DownloadPipelineArtifact@2
         displayName: "Download container artifact"
         inputs:
           buildType: "specific"
-          project: "$(resources.pipeline.ciPipeline.projectID)"
-          definition: "$(resources.pipeline.ciPipeline.pipelineID)"
-          runId: "$(resources.pipeline.ciPipeline.runID)"
+          project: "coalesce(parameters.pipelines).projectID"
+          definition: "coalesce(parameters.pipelines).pipelineID"
+          runId: "coalesce(parameters.pipelines).runID"
           runVersion: "specific"
           preferTriggeringPipeline: true
           targetPath: "$(Pipeline.Workspace)"
@@ -91,38 +92,3 @@ jobs:
             fi
         env:
           ARTIFACT_FILE_NAME: $(artifactFileName)
-
-  - job: verify_push_${{ parameters.environment }}
-    condition: and(succeeded(), ne(variables['resources.pipeline.ciPipeline.sourceBranch'], '${{ parameters.sourceBranch }}'))
-    displayName: Verify image is in ${{ parameters.environment }} ACR
-    pool:
-      ${{ if not(eq(parameters.poolName, '')) }}:
-        name: ${{ parameters.poolName }}
-      ${{ if not(eq(parameters.poolVmImage, '')) }}:
-        vmImage: ${{ parameters.poolVmImage }}
-    continueOnError: false
-    steps:
-      - bash: |
-          set -e
-          IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
-          echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
-        displayName: "Create image id"
-        env:
-          SERVICE_NAME: ${{ parameters.serviceName }}
-          SOURCE_VERSION: $(resources.pipeline.ciPipeline.sourceCommit)
-
-      - task: AzureCLI@2
-        displayName: "Validate image exists in ACR"
-        inputs:
-          azureSubscription: ${{ parameters.azureSubscription }}
-          addSpnToEnvironment: true
-          workingDirectory: "."
-          scriptLocation: inlineScript
-          scriptType: bash
-          inlineScript: |
-            set -e
-            az acr repository show --name ${ACR_NAME} --image ${IMAGE_PATH_PREFIX}/${IMAGE_ID}
-        env:
-          IMAGE_ID: $(imageId)
-          IMAGE_PATH_PREFIX: ${{ parameters.imagePathPrefix }}
-          ACR_NAME: ${{ parameters.acrName }}

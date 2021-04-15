@@ -10,10 +10,7 @@ parameters:
     default: "v0.0.1"
   - name: group
     type: string
-  - name: app
-    type: string
-  - name: tag
-    type: string
+  - name: pipelines
 
 jobs:
   - job: New
