@@ -30,15 +30,10 @@ jobs:
     steps:
       - bash: |
           set -e
-
-          env
-
           # env grep work ardound for env name issues
           # https://developercommunity.visualstudio.com/t/cannot-directly-access-release-pipeline-variables/433796
           SOURCE_VERSION_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCECOMMIT"
           SOURCE_VERSION=$(env | grep -e "^${SOURCE_VERSION_KEY}" | cut -d= -f2)
-          echo $SOURCE_VERSION_KEY
-          echo $SOURCE_VERSION
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
           ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
           echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
@@ -46,13 +41,10 @@ jobs:
 
           PROJECT_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PROJECTID"
           PROJECT_ID=$(env | grep -e "^${PROJECT_ID_KEY}" | cut -d= -f2)
-          echo $PROJECT_ID
           PIPELINE_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PIPELINEID"
           PIPELINE_ID=$(env | grep -e "^${PIPELINE_ID_KEY}" | cut -d= -f2)
-          echo $PIPELINE_ID
           RUN_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_RUNID"
           RUN_ID=$(env | grep -e "^${RUN_ID_KEY}" | cut -d= -f2)
-          echo $RUN_ID
           echo "##vso[task.setvariable variable=projectId]$PROJECT_ID"
           echo "##vso[task.setvariable variable=pipelineId]$PIPELINE_ID"
           echo "##vso[task.setvariable variable=runId]$RUN_ID"

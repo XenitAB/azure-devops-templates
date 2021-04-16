@@ -24,7 +24,7 @@ jobs:
       - bash: |
           set -e
           SOURCE_VERSION_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCECOMMIT"
-          SOURCE_VERSION="${!SOURCE_VERSION_KEY}"
+          SOURCE_VERSION=$(env | grep -e "^${SOURCE_VERSION_KEY}" | cut -d= -f2)
           echo "##vso[task.setvariable variable=tag]${SOURCE_VERSION:0:7}"
         displayName: "Calculate artifact variables"
         env:
