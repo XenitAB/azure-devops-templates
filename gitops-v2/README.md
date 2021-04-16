@@ -65,7 +65,7 @@ resources:
     - repository: templates
       type: git
       name: XKS/azure-devops-templates
-      ref: 2021.04.1
+      ref: refs/tags/2021.04.2
 
 stages:
   - template: gitops-v2/build/main.yaml@templates
@@ -86,7 +86,7 @@ resources:
     - repository: templates
       type: git
       name: XKS/azure-devops-templates
-      ref: 2021.04.1
+      ref: refs/tags/2021.04.2
   pipelines:
     - pipeline: test-application
       source: test-application
@@ -94,7 +94,7 @@ resources:
         stages:
           - cd_trigger
 
-jobs:
+stages:
   - template: ./gitops-v2/new/main.yaml@templates
     parameters:
       azureSubscriptionTemplate: "msdn"
@@ -116,9 +116,9 @@ resources:
     - repository: templates
       type: git
       name: XKS/azure-devops-templates
-      ref: 2021.04.1
+      ref: refs/tags/2021.04.2
 
-jobs:
+stages:
   - template: ./gitops-v2/status/main.yaml@templates
 ```
 
@@ -132,9 +132,9 @@ resources:
     - repository: templates
       type: git
       name: XKS/azure-devops-templates
-      ref: 2021.04.1
+      ref: refs/tags/2021.04.2
 
-jobs:
+stages:
   - template: ./gitops-v2/promote/main.yaml@templates
 ```
 
