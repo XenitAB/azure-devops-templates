@@ -1,27 +1,40 @@
 parameters:
-  poolName: ""
-  environment: ""
-  azureSubscription: ""
-  serviceName: ""
-  acrName: ""
-  imagePathPrefix: ""
-  extraTag: ""
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-16.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: environment
+    type: string
+  - name: azureSubscription
+    type: string
+  - name: acrName
+    type: string
+  - name: imagePathPrefix
+    type: string
+    default: ""
+  - name: extraTag
+    type: string
+    default: ""
 
 jobs:
   - job: push_${{ parameters.environment }}
-    displayName: Push image to ${{ parameters.environment }}
     pool:
       name: ${{ parameters.poolName }}
+    displayName: Push image to ${{ parameters.environment }}
     continueOnError: false
     steps:
       - bash: |
           set -e
+
           SOURCE_VERSION_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCECOMMIT"
           SOURCE_VERSION="${!SOURCE_VERSION_KEY}"
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
           ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
           echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
           echo "##vso[task.setvariable variable=artifactFileName]$ARTIFACT_FILE_NAME"
+
           PROJECT_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PROJECTID"
           PROJECT_ID="${!PROJECT_ID_KEY}"
           PIPELINE_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PIPELINEID"
