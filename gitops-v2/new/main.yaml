@@ -21,19 +21,20 @@ parameters:
     type: string
 
 stages:
-  #- stage: push
-  #  jobs:
-  #    - ${{ each env in parameters.environments }}:
-  #        - template: push.yaml
-  #          parameters:
-  #            poolVmImage: ${{ parameters.poolVmImage }}
-  #            poolName: ${{ parameters.poolName }}
-  #            environment: ${{ env.name }}
-  #            azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
-  #            acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
-  #            imagePathPrefix: ${{ parameters.imagePathPrefix }}
+  - stage: push
+    jobs:
+      - ${{ each env in parameters.environments }}:
+          - template: push.yaml
+            parameters:
+              poolVmImage: ${{ parameters.poolVmImage }}
+              poolName: ${{ parameters.poolName }}
+              environment: ${{ env.name }}
+              azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
+              acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
+              imagePathPrefix: ${{ parameters.imagePathPrefix }}
 
   - stage: new
+    dependsOn: [push]
     jobs:
       - template: new.yaml
         parameters:
