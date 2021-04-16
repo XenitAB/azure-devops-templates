@@ -19,6 +19,7 @@ parameters:
     default: "v0.0.2"
   - name: group
     type: string
+
 stages:
   - stage: push
     jobs:
@@ -31,7 +32,9 @@ stages:
               azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
               acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
               imagePathPrefix: ${{ parameters.imagePathPrefix }}
+
   - stage: new
+    dependsOn: [push]
     jobs:
       - template: new.yaml
         parameters:
