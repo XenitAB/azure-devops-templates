@@ -9,32 +9,34 @@ parameters:
     type: string
     default: "v0.0.2"
 
-jobs:
-  - job: Status
-    pool:
-      ${{ if not(eq(parameters.poolName, '')) }}:
-        name: ${{ parameters.poolName }}
-      ${{ if not(eq(parameters.poolVmImage, '')) }}:
-        vmImage: ${{ parameters.poolVmImage }}
-    timeoutInMinutes: 20
-    steps:
-      - checkout: self
-        persistCredentials: true
-        displayName: Get sources
-      - bash: |
-          [ -z "$PR_BRANCH" ] && exit 0
-          PR_BRANCH=${PR_BRANCH//refs\/heads\//}
-          git checkout ${PR_BRANCH}
-          git pull
-          git fetch -p
-          git reset --hard origin/${PR_BRANCH}
-          git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
-          git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
-          docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} status --token ${TOKEN}
-        env:
-          GITOPS_PROMOTION_TAG: ${{ parameters.gitopsPromotionTag }}
-          PROJECT_NAME: $(System.TeamProject)
-          REPO_NAME: $(Build.Repository.Name)
-          TOKEN: $(System.AccessToken)
-          PR_BRANCH: $(System.PullRequest.SourceBranch)
-        displayName: GitOps Promotion
+stages:
+  - stage: status
+    jobs:
+      - job: Status
+        pool:
+          ${{ if not(eq(parameters.poolName, '')) }}:
+            name: ${{ parameters.poolName }}
+          ${{ if not(eq(parameters.poolVmImage, '')) }}:
+            vmImage: ${{ parameters.poolVmImage }}
+        timeoutInMinutes: 20
+        steps:
+          - checkout: self
+            persistCredentials: true
+            displayName: Get sources
+          - bash: |
+              [ -z "$PR_BRANCH" ] && exit 0
+              PR_BRANCH=${PR_BRANCH//refs\/heads\//}
+              git checkout ${PR_BRANCH}
+              git pull
+              git fetch -p
+              git reset --hard origin/${PR_BRANCH}
+              git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
+              git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
+              docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} status --token ${TOKEN}
+            env:
+              GITOPS_PROMOTION_TAG: ${{ parameters.gitopsPromotionTag }}
+              PROJECT_NAME: $(System.TeamProject)
+              REPO_NAME: $(Build.Repository.Name)
+              TOKEN: $(System.AccessToken)
+              PR_BRANCH: $(System.PullRequest.SourceBranch)
+            displayName: GitOps Promotion
