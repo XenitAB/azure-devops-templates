@@ -33,6 +33,8 @@ jobs:
 
           env
 
+          # env grep work ardound for env name issues
+          # https://developercommunity.visualstudio.com/t/cannot-directly-access-release-pipeline-variables/433796
           SOURCE_VERSION_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCECOMMIT"
           SOURCE_VERSION=$(env | grep -e "^${SOURCE_VERSION_KEY}" | cut -d= -f2)
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
