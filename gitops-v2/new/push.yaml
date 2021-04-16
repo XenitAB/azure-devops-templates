@@ -31,6 +31,8 @@ jobs:
       - bash: |
           set -e
 
+          env
+
           SOURCE_VERSION_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCECOMMIT"
           SOURCE_VERSION="${!SOURCE_VERSION_KEY}"
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
