@@ -34,18 +34,18 @@ jobs:
           env
 
           SOURCE_VERSION_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCECOMMIT"
-          SOURCE_VERSION="${!SOURCE_VERSION_KEY}"
+          SOURCE_VERSION=$(env | grep -e "^${SOURCE_VERSION_KEY}" | cut -d= -f2)
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
           ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
           echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
           echo "##vso[task.setvariable variable=artifactFileName]$ARTIFACT_FILE_NAME"
 
           PROJECT_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PROJECTID"
-          PROJECT_ID="${!PROJECT_ID_KEY}"
+          PROJECT_ID=$(env | grep -e "^${PROJECT_ID_KEY}" | cut -d= -f2)
           PIPELINE_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_PIPELINEID"
-          PIPELINE_ID="${!PIPELINE_ID_KEY}"
+          PIPELINE_ID=$(env | grep -e "^${PIPELINE_ID_ID_KEY}" | cut -d= -f2)
           RUN_ID_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_RUNID"
-          RUN_ID="${!RUN_ID_KEY}"
+          RUN_ID=$(env | grep -e "^${RUN_ID_ID_KEY}" | cut -d= -f2)
           echo "##vso[task.setvariable variable=projectId]$PROJECT_ID"
           echo "##vso[task.setvariable variable=pipelineId]$PIPELINE_ID"
           echo "##vso[task.setvariable variable=runId]$RUN_ID"
