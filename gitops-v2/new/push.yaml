@@ -21,7 +21,10 @@ parameters:
 jobs:
   - job: push_${{ parameters.environment }}
     pool:
-      name: ${{ parameters.poolName }}
+      ${{ if not(eq(parameters.poolName, '')) }}:
+        name: ${{ parameters.poolName }}
+      ${{ if not(eq(parameters.poolVmImage, '')) }}:
+        vmImage: ${{ parameters.poolVmImage }}
     displayName: Push image to ${{ parameters.environment }}
     continueOnError: false
     steps:
