@@ -34,7 +34,7 @@ The tenant directory contains the entrypoint for the tenant into each cluster. F
 individual `Kustomization` resources are created to deploy applications. The directory `apps` represents a group of applications,
 a tenant repository can contain multiple groups which will run their promotion in separate cadences.
 
-Look in the [examples directory](./examples/template-repository) for a template directory structure to get started.
+Look in the [examples directory](https://github.com/XenitAB/azure-devops-templates/blob/main/gitops-v2/examples/template-repository) for a template directory structure to get started.
 
 # Background
 
