@@ -16,7 +16,7 @@ parameters:
     default: ""
   - name: gitopsPromotionTag
     type: string
-    default: "v0.0.3"
+    default: "v0.0.4"
   - name: group
     type: string
 
