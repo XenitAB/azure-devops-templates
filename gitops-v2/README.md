@@ -2,11 +2,11 @@
 
 These Azure DevOps tempalates are meant to be used to enable an application promotion flow together with Flux V2 in a multi tenant deployment.
 
-# Prerequisites
+## Prerequisites
 
-The pipelines and tools expect that the tenant repository is setup in a specifc strucuture.
+The pipelines and tools expect that the tenant repository is setup in a specific structure.
 
-```
+```txt
 .
 ├── apps/
 │   ├── dev/
@@ -36,23 +36,24 @@ a tenant repository can contain multiple groups which will run their promotion i
 
 Look in the [examples directory](./examples/template-repository) for a template directory structure to get started.
 
-# Background
+## Background
 
 The tempaltes are meant to be used in two different repositories, `./build/main.yaml` should be used in the application
 repository. It builds a Docker image and published the image as an artificat on the pipeline. After that is complete
 its responsibility is done.
 
 The `./new/main.yaml`, `./status/main.yaml`, and `./promote/main.yaml` are meant to be used to create pipelines in
-the "gitops" respository. These three pipelines are responsible for createing the PRs to move an application from
+the "gitops" repository. These three pipelines are responsible for creating the PRs to move an application from
 one environment to another. The templates make heavy use of the [gitops-promotion](https://github.com/XenitAB/gitops-promotion)
 tool to execute the majority of logic.
 
-# Usage
+## Usage
 
 Create the build pipeline in the application repository. The `serviceName` is the name of the application.
 
 build.yaml
-```
+
+```yaml
 name: $(Build.BuildId)
 
 trigger:
@@ -78,7 +79,8 @@ It is totally fine to reference multiple pipelines as triggers, this will be han
 triggered the run.
 
 new.yaml
-```
+
+```yaml
 trigger: none
 
 resources:
@@ -97,8 +99,8 @@ resources:
 stages:
   - template: ./gitops-v2/new/main.yaml@templates
     parameters:
-      azureSubscriptionTemplate: "msdn"
-      acrNameTemplate: "acr"
+      azureSubscriptionTemplate: "azure-{0}-foobar-contributor"
+      acrNameTemplate: "acr{0}weaks"
       imagePathPrefix: "foobar"
       group: "apps"
       environments:
@@ -108,7 +110,8 @@ stages:
 ```
 
 status.yaml
-```
+
+```yaml
 trigger: none
 
 resources:
@@ -123,7 +126,8 @@ stages:
 ```
 
 promote.yaml
-```
+
+```yaml
 trigger:
   - main
 
@@ -145,7 +149,8 @@ Without an annotation the gitops-promotion tool will not know where to update th
 simple and can either be set on a kustomization image replacement or helm release.
 
 ./examples/template-repository/apps/dev/kustomization.yaml
-```
+
+```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: dev-a
