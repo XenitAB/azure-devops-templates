@@ -48,6 +48,13 @@ jobs:
           echo "##vso[task.setvariable variable=projectId]$PROJECT_ID"
           echo "##vso[task.setvariable variable=pipelineId]$PIPELINE_ID"
           echo "##vso[task.setvariable variable=runId]$RUN_ID"
+
+          echo "Debug:"
+          echo "imageId (IMAGE_ID): $IMAGE_ID"
+          echo "artifactFileName (ARTIFACT_FILE_NAME): $ARTIFACT_FILE_NAME"
+          echo "projectId (PROJECT_ID): $PROJECT_ID"
+          echo "pipelineId (PIPELINE_ID): $PIPELINE_ID"
+          echo "runId (RUN_ID): $RUN_ID"
         displayName: "Calculate artifact variables"
         env:
           SERVICE_NAME: $(resources.triggeringAlias)
