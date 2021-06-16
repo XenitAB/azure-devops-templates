@@ -81,5 +81,5 @@ ifeq ($(RESOURCE_GROUP),"")
 endif
 
 build: check
-	docker run --entrypoint "/opt/packer.sh" -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $(TEMP_DIRECTORY)/$(ENV).env:/tmp/$(ENV).env $(IMAGE) build $(ENV) $(GIT_REPO) $(GIT_BRANCH) $(TEMPLATE_FILE) $(RESOURCE_GROUP)
+	docker run --rm --entrypoint "/opt/packer.sh" -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $(TEMP_DIRECTORY)/$(ENV).env:/tmp/$(ENV).env $(IMAGE) build $(ENV) $(GIT_REPO) $(GIT_BRANCH) $(TEMPLATE_FILE) $(RESOURCE_GROUP)
 ```
