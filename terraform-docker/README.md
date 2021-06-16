@@ -92,20 +92,20 @@ ifeq ($(DIR),"")
 endif
 
 plan: check
-	docker run --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) plan $(DIR) $(ENV) $(SUFFIX) $(OPA_BLAST_RADIUS)
+	docker run --rm --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) plan $(DIR) $(ENV) $(SUFFIX) $(OPA_BLAST_RADIUS)
 
 apply: check
-	docker run --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) apply $(DIR) $(ENV) $(SUFFIX)
+	docker run --rm --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) apply $(DIR) $(ENV) $(SUFFIX)
 
 validate: check
-	docker run --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) validate $(DIR) $(ENV) $(SUFFIX)
+	docker run --rm --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) validate $(DIR) $(ENV) $(SUFFIX)
 
 prepare: check
-	docker run --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) prepare $(DIR) $(ENV) $(SUFFIX)
+	docker run --rm --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) prepare $(DIR) $(ENV) $(SUFFIX)
 
 destroy: check
-	docker run -it --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) destroy $(DIR) $(ENV) $(SUFFIX)
+	docker run --rm -it --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) destroy $(DIR) $(ENV) $(SUFFIX)
 
 state-remove: check
-	docker run -it --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) state-remove $(DIR) $(ENV) $(SUFFIX)
+	docker run --rm -it --entrypoint "/opt/terraform.sh" -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) state-remove $(DIR) $(ENV) $(SUFFIX)
 ```
