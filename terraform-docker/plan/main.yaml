@@ -21,6 +21,15 @@ parameters:
   - name: validateEnabled
     type: boolean
     default: true
+  - name: awsRegion
+    type: string
+    default: ""
+  - name: awsServiceConnectionTemplate
+    type: string
+    default: ""
+  - name: awsArn
+    type: string
+    default: ""
 stages:
   - stage: plan
     jobs:
@@ -32,12 +41,62 @@ stages:
               ${{ if not(eq(parameters.poolVmImage, '')) }}:
                 vmImage: ${{ parameters.poolVmImage }}
             steps:
+              - task: AmazonWebServices.aws-vsts-tools.AWSShellScript.AWSShellScript@1
+                displayName: "Get AWS credentials"
+                inputs:
+                  workingDirectory: "."
+                  awsCredentials: ${{ format(parameters.awsServiceConnectionTemplate, env.name) }}
+                  regionName: ${{ parameters.awsRegion }}
+                  scriptType: inline
+                  inlineScript: |
+                    set -e
+                    AWS_CONFIG_FILE=${HOME}/.aws/config
+                    AWS_SHARED_CREDENTIALS_FILE=${HOME}/.aws/credentials
+                    TMPFILE=${HOME}/.aws/tmp.json
+                    mkdir $(dirname $TMPFILE)
+                    aws sts get-federation-token --name xkf-$ENV --policy-arns arn="$AWS_ARN" --region $AWS_REGION > $TMPFILE
+
+                    KEY_ID=$(cat $TMPFILE |jq -r .Credentials.AccessKeyId)
+                    KEY_SECRET=$(cat $TMPFILE |jq -r .Credentials.SecretAccessKey)
+                    SESSION_TOKEN=$(cat $TMPFILE |jq -r .Credentials.SessionToken)
+
+                    # Create the credentials file from AWS session token
+                    cat <<EOF > $AWS_SHARED_CREDENTIALS_FILE
+                    [xkf-$ENV]
+                    aws_access_key_id = $KEY_ID
+                    aws_secret_access_key = $KEY_SECRET
+                    aws_session_token = $SESSION_TOKEN
+
+                    EOF
+
+                    # Create the config file
+
+                    cat <<EOF > $AWS_CONFIG_FILE
+                    [default]
+                    region = $AWS_REGION
+                    output = json
+
+                    [profile xkf-$ENV]
+                        source_profile = xkf-$ENV
+                        role_arn = $AWS_ARN
+
+                    EOF
+
+                    sudo chown -R 1000:1000 ${AWS_CONFIG_FILE}
+                    sudo chown -R 1000:1000 ${AWS_SHARED_CREDENTIALS_FILE}
+                env:
+                  AWS_REGION: ${{ parameters.awsRegion }}
+                  ENV: ${{ env.name }}
+                  AWS_ARN: ${{ parameters.awsArn }}
+                condition: ne('${{ parameters.awsRegion }}', '')
+
               - task: AzureCLI@1
                 inputs:
                   azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
                   addSpnToEnvironment: true
                   scriptLocation: inlineScript
                   inlineScript: |
+
                     if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
                       echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
                     else
@@ -46,7 +105,11 @@ stages:
                     fi
 
                     # pre-azdo
-                    set -e
+                    set -ex
+                    export AWS_PROFILE=xkf-${{ env.name }}
+                    export AWS_SHARED_CREDENTIALS_FILE="${AWS_SHARED_CREDENTIALS_FILE:-${HOME}/.aws/credentials}"
+                    export AWS_CONFIG_FILE="${AWS_CONFIG_FILE:-${HOME}/.aws/config}"
+
                     AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
                     mkdir -p ${PWD}/${DIR}/.terraform/
                     echo ARM_CLIENT_ID=${servicePrincipalId} > ${PWD}/${DIR}/.terraform/${ENV}.env
@@ -85,6 +148,11 @@ stages:
                     sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
                     sudo chown -R $(id -u):$(id -g) ${PWD}/global.tfvars
 
+                    if [[ AWS_REGION != "" ]]
+                    then
+                      sudo chown -R $(id -u):$(id -g) $(dirname ${AWS_SHARED_CREDENTIALS_FILE})
+                    fi
+
                     if [[ ${PREPARE_ERROR_CODE} != 0 ]]; then
                       echo "ERROR: PREPARE failed."
                       exit ${PREPARE_ERROR_CODE}
@@ -106,6 +174,7 @@ stages:
                   ENV: ${{ env.name }}
                   OPA_BLAST_RADIUS: $(opaBlastRadius)
                   VALIDATE_ENABLED: ${{ parameters.validateEnabled }}
+                  AWS_REGION: ${{ parameters.awsRegion }}
                 displayName: "Terraform Plan"
 
               - task: PublishPipelineArtifact@0
