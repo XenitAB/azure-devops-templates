@@ -98,13 +98,7 @@ jobs:
             ACR_NAME=${{ parameters.acrName }}
 
             IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${IMAGE_ID}"
-            # Get token and store it in variables
-            az acr login -n "${ACR_NAME}" -t > tmp.json
-            TOKEN=$(cat tmp.json |jq -r .accessToken)
-            SERVER=$(cat tmp.json |jq -r .loginServer)
-
-            echo "##vso[task.setvariable variable=token]$TOKEN"
-            echo "##vso[task.setvariable variable=server]$SERVER"
+            az acr login -n "${ACR_NAME}"
         condition: ne('${{ parameters.azureSubscription }}', '')
 
       - task: AmazonWebServices.aws-vsts-tools.AWSShellScript.AWSShellScript@1
@@ -118,11 +112,11 @@ jobs:
             set -e
 
             aws ecr describe-repositories --repository-names ${SERVICE_NAME} || aws ecr create-repository --repository-name ${SERVICE_NAME} --image-scanning-configuration scanOnPush=true
-            SERVER=$(aws ecr describe-repositories --repository-names ${SERVICE_NAME} | jq -r '.repositories[0].repositoryUri')
-            TOKEN=$(aws ecr get-login-password --region ${AWS_REGION})
+            ECR_URI=$(aws ecr describe-repositories --repository-names ${SERVICE_NAME} | jq -r '.repositories[0].repositoryUri')
+            ECR_PASSWORD=$(aws ecr get-login-password --region ${AWS_REGION})
+            docker login -u AWS -p $ECR_PASSWORD $ECR_URI
 
-            echo "##vso[task.setvariable variable=token]$TOKEN"
-            echo "##vso[task.setvariable variable=server]$SERVER"
+            echo "##vso[task.setvariable variable=server]$ECR_URI"
         env:
           SERVICE_NAME: $(resources.triggeringAlias)
         condition: ne('${{ parameters.awsRegion }}', '')
@@ -132,7 +126,6 @@ jobs:
           WORKSPACE=$(Pipeline.Workspace)
           EXTRA_TAG=${{ parameters.extraTag }}
           SHA_SHORT=$(shaShort)
-          TOKEN=$(token)
           SERVER=$(server)
           ACR_NAME=${{ parameters.acrName }}
           IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
@@ -150,7 +143,6 @@ jobs:
           # Run AWS
           if [[ ${{ parameters.awsRegion }} != "" ]]
           then
-            docker login -u AWS -p $TOKEN $SERVER
             docker tag $(imageId) ${SERVER}:${SHA_SHORT}
             docker push ${SERVER}:${SHA_SHORT}
           fi
@@ -158,7 +150,6 @@ jobs:
           # Run Azure
           if [[ $IMAGE_PATH_PREFIX != "" ]]
           then
-            docker login -u 00000000-0000-0000-0000-000000000000 -p $TOKEN $SERVER
             docker tag $(imageId) "${IMAGE_ID_FULL}"
             docker push "${IMAGE_ID_FULL}"
           fi
