@@ -78,7 +78,11 @@ Create the three pipelines in the "gitops" repository, note that the pipeline al
 It is totally fine to reference multiple pipelines as triggers, this will be handled by the pipeline to determine which pipeline
 triggered the run.
 
-new.yaml
+There are support for both Azure and AWS container registry but not at the same time in one pipeline.
+To use AWS you have to define the variable `cloud`, it defaults to `azure`.
+> The `cloud` variable supports **lowercase** only, accepted variables is `aws` or `azure`.
+
+new-azure.yaml
 
 ```yaml
 trigger: none
@@ -101,8 +105,40 @@ stages:
     parameters:
       azureSubscriptionTemplate: "azure-{0}-foobar-contributor"
       acrNameTemplate: "acr{0}weaks"
-      imagePathPrefix: "foobar"
-      group: "apps"
+      imagePathPrefix: foobar
+      cloud: azure
+      group: apps
+      environments:
+        - name: dev
+        - name: qa
+        - name: prod
+```
+
+new-aws.yaml
+
+```yaml
+trigger: none
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: XKS/azure-devops-templates
+      ref: refs/tags/2021.07.1
+  pipelines:
+    - pipeline: test-application
+      source: test-application
+      trigger:
+        stages:
+          - cd_trigger
+
+stages:
+  - template: ./gitops-v2/new/main.yaml@templates
+    parameters:
+      awsServiceConnectionTemplate: "ecr-{0}-foobar-contributor"
+      awsRegion: eu-west-1
+      cloud: aws
+      group: apps
       environments:
         - name: dev
         - name: qa

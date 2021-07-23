@@ -9,16 +9,25 @@ parameters:
     type: object
   - name: azureSubscriptionTemplate
     type: string
+    default: ""
   - name: acrNameTemplate
     type: string
+    default: ""
   - name: imagePathPrefix
     type: string
     default: ""
   - name: gitopsPromotionTag
     type: string
     default: "v0.0.6"
+  - name: awsServiceConnectionTemplate
+    type: string
+    default: ""
+  - name: awsRegion
+    type: string
+    default: ""
   - name: group
     type: string
+    default: ""
 
 stages:
   - stage: push
@@ -29,9 +38,11 @@ stages:
               poolVmImage: ${{ parameters.poolVmImage }}
               poolName: ${{ parameters.poolName }}
               environment: ${{ env.name }}
+              awsServiceConnection: ${{ format(parameters.awsServiceConnectionTemplate, env.name) }}
               azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
               acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
               imagePathPrefix: ${{ parameters.imagePathPrefix }}
+              awsRegion: ${{ parameters.awsRegion }}
 
   - stage: new
     dependsOn: [push]
