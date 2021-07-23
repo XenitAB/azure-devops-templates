@@ -22,9 +22,6 @@ parameters:
   - name: imagePathPrefix
     type: string
     default: ""
-  - name: extraTag
-    type: string
-    default: ""
 
 jobs:
   - job: push_${{ parameters.environment }}
@@ -92,12 +89,7 @@ jobs:
           inlineScript: |
             set -e
 
-            SERVICE_NAME=$(resources.triggeringAlias)
-            IMAGE_ID=$(imageId)
-            IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
             ACR_NAME=${{ parameters.acrName }}
-
-            IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${IMAGE_ID}"
             az acr login -n "${ACR_NAME}"
         condition: ne('${{ parameters.azureSubscription }}', '')
 
@@ -124,7 +116,6 @@ jobs:
       - bash: |
           set -e
           WORKSPACE=$(Pipeline.Workspace)
-          EXTRA_TAG=${{ parameters.extraTag }}
           SHA_SHORT=$(shaShort)
           SERVER=$(server)
           ACR_NAME=${{ parameters.acrName }}
@@ -152,12 +143,6 @@ jobs:
           then
             docker tag $(imageId) "${IMAGE_ID_FULL}"
             docker push "${IMAGE_ID_FULL}"
-          fi
-
-          if [[ "${EXTRA_TAG}" != "" ]]
-          then
-            docker tag ${SERVICE_NAME}:${EXTRA_TAG}
-            docker push ${SERVICE_NAME}:${EXTRA_TAG}
           fi
 
         displayName: "Push image to container registry in ${{ parameters.environment }}"
