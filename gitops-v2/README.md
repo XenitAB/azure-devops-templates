@@ -79,7 +79,8 @@ It is totally fine to reference multiple pipelines as triggers, this will be han
 triggered the run.
 
 There are support for both Azure and AWS container registry but not at the same time in one pipeline.
-Bellow you will find examples of both
+To use AWS you have to define the variable `cloud`, it defaults to `azure`.
+> The `cloud` variable supports **lowercase** only, accepted variables is `aws` or `azure`.
 
 new-azure.yaml
 
@@ -104,8 +105,9 @@ stages:
     parameters:
       azureSubscriptionTemplate: "azure-{0}-foobar-contributor"
       acrNameTemplate: "acr{0}weaks"
-      imagePathPrefix: "foobar"
-      group: "apps"
+      imagePathPrefix: foobar
+      cloud: azure
+      group: apps
       environments:
         - name: dev
         - name: qa
@@ -135,7 +137,8 @@ stages:
     parameters:
       awsServiceConnectionTemplate: "ecr-{0}-foobar-contributor"
       awsRegion: eu-west-1
-      group: "apps"
+      cloud: aws
+      group: apps
       environments:
         - name: dev
         - name: qa

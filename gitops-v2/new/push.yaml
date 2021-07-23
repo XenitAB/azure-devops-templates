@@ -22,6 +22,9 @@ parameters:
   - name: imagePathPrefix
     type: string
     default: ""
+  - name: cloud
+    type: string
+    default: ""
 
 jobs:
   - job: push_${{ parameters.environment }}
@@ -94,7 +97,7 @@ jobs:
           inlineScript: |
             set -e
             az acr login -n "${ACR_NAME}"
-        condition: ne('${{ parameters.azureSubscription }}', '')
+        condition: eq('${{ parameters.cloud }}', 'azure')
         env:
           ACR_NAME: ${{ parameters.acrName }}
 
@@ -118,7 +121,7 @@ jobs:
             echo "##vso[task.setvariable variable=imageIdFull]$IMAGE_ID_FULL"
         env:
           SERVICE_NAME: $(resources.triggeringAlias)
-        condition: ne('${{ parameters.awsRegion }}', '')
+        condition: eq('${{ parameters.cloud }}', 'aws')
 
       - bash: |
           set -e
