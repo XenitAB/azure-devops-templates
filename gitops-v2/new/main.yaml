@@ -28,6 +28,9 @@ parameters:
   - name: group
     type: string
     default: ""
+  - name: cloud
+    type: string
+    default: "azure"
 
 stages:
   - stage: push
@@ -43,6 +46,7 @@ stages:
               acrName: ${{ format(parameters.acrNameTemplate, env.name) }}
               imagePathPrefix: ${{ parameters.imagePathPrefix }}
               awsRegion: ${{ parameters.awsRegion }}
+              cloud: ${{ parameters.cloud }}
 
   - stage: new
     dependsOn: [push]
