@@ -42,7 +42,10 @@ jobs:
           SHA_SHORT=${SOURCE_VERSION:0:7}
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
           ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
+          IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${IMAGE_ID}"
+
           echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
+          echo "##vso[task.setvariable variable=imageIdFull]$IMAGE_ID_FULL"
           echo "##vso[task.setvariable variable=shaShort]$SHA_SHORT"
           echo "##vso[task.setvariable variable=artifactFileName]$ARTIFACT_FILE_NAME"
 
@@ -58,6 +61,7 @@ jobs:
 
           echo "Debug:"
           echo "imageId (IMAGE_ID): $IMAGE_ID"
+          echo "imageIdFull (IMAGE_ID_FULL): $IMAGE_ID_FULL"
           echo "shaShort (SHA_SHORT): $SHA_SHORT"
           echo "artifactFileName (ARTIFACT_FILE_NAME): $ARTIFACT_FILE_NAME"
           echo "projectId (PROJECT_ID): $PROJECT_ID"
@@ -66,6 +70,7 @@ jobs:
         displayName: "Calculate artifact variables"
         env:
           SERVICE_NAME: $(resources.triggeringAlias)
+          ACR_NAME: ${{ parameters.acrName }}
 
       - task: DownloadPipelineArtifact@2
         displayName: "Download container artifact"
@@ -88,10 +93,10 @@ jobs:
           scriptType: bash
           inlineScript: |
             set -e
-
-            ACR_NAME=${{ parameters.acrName }}
             az acr login -n "${ACR_NAME}"
         condition: ne('${{ parameters.azureSubscription }}', '')
+        env:
+          ACR_NAME: ${{ parameters.acrName }}
 
       - task: AmazonWebServices.aws-vsts-tools.AWSShellScript.AWSShellScript@1
         displayName: "Get ECR login info"
@@ -102,26 +107,21 @@ jobs:
           scriptType: inline
           inlineScript: |
             set -e
+            SHA_SHORT=$(shaShort)
 
             aws ecr describe-repositories --repository-names ${SERVICE_NAME} || aws ecr create-repository --repository-name ${SERVICE_NAME} --image-scanning-configuration scanOnPush=true
             ECR_URI=$(aws ecr describe-repositories --repository-names ${SERVICE_NAME} | jq -r '.repositories[0].repositoryUri')
             ECR_PASSWORD=$(aws ecr get-login-password --region ${AWS_REGION})
             docker login -u AWS -p $ECR_PASSWORD $ECR_URI
 
-            echo "##vso[task.setvariable variable=server]$ECR_URI"
+            IMAGE_ID_FULL=$ECR_URI:SHA_SHORT
+            echo "##vso[task.setvariable variable=imageIdFull]$IMAGE_ID_FULL"
         env:
           SERVICE_NAME: $(resources.triggeringAlias)
         condition: ne('${{ parameters.awsRegion }}', '')
 
       - bash: |
           set -e
-          WORKSPACE=$(Pipeline.Workspace)
-          SHA_SHORT=$(shaShort)
-          SERVER=$(server)
-          ACR_NAME=${{ parameters.acrName }}
-          IMAGE_PATH_PREFIX=${{ parameters.imagePathPrefix }}
-          IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${IMAGE_ID}"
-
           ARTIFACT_PATH="${WORKSPACE}/${SERVICE_NAME}/${ARTIFACT_FILE_NAME}"
           if [[ ! -f "${ARTIFACT_PATH}" ]]
           then
@@ -130,22 +130,12 @@ jobs:
           fi
 
           docker load < $ARTIFACT_PATH
-
-          # Run AWS
-          if [[ ${{ parameters.awsRegion }} != "" ]]
-          then
-            docker tag $(imageId) ${SERVER}:${SHA_SHORT}
-            docker push ${SERVER}:${SHA_SHORT}
-          fi
-
-          # Run Azure
-          if [[ $IMAGE_PATH_PREFIX != "" ]]
-          then
-            docker tag $(imageId) "${IMAGE_ID_FULL}"
-            docker push "${IMAGE_ID_FULL}"
-          fi
+          docker tag $(imageId) "${IMAGE_ID_FULL}"
+          docker push "${IMAGE_ID_FULL}"
 
         displayName: "Push image to container registry in ${{ parameters.environment }}"
         env:
           SERVICE_NAME: $(resources.triggeringAlias)
           ARTIFACT_FILE_NAME: $(artifactFileName)
+          IMAGE_ID_FULL: $(imageIdFull)
+          WORKSPACE: $(Pipeline.Workspace)
