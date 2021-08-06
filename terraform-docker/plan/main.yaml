@@ -53,7 +53,7 @@ stages:
                     AWS_CONFIG_FILE=${HOME}/.aws/config
                     AWS_SHARED_CREDENTIALS_FILE=${HOME}/.aws/credentials
                     TMPFILE=${HOME}/.aws/tmp.json
-                    mkdir $(dirname $TMPFILE)
+                    mkdir -p $(dirname $TMPFILE)
                     aws sts get-federation-token --name xkf-$ENV --policy-arns arn="$AWS_ARN" --region $AWS_REGION > $TMPFILE
 
                     KEY_ID=$(cat $TMPFILE |jq -r .Credentials.AccessKeyId)
