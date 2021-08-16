@@ -117,10 +117,6 @@ stages:
                     echo ARM_TENANT_ID=${tenantId} >> ${PWD}/${DIR}/.terraform/${ENV}.env
                     echo ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') >> ${PWD}/${DIR}/.terraform/${ENV}.env
                     set +e
-                    sudo chown -R 1000:1000 ${PWD}/${DIR}
-                    sudo chown -R 1000:1000 ${AZURE_CONFIG_DIR}
-                    sudo chown -R 1000:1000 ${PWD}/global.tfvars
-
                     PREPARE_ERROR_CODE=0
                     make prepare
                     PREPARE_ERROR_CODE=$?
@@ -144,15 +140,6 @@ stages:
                     fi
 
                     # post-azdo
-                    sudo chown -R $(id -u):$(id -g) ${PWD}/${DIR}
-                    sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
-                    sudo chown -R $(id -u):$(id -g) ${PWD}/global.tfvars
-
-                    if [[ AWS_REGION != "" ]]
-                    then
-                      sudo chown -R $(id -u):$(id -g) $(dirname ${AWS_SHARED_CREDENTIALS_FILE})
-                    fi
-
                     if [[ ${PREPARE_ERROR_CODE} != 0 ]]; then
                       echo "ERROR: PREPARE failed."
                       exit ${PREPARE_ERROR_CODE}
