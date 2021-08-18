@@ -130,46 +130,6 @@ stages:
       awsArn: arn:aws:iam::aws:policy/RandomBuiltInPolicy
 ```
 
-### Makefile
+### Packaged Terraform tooling
 
-```makefile
-SHELL:=/bin/bash
-
-SUFFIX="tfstate<4 random digits>"
-IMAGE="ghcr.io/xenitab/github-actions/tools:2021.05.2"
-ENV?=""
-DIR?=""
-OPA_BLAST_RADIUS := $(if $(OPA_BLAST_RADIUS), $(OPA_BLAST_RADIUS), 50)
-AZURE_CONFIG_DIR := $(if $(AZURE_CONFIG_DIR), $(AZURE_CONFIG_DIR), "$${HOME}/.azure")
-
-check:
-ifeq ($(ENV),"")
-	echo "Need to set ENV"
-	exit 1
-endif
-ifeq ($(DIR),"")
-	echo "Need to set DIR"
-	exit 1
-endif
-
-plan: check
-	docker run --entrypoint "/opt/terraform.sh" -e AWS_PROFILE=$${AWS_PROFILE} -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${AWS_CONFIG_FILE}:/home/tools/.aws/config -v $${AWS_SHARED_CREDENTIALS_FILE}:/home/tools/.aws/credentials -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) plan $(DIR) $(ENV) $(SUFFIX) $(OPA_BLAST_RADIUS)
-
-apply: check
-	docker run --entrypoint "/opt/terraform.sh" -e AWS_PROFILE=$${AWS_PROFILE} -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${AWS_CONFIG_FILE}:/home/tools/.aws/config -v $${AWS_SHARED_CREDENTIALS_FILE}:/home/tools/.aws/credentials -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) apply $(DIR) $(ENV) $(SUFFIX)
-
-prepare: check
-	docker run --entrypoint "/opt/terraform.sh" -e AWS_PROFILE=$${AWS_PROFILE} -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${AWS_CONFIG_FILE}:/home/tools/.aws/config -v $${AWS_SHARED_CREDENTIALS_FILE}:/home/tools/.aws/credentials -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) prepare $(DIR) $(ENV) $(SUFFIX)
-
-destroy: check
-	docker run -it --entrypoint "/opt/terraform.sh" -e AWS_PROFILE=$${AWS_PROFILE} -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${AWS_CONFIG_FILE}:/home/tools/.aws/config -v $${AWS_SHARED_CREDENTIALS_FILE}:/home/tools/.aws/credentials -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) destroy $(DIR) $(ENV) $(SUFFIX)
-
-state-remove: check
-	docker run -it --entrypoint "/opt/terraform.sh" -e AWS_PROFILE=$${AWS_PROFILE} -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${AWS_CONFIG_FILE}:/home/tools/.aws/config -v $${AWS_SHARED_CREDENTIALS_FILE}:/home/tools/.aws/credentials -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) state-remove $(DIR) $(ENV) $(SUFFIX)
-
-validate: check
-	docker run --entrypoint "/opt/terraform.sh" -e AWS_PROFILE=$${AWS_PROFILE} -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${AWS_CONFIG_FILE}:/home/tools/.aws/config -v $${AWS_SHARED_CREDENTIALS_FILE}:/home/tools/.aws/credentials -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) validate $(DIR) $(ENV) $(SUFFIX)
-
-fmt: check
-	docker run --entrypoint "/opt/terraform.sh" -e AWS_PROFILE=$${AWS_PROFILE} -v $${PWD}/$(DIR)/.terraform/$(ENV).env:/tmp/$(ENV).env -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $${AWS_CONFIG_FILE}:/home/tools/.aws/config -v $${AWS_SHARED_CREDENTIALS_FILE}:/home/tools/.aws/credentials -v $${PWD}/$(DIR):/tmp/$(DIR) -v $${PWD}/global.tfvars:/tmp/global.tfvars $(IMAGE) "fmt -recursive" $(DIR) $(ENV) $(SUFFIX)
-```
+In order to simplify the interaction with Terraform, you may want to use [XenitAB tools](https://github.com/XenitAB/github-actions). In particular, this provides an interface that can be used by both humans and CIs.
