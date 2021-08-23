@@ -41,6 +41,8 @@ stages:
               ${{ if not(eq(parameters.poolVmImage, '')) }}:
                 vmImage: ${{ parameters.poolVmImage }}
             steps:
+              - ${{ if not(eq(parameters.awsRegion, '')) }}:
+                  - template: aws.yaml
               - task: AzureCLI@1
                 inputs:
                   azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
@@ -112,7 +114,7 @@ stages:
                   ENV: ${{ env.name }}
                   OPA_BLAST_RADIUS: $(opaBlastRadius)
                   VALIDATE_ENABLED: ${{ parameters.validateEnabled }}
-                  AWS_REGION: ${{ parameters.awsRegion }}
+                  AWS_VARS: $(awsVars)
                 displayName: "Terraform Plan"
 
               - task: PublishPipelineArtifact@0

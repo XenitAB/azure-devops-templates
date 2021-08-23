@@ -1,0 +1,26 @@
+parameters:
+  - name: environment
+    type: string
+    default: ""
+  - name: awsRegion
+    type: string
+    default: ""
+  - name: awsServiceConnectionTemplate
+    type: string
+    default: ""
+
+steps:
+  - task: AmazonWebServices.aws-vsts-tools.AWSShellScript.AWSShellScript@1
+    displayName: "Get AWS credentials"
+    inputs:
+      workingDirectory: "."
+      awsCredentials: ${{ format(parameters.awsServiceConnectionTemplate, parameters.environment) }}
+      regionName: ${{ parameters.awsRegion }}
+      scriptType: inline
+      inlineScript: |
+        set -e
+        AWS_ROLE_ARN=${AWS_ROLE_ARN:-$(aws configure get role_arn)}
+        AWS_VARS=${AWS_VARS:-$(aws sts assume-role --role-arn ${AWS_ROLE_ARN} --role-session-name awscli --output json | grep -E "AccessKeyId|SecretAccessKey|SessionToken" | sed "s/[ |,|\"]//g")}
+        echo ##vso[task.setvariable variable=awsVars;issecret=true]"${AWS_VARS}"
+    env:
+      AWS_REGION: ${{ parameters.awsRegion }}
