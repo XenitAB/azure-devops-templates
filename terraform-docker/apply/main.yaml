@@ -78,6 +78,6 @@ stages:
                         CI: "true"
                         DIR: ${{ parameters.terraformFolder }}
                         ENV: ${{ env.name }}
-                        AWS_ACCESS_KEY_ID: $(awsAccessKeyId)
-                        AWS_SECRET_ACCESS_KEY: $(awsSecretAccessKey)
-                        AWS_DEFAULT_REGION: $(awsDefaultRegion)
+                        CI_AWS_ACCESS_KEY_ID: $(CIAwsAccessKeyId)
+                        CI_AWS_SECRET_ACCESS_KEY: $(CIAwsSecretAccessKey)
+                        CI_AWS_DEFAULT_REGION: $(CIAwsDefaultRegion)
