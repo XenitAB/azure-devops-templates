@@ -49,6 +49,8 @@ stages:
                   addSpnToEnvironment: true
                   scriptLocation: inlineScript
                   inlineScript: |
+                    set -e
+
                     if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
                       echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
                     else
@@ -57,12 +59,14 @@ stages:
                     fi
 
                     make prepare
-                    make validate
 
-                    if [[ $(git status --porcelain) ]]; then
-                      git diff
-                      echo 'run make validate and commit changes'
-                      GIT_STATUS_CODE=1
+                    if [[ "${VALIDATE_ENABLED}" == "True" ]]; then
+                      make validate
+                      if [[ $(git status --porcelain) ]]; then
+                        git diff
+                        echo 'run make validate and commit changes' 1>&2
+                        exit 1
+                      fi
                     fi
 
                     make plan
