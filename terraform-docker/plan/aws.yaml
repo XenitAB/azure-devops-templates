@@ -18,9 +18,8 @@ steps:
       regionName: ${{ parameters.awsRegion }}
       scriptType: inline
       inlineScript: |
-        set -e
+        set -ex
+        set | grep -E "^AWS_"
         AWS_ROLE_ARN=${AWS_ROLE_ARN:-$(aws configure get role_arn)}
         AWS_VARS=${AWS_VARS:-$(aws sts assume-role --role-arn ${AWS_ROLE_ARN} --role-session-name awscli --output json | grep -E "AccessKeyId|SecretAccessKey|SessionToken" | sed "s/[ |,|\"]//g")}
         echo ##vso[task.setvariable variable=awsVars;issecret=true]"${AWS_VARS}"
-    env:
-      AWS_REGION: ${{ parameters.awsRegion }}
