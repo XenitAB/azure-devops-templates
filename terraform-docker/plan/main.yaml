@@ -88,3 +88,4 @@ stages:
                   targetPath: $(Build.Repository.LocalPath)/${{ parameters.terraformFolder }}/.terraform/plans
                   artifactName: "${{ env.name }}.enc"
                 displayName: "Publish artifact"
+                condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))

@@ -72,7 +72,6 @@ stages:
                         scriptLocation: inlineScript
                         inlineScript: |
                           set -e
-                          mkdir -p ${PWD}/${DIR}/.terraform/
                           make apply
                       env:
                         CI: "true"
