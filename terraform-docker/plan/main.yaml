@@ -44,9 +44,8 @@ stages:
               - ${{ if not(eq(parameters.awsRegion, '')) }}:
                   - template: aws.yaml
                     parameters:
-                      environment: ${{ env.name }}
                       awsRegion: ${{ parameters.awsRegion }}
-                      awsServiceConnectionTemplate: ${{ parameters.awsServiceConnectionTemplate }}
+                      awsServiceConnection: ${{ format(parameters.awsServiceConnectionTemplate, env.name) }}
 
               - task: AzureCLI@1
                 inputs:

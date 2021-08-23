@@ -1,11 +1,8 @@
 parameters:
-  - name: environment
-    type: string
-    default: ""
   - name: awsRegion
     type: string
     default: ""
-  - name: awsServiceConnectionTemplate
+  - name: awsServiceConnection
     type: string
     default: ""
 
@@ -14,7 +11,7 @@ steps:
     displayName: "Get AWS credentials"
     inputs:
       workingDirectory: "."
-      awsCredentials: ${{ format(parameters.awsServiceConnectionTemplate, parameters.environment) }}
+      awsCredentials: ${{ parameters.awsServiceConnection }}
       regionName: ${{ parameters.awsRegion }}
       scriptType: inline
       inlineScript: |
