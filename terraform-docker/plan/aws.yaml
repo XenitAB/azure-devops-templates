@@ -15,8 +15,7 @@ steps:
       regionName: ${{ parameters.awsRegion }}
       scriptType: inline
       inlineScript: |
-        set -ex
-        printenv
+        set -e
         echo ##vso[task.setvariable variable=awsAccessKeyId;issecret=true]${AWS_ACCESS_KEY_ID}
         echo ##vso[task.setvariable variable=awsSecretAccessKey;issecret=true]${AWS_SECRET_ACCESS_KEY}
         echo ##vso[task.setvariable variable=awsDefaultRegion;issecret=true]${AWS_DEFAULT_REGION}

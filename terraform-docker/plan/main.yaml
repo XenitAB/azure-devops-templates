@@ -79,7 +79,9 @@ stages:
                   ENV: ${{ env.name }}
                   OPA_BLAST_RADIUS: $(opaBlastRadius)
                   VALIDATE_ENABLED: ${{ parameters.validateEnabled }}
-                  AWS_VARS: $(awsVars)
+                  AWS_ACCESS_KEY_ID: $(awsAccessKeyId)
+                  AWS_SECRET_ACCESS_KEY: $(awsSecretAccessKey)
+                  AWS_DEFAULT_REGION: $(awsDefaultRegion)
                 displayName: "Terraform Plan"
 
               - task: PublishPipelineArtifact@0
