@@ -75,6 +75,7 @@ stages:
 
                     make plan
                 env:
+                  CI: "true"
                   DIR: ${{ parameters.terraformFolder }}
                   ENV: ${{ env.name }}
                   OPA_BLAST_RADIUS: $(opaBlastRadius)
