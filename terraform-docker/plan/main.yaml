@@ -27,9 +27,7 @@ parameters:
   - name: awsServiceConnectionTemplate
     type: string
     default: ""
-  - name: awsArn
-    type: string
-    default: ""
+
 stages:
   - stage: plan
     jobs:
@@ -42,7 +40,7 @@ stages:
                 vmImage: ${{ parameters.poolVmImage }}
             steps:
               - ${{ if not(eq(parameters.awsRegion, '')) }}:
-                  - template: aws.yaml
+                  - template: ../aws_creds.yaml
                     parameters:
                       awsRegion: ${{ parameters.awsRegion }}
                       awsServiceConnection: ${{ format(parameters.awsServiceConnectionTemplate, env.name) }}
