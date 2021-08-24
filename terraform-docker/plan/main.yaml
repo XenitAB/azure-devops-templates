@@ -27,9 +27,7 @@ parameters:
   - name: awsServiceConnectionTemplate
     type: string
     default: ""
-  - name: awsArn
-    type: string
-    default: ""
+
 stages:
   - stage: plan
     jobs:
@@ -41,12 +39,19 @@ stages:
               ${{ if not(eq(parameters.poolVmImage, '')) }}:
                 vmImage: ${{ parameters.poolVmImage }}
             steps:
+              - ${{ if not(eq(parameters.awsRegion, '')) }}:
+                  - template: ../aws_creds.yaml
+                    parameters:
+                      awsRegion: ${{ parameters.awsRegion }}
+                      awsServiceConnection: ${{ format(parameters.awsServiceConnectionTemplate, env.name) }}
+
               - task: AzureCLI@1
                 inputs:
                   azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
                   addSpnToEnvironment: true
                   scriptLocation: inlineScript
                   inlineScript: |
+                    set -e
 
                     if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
                       echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
@@ -55,64 +60,27 @@ stages:
                       echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
                     fi
 
-                    # pre-azdo
-                    set -ex
-                    export AWS_PROFILE=xkf-${{ env.name }}
-                    export AWS_SHARED_CREDENTIALS_FILE="${AWS_SHARED_CREDENTIALS_FILE:-${HOME}/.aws/credentials}"
-                    export AWS_CONFIG_FILE="${AWS_CONFIG_FILE:-${HOME}/.aws/config}"
-
-                    AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
-                    mkdir -p ${PWD}/${DIR}/.terraform/
-                    echo ARM_CLIENT_ID=${servicePrincipalId} > ${PWD}/${DIR}/.terraform/${ENV}.env
-                    echo ARM_CLIENT_SECRET=${servicePrincipalKey} >> ${PWD}/${DIR}/.terraform/${ENV}.env
-                    echo ARM_TENANT_ID=${tenantId} >> ${PWD}/${DIR}/.terraform/${ENV}.env
-                    echo ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') >> ${PWD}/${DIR}/.terraform/${ENV}.env
-                    set +e
-                    PREPARE_ERROR_CODE=0
                     make prepare
-                    PREPARE_ERROR_CODE=$?
 
-                    VALIDATE_ERROR_CODE=0
-                    GIT_STATUS_CODE=0
                     if [[ "${VALIDATE_ENABLED}" == "True" ]]; then
                       make validate
-                      VALIDATE_ERROR_CODE=$?
-
                       if [[ $(git status --porcelain) ]]; then
                         git diff
-                        echo 'run make validate and commit changes'
-                        GIT_STATUS_CODE=1
+                        echo 'run make validate and commit changes' 1>&2
+                        exit 1
                       fi
                     fi
 
-                    if [[ ${PREPARE_ERROR_CODE} = 0 && ${VALIDATE_ERROR_CODE} = 0 && ${GIT_STATUS_CODE} = 0 ]]; then
-                      make plan
-                      PLAN_ERROR_CODE=$?
-                    fi
-
-                    # post-azdo
-                    if [[ ${PREPARE_ERROR_CODE} != 0 ]]; then
-                      echo "ERROR: PREPARE failed."
-                      exit ${PREPARE_ERROR_CODE}
-                    elif [[ ${VALIDATE_ERROR_CODE} != 0 ]]; then
-                      echo "ERROR: VALIDATE failed."
-                      exit ${VALIDATE_ERROR_CODE}
-                    elif [[ ${GIT_STATUS_CODE} != 0 ]]; then
-                      echo "ERROR: git status not clean. Run make validate and commit changes."
-                      exit ${GIT_STATUS_CODE}
-                    elif [[ ${PLAN_ERROR_CODE} != 0 ]]; then
-                      echo "ERROR: PLAN failed."
-                      exit ${PLAN_ERROR_CODE}
-                    else
-                      echo "INFO: Completed successfully."
-                      exit 0
-                    fi
+                    make plan
                 env:
+                  CI: "true"
                   DIR: ${{ parameters.terraformFolder }}
                   ENV: ${{ env.name }}
                   OPA_BLAST_RADIUS: $(opaBlastRadius)
                   VALIDATE_ENABLED: ${{ parameters.validateEnabled }}
-                  AWS_REGION: ${{ parameters.awsRegion }}
+                  AWS_ACCESS_KEY_ID: $(awsAccessKeyId)
+                  AWS_SECRET_ACCESS_KEY: $(awsSecretAccessKey)
+                  AWS_DEFAULT_REGION: $(awsDefaultRegion)
                 displayName: "Terraform Plan"
 
               - task: PublishPipelineArtifact@0
@@ -120,3 +88,4 @@ stages:
                   targetPath: $(Build.Repository.LocalPath)/${{ parameters.terraformFolder }}/.terraform/plans
                   artifactName: "${{ env.name }}.enc"
                 displayName: "Publish artifact"
+                condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))

@@ -24,9 +24,6 @@ parameters:
   - name: awsServiceConnectionTemplate
     type: string
     default: ""
-  - name: awsArn
-    type: string
-    default: ""
 
 stages:
   - ${{ each env in parameters.environments }}:
@@ -49,6 +46,12 @@ stages:
                     - checkout: self
                       displayName: Get sources
 
+                    - ${{ if not(eq(parameters.awsRegion, '')) }}:
+                        - template: ../aws_creds.yaml
+                          parameters:
+                            awsRegion: ${{ parameters.awsRegion }}
+                            awsServiceConnection: ${{ format(parameters.awsServiceConnectionTemplate, env.name) }}
+
                     - bash: |
                         mkdir -p ${TERRAFORM_PLAN_FOLDER}
                       env:
@@ -68,21 +71,12 @@ stages:
                         addSpnToEnvironment: true
                         scriptLocation: inlineScript
                         inlineScript: |
-                          # pre-azdo
                           set -e
-                          export AWS_PROFILE=xkf-${{ env.name }}
-                          export AWS_SHARED_CREDENTIALS_FILE="${AWS_SHARED_CREDENTIALS_FILE:-${HOME}/.aws/credentials}"
-                          export AWS_CONFIG_FILE="${AWS_CONFIG_FILE:-${HOME}/.aws/config}"
-
-                          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
-                          mkdir -p ${PWD}/${DIR}/.terraform/
-                          echo ARM_CLIENT_ID=${servicePrincipalId} > ${PWD}/${DIR}/.terraform/${ENV}.env
-                          echo ARM_CLIENT_SECRET=${servicePrincipalKey} >> ${PWD}/${DIR}/.terraform/${ENV}.env
-                          echo ARM_TENANT_ID=${tenantId} >> ${PWD}/${DIR}/.terraform/${ENV}.env
-                          echo ARM_SUBSCRIPTION_ID=$(az account show -o tsv --query 'id') >> ${PWD}/${DIR}/.terraform/${ENV}.env
-
                           make apply
                       env:
+                        CI: "true"
                         DIR: ${{ parameters.terraformFolder }}
                         ENV: ${{ env.name }}
-                        AWS_REGION: ${{ parameters.awsRegion }}
+                        AWS_ACCESS_KEY_ID: $(awsAccessKeyId)
+                        AWS_SECRET_ACCESS_KEY: $(awsSecretAccessKey)
+                        AWS_DEFAULT_REGION: $(awsDefaultRegion)
