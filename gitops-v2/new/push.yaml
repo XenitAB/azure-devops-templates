@@ -45,7 +45,7 @@ jobs:
           SHA_SHORT=${SOURCE_VERSION:0:7}
           IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
           ARTIFACT_FILE_NAME=${IMAGE_ID/:/_}.tar.gz
-          IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX}/${IMAGE_ID}"
+          IMAGE_ID_FULL="${ACR_NAME}.azurecr.io/${IMAGE_PATH_PREFIX:+${IMAGE_PATH_PREFIX}/}${IMAGE_ID}"
 
           echo "##vso[task.setvariable variable=imageId]$IMAGE_ID"
           echo "##vso[task.setvariable variable=imageIdFull]$IMAGE_ID_FULL"
