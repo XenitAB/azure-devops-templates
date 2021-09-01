@@ -98,11 +98,11 @@ jobs:
           inlineScript: |
             set -e
             az acr login -n "${ACR_NAME}"
-        condition: eq('${{ parameters.cloud }}', 'azure')
+        condition: and(succeeded(), eq('${{ parameters.cloud }}', 'azure'))
         env:
           ACR_NAME: ${{ parameters.acrName }}
 
-      - ${{ if eq(parameters.cloud, 'aws') }}:
+      - ${{ if and(succeeded(), eq(parameters.cloud, 'aws')) }}:
           - template: push_aws.yaml
             parameters:
               awsRegion: ${{ parameters.awsRegion }}
