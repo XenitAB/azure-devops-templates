@@ -74,6 +74,7 @@ jobs:
         env:
           SERVICE_NAME: $(resources.triggeringAlias)
           ACR_NAME: ${{ parameters.acrName }}
+          IMAGE_PATH_PREFIX: ${{ parameters.imagePathPrefix }}
 
       - task: DownloadPipelineArtifact@2
         displayName: "Download container artifact"
