@@ -102,7 +102,7 @@ jobs:
         env:
           ACR_NAME: ${{ parameters.acrName }}
 
-      - ${{ if and(succeeded(), eq(parameters.cloud, 'aws')) }}:
+      - ${{ if eq(parameters.cloud, 'aws') }}:
           - template: push_aws.yaml
             parameters:
               awsRegion: ${{ parameters.awsRegion }}

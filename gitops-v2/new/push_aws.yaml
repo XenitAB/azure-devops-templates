@@ -9,6 +9,7 @@ parameters:
 steps:
   - task: AmazonWebServices.aws-vsts-tools.AWSShellScript.AWSShellScript@1
     displayName: "Get ECR login info"
+    condition: succeeded()
     inputs:
       workingDirectory: "."
       awsCredentials: ${{ parameters.awsServiceConnection }}
