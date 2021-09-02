@@ -5,7 +5,7 @@ Collection of templates to use in Azure DevOps.
 ## Usage
 
 Currently Azure DevOps does not support referencing templates from public GitHub repositories without
-specifiying a valid service connection. This would be too cumborsome to deal with for multiple organizations.
+specifiying a valid service connection. This would be too cumbersome to deal with for multiple organizations.
 Instead this repo is best used by creating a mirror of it, and using a pipeline to synchronize the content from upstream.
 
 ### Importing the repository to Azure DevOps
