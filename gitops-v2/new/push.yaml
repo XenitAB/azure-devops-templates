@@ -106,7 +106,7 @@ jobs:
           - template: push_aws.yaml
             parameters:
               awsRegion: ${{ parameters.awsRegion }}
-              awsServiceConnection: ${{ format(parameters.awsServiceConnectionTemplate, env.name) }}
+              awsServiceConnection: ${{ format(parameters.awsServiceConnection, parameters.environment) }}
 
       - bash: |
           set -e
