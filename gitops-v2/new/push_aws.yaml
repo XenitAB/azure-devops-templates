@@ -23,7 +23,7 @@ steps:
         ECR_URI=$(aws ecr describe-repositories --repository-names ${SERVICE_NAME} --output json | jq -r '.repositories[0].repositoryUri')
         aws ecr get-login-password --region ${AWS_REGION} | docker login -u AWS --password-stdin $ECR_URI
 
-        IMAGE_ID_FULL=$ECR_URI:SHA_SHORT
+        IMAGE_ID_FULL=$ECR_URI:$SHA_SHORT
         echo "##vso[task.setvariable variable=imageIdFull]$IMAGE_ID_FULL"
     env:
       SERVICE_NAME: $(resources.triggeringAlias)
