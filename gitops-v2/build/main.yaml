@@ -31,6 +31,11 @@ parameters:
     default:
       enable: true
       ignoreRuleViolations: true
+  - name: horusec
+    type: object
+    default:
+      enable: false
+      ignoreRuleViolations: true
   - name: imageScan
     type: object
     default:
@@ -45,6 +50,9 @@ parameters:
       trivy:
         tag: "v0.12.0"
         sha: "4003d993d4b6b5673d4ef6e216578e8ac2bf6b439201a8e748a75fc68430c3f5"
+      horusec:
+        tag: "v2.5.0"
+        sha: "94bbfcb65db40d802b0c5b5b5a7f31bc89d4bd25ba6cbff3fa5debe3313d1b1f"
 
 stages:
   - stage: build
@@ -71,13 +79,12 @@ stages:
           - bash: |
               set -ex
               # Download
-              wget https://github.com/hadolint/hadolint/releases/download/${HADOLINT_TAG}/hadolint-Linux-x86_64
-              DOWNLOAD_HADOLINT_SHA=$(openssl sha1 -sha256 hadolint-Linux-x86_64 | awk '{print $2}')
-              if [[ "${HADOLINT_SHA}" != "${HADOLINT_SHA}" ]]; then
+              wget -O hadolint https://github.com/hadolint/hadolint/releases/download/${HADOLINT_TAG}/hadolint-Linux-x86_64
+              DOWNLOAD_HADOLINT_SHA=$(openssl sha1 -sha256 hadolint | awk '{print $2}')
+              if [[ "${HADOLINT_SHA}" != "${DOWNLOAD_HADOLINT_SHA}" ]]; then
                   echo "Downloaded checksum (${DOWNLOAD_HADOLINT_SHA}) for hadolint does not match expected value: ${HADOLINT_SHA}"
                   exit 1
               fi
-              mv hadolint-Linux-x86_64 hadolint
               chmod +x hadolint
               # Run
               ./hadolint ${DOCKERFILE_PATH}
@@ -92,6 +99,28 @@ stages:
               condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
             ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
               condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true))
+          - bash: |
+              set -ex
+              # Download
+              wget -O horusec https://github.com/ZupIT/horusec/releases/download/${HORUSEC_TAG}/horusec_linux_x86
+
+              DOWNLOAD_HORUSEC_SHA=$(openssl sha1 -sha256 horusec | awk '{print $2}')
+              if [[ "${HORUSEC_SHA}" != "${DOWNLOAD_HORUSEC_SHA}" ]]; then
+                  echo "Downloaded checksum (${DOWNLOAD_HORUSEC_SHA}) for hadolint does not match expected value: ${HORUSEC_SHA}"
+                  exit 1
+              fi
+              chmod +x horusec
+              # Run
+              ./horusec start -p . -e=true
+            displayName: Horusec
+            continueOnError: ${{ parameters.horusec.ignoreRuleViolations }}
+            env:
+              HORUSEC_TAG: ${{ parameters.binaries.horusec.tag }}
+              HORUSEC_SHA: ${{ parameters.binaries.horusec.sha }}
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(${{ parameters.horusec.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+            ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+              condition: and(succeeded(), eq(${{ parameters.horusec.enable }}, true))
           - bash: |
               set -ex
 
@@ -114,9 +143,9 @@ stages:
           - bash: |
               set -ex
               # Download
-              wget https://github.com/aquasecurity/trivy/releases/download/${TRIVY_TAG}/trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
+              wget -O trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz https://github.com/aquasecurity/trivy/releases/download/${TRIVY_TAG}/trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
               DOWNLOAD_TRIVY_SHA=$(openssl sha1 -sha256 trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz | awk '{print $2}')
-              if [[ "${TRIVY_SHA}" != "${TRIVY_SHA}" ]]; then
+              if [[ "${TRIVY_SHA}" != "${DOWNLOAD_TRIVY_SHA}" ]]; then
                   echo "Downloaded checksum (${DOWNLOAD_TRIVY_SHA}) for trivy does not match expected value: ${TRIVY_SHA}"
                   exit 1
               fi
