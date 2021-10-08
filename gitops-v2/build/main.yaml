@@ -117,6 +117,8 @@ stages:
             env:
               HORUSEC_TAG: ${{ parameters.binaries.horusec.tag }}
               HORUSEC_SHA: ${{ parameters.binaries.horusec.sha }}
+            ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
+              condition: and(succeeded(), eq(${{ parameters.horusec.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
             ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
               condition: and(succeeded(), eq(${{ parameters.horusec.enable }}, true))
           - bash: |
