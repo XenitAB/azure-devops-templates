@@ -2,14 +2,14 @@ name: Trigger xenit-home to regenerate docs
 on:
   push:
     branches:
-      - master
-  
+      - main
+
 jobs:
   trigger-docs:
     runs-on: ubuntu-latest
     env:
       TOKEN: ${{ secrets.XENIT_HOME_GITHUB_PAT }}
-    
+
     steps:
     - uses: actions/checkout@v2
 
