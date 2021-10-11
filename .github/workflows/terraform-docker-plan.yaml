@@ -1,0 +1,117 @@
+name: terraform
+
+on:
+  workflow_call:
+    inputs:
+      opa_blast_radius:
+        description: 'OPA Blast Radius'
+        required: false
+        type: string
+        default: "50"
+      ENVIRONMENTS:
+        default: '{"environments":[{"name":"dev","secret_name":"AZURE_DEV"}]}'
+        required: true
+        type: string
+      DIR:
+        required: true
+        type: string
+    secrets:
+      AZ_APP_ID:
+        required: true
+      AZ_APP_SECRET:
+        required: true
+      SUBSCRIPTION_ID:
+        required: true
+      TENANT_ID:
+        required: true
+
+jobs:
+  set_env_matrix:
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set matrix for environment
+        id: set-matrix
+        run: |
+          set -e
+          echo ${{ inputs.ENVIRONMENTS }} | jq .
+          MATRIX=$(echo ${{ inputs.ENVIRONMENTS }} | jq -c .)
+          echo "::set-output name=matrix::${MATRIX}"
+
+  terraform_plan:
+    needs: set_env_matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix directory permissions
+        run: |
+          set -e
+          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+          mkdir -p $AZURE_CONFIG_DIR
+          sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
+          sudo chown -R $(id -u):$(id -g) ${PWD}
+
+      - name: Setup Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+      - name: Azure Login
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+        run: |
+          echo $HOME
+          echo $PATH
+          az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
+          az account set -s ${ARM_SUBSCRIPTION_ID}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Terraform plan
+        env:
+          ENV: ${{ matrix.environments.name }}
+          OPA_BLAST_RADIUS: ${{ github.event.inputs.OPA_BLAST_RADIUS }}
+          servicePrincipalId: ${{ secrets.AZ_APP_ID }}
+          servicePrincipalKey: ${{ secrets.AZ_APP_SECRET }}
+          tenantId: ${{ secrets.TENANT_ID }}
+        run: |
+          if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
+            echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
+          else
+            export OPA_BLAST_RADIUS=50
+            echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
+          fi
+
+          # pre github actions
+          set -e
+          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+
+          make prepare
+          PREPARE_ERROR_CODE=$?
+          if [[ ${PREPARE_ERROR_CODE} = 0 ]]; then
+            make plan
+            PLAN_ERROR_CODE=$?
+          fi
+
+          if [[ ${PREPARE_ERROR_CODE} != 0 ]]; then
+            echo "ERROR: PREPARE failed."
+            exit ${PREPARE_ERROR_CODE}
+          elif [[ ${PLAN_ERROR_CODE} != 0 ]]; then
+            echo "ERROR: PLAN failed."
+            exit ${PLAN_ERROR_CODE}
+          else
+            echo "INFO: Both PREPARE and PLAN completed successfully."
+            exit 0
+          fi
+
+      - name: Upload artifact (encrypted plan)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.environments.name }}-plan
+          path: ${{ inputs.DIR }}/.terraform/plans/${{ matrix.environments.name }}.enc
+          if-no-files-found: error

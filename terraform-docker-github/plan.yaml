@@ -1,0 +1,11 @@
+name: Trigger xenit-home to regenerate docs
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  call-workflow-1:
+    uses: NissesSenap/githubworkflowplay/.github/workflows/workflow.yaml@43583eba33d08b478d6a4a14dc1febfccc5d14ac
+    with:
+      username: mona
