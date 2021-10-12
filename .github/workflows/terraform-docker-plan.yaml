@@ -15,6 +15,10 @@ on:
       DIR:
         required: true
         type: string
+      VALIDATE_ENABLED:
+        required: false
+        default: "true"
+        type: string
     secrets:
       AZ_APP_ID:
         required: true
@@ -96,6 +100,16 @@ jobs:
 
           make prepare
           PREPARE_ERROR_CODE=$?
+
+          if [[ "${{ inputs.VALIDATE_ENABLED }}" -eq "True" || "${{ inputs.VALIDATE_ENABLED }}" -eq "true" ]]; then
+            make validate
+            if [[ $(git status --porcelain) ]]; then
+              git diff
+              echo 'run make validate and commit changes' 1>&2
+              exit 1
+            fi
+          fi
+
           if [[ ${PREPARE_ERROR_CODE} = 0 ]]; then
             make plan
             PLAN_ERROR_CODE=$?
