@@ -9,7 +9,7 @@ on:
         type: string
         default: "50"
       ENVIRONMENTS:
-        default: '{"environments":[{"name":"dev","secret_name":"AZURE_DEV"}]}'
+        default: '{"environments":[{"name":"dev","subscription_id":"0000000000000-0000000000-000000-000"}]}'
         required: true
         type: string
       DIR:
@@ -26,12 +26,6 @@ on:
         required: true
       TENANT_ID:
         required: true
-      SUBSCRIPTION_ID_DEV:
-        required: false
-      SUBSCRIPTION_ID_QA:
-        required: false
-      SUBSCRIPTION_ID_PROD:
-        required: false
 
 env:
   DIR: ${{ inputs.DIR }}
@@ -72,7 +66,7 @@ jobs:
         env:
           ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.secret_name] }}
+          ARM_SUBSCRIPTION_ID: ${{ matrix.environments.subscription_id }}
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: |
           echo $HOME
@@ -164,7 +158,7 @@ jobs:
         env:
           ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.secret_name] }}
+          ARM_SUBSCRIPTION_ID: ${{ matrix.environments.subscription_id }}
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: |
           echo $HOME
