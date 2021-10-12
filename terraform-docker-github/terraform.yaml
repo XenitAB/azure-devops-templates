@@ -1,11 +1,29 @@
-name: Trigger xenit-home to regenerate docs
+name: terraform_core
+
 on:
   push:
     branches:
       - main
+    paths:
+      - "core/**"
+  pull_request:
+    paths:
+      - "core/**"
+  workflow_dispatch:
+    inputs:
+      OPA_BLAST_RADIUS:
+        description: "OPA Blast Radius"
+        required: true
+        default: "50"
 
 jobs:
-  call-workflow-1:
-    uses: NissesSenap/githubworkflowplay/.github/workflows/workflow.yaml@43583eba33d08b478d6a4a14dc1febfccc5d14ac
+  terraform:
+    uses: xenitab/azure-devops-templates/.github/workflows/terraform-docker.yaml@2021.09.3
     with:
-      username: mona
+      DIR: core
+      ENVIRONMENTS: '{"environments":[{"name":"dev"}]}'
+    secrets:
+      AZ_APP_ID: ${{ secrets.AZ_APP_ID }}
+      AZ_APP_SECRET: ${{ secrets.AZ_APP_SECRET }}
+      SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+      TENANT_ID: ${{ secrets.TENANT_ID }}
