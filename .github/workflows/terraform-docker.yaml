@@ -9,7 +9,7 @@ on:
         type: string
         default: "50"
       ENVIRONMENTS:
-        default: '{"environments":[{"name":"dev"}]}'
+        description: '{"environments":[{"name":"dev"}, {"name":"qa"}]}'
         required: true
         type: string
       DIR:
