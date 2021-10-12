@@ -26,12 +26,6 @@ on:
         required: true
       TENANT_ID:
         required: true
-      SUBSCRIPTION_ID_DEV:
-        required: false
-      SUBSCRIPTION_ID_QA:
-        required: false
-      SUBSCRIPTION_ID_PROD:
-        required: false
 
 env:
   DIR: ${{ inputs.DIR }}
