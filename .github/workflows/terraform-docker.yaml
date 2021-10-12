@@ -68,12 +68,13 @@ jobs:
         env:
           ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.subscription_id_key] }}
+          #ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.subscription_id_key] }}
+          ARM_SUBSCRIPTION_ID: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: |
           az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
           env
-          echo "THIS IS SUBS IDS: ${{ secrets.SUB_IDS }}"
+          echo "THIS IS SUBS IDS: ${ARM_SUBSCRIPTION_ID}"
           az account set -s ${ARM_SUBSCRIPTION_ID}
 
       - name: Checkout
@@ -160,7 +161,7 @@ jobs:
         env:
           ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.subscription_id_key] }}
+          ARM_SUBSCRIPTION_ID: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: |
           env
