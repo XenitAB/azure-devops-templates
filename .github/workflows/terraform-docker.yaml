@@ -9,7 +9,7 @@ on:
         type: string
         default: "50"
       ENVIRONMENTS:
-        default: '{"environments":[{"name":"dev","subscription_id":"0000000000000-0000000000-000000-000"}]}'
+        default: '{"environments":[{"name":"dev"}]}'
         required: true
         type: string
       DIR:
@@ -58,8 +58,6 @@ jobs:
           set -e
           AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
           mkdir -p $AZURE_CONFIG_DIR
-          sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
-          sudo chown -R $(id -u):$(id -g) ${PWD}
 
       - name: Setup Azure CLI
         run: |
@@ -68,7 +66,6 @@ jobs:
         env:
           ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          #ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.subscription_id_key] }}
           ARM_SUBSCRIPTION_ID: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: |
@@ -88,6 +85,7 @@ jobs:
           servicePrincipalKey: ${{ secrets.AZ_APP_SECRET }}
           tenantId: ${{ secrets.TENANT_ID }}
         run: |
+          set -e
           if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
             echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
           else
@@ -95,12 +93,9 @@ jobs:
             echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
           fi
 
-          # pre github actions
-          set -e
           AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
 
           make prepare
-          PREPARE_ERROR_CODE=$?
 
           if [[ "${{ inputs.VALIDATE_ENABLED }}" -eq "True" || "${{ inputs.VALIDATE_ENABLED }}" -eq "true" ]]; then
             make validate
@@ -110,25 +105,8 @@ jobs:
               exit 1
             fi
           fi
-
-          if [[ ${PREPARE_ERROR_CODE} = 0 ]]; then
-            make plan
-            PLAN_ERROR_CODE=$?
-          fi
-
-          # Allways logout from azure
+          make plan
           az logout
-
-          if [[ ${PREPARE_ERROR_CODE} != 0 ]]; then
-            echo "ERROR: PREPARE failed."
-            exit ${PREPARE_ERROR_CODE}
-          elif [[ ${PLAN_ERROR_CODE} != 0 ]]; then
-            echo "ERROR: PLAN failed."
-            exit ${PLAN_ERROR_CODE}
-          else
-            echo "INFO: Both PREPARE and PLAN completed successfully."
-            exit 0
-          fi
 
       - name: Upload artifact (encrypted plan)
         uses: actions/upload-artifact@v2
@@ -190,13 +168,9 @@ jobs:
           tenantId: ${{ secrets.TENANT_ID }}
         run: |
           # pre github actions
-          set -e
           AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
           make apply DIR=${DIR} ENV=${ENV}
           ERROR_CODE=$?
           # post github actions
           az logout
-          sudo chown -R $(id -u):$(id -g) ${PWD}/${DIR}
-          sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
-          sudo chown -R $(id -u):$(id -g) ${PWD}/global.tfvars
           exit $ERROR_CODE
