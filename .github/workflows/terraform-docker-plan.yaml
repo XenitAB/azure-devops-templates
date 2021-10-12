@@ -25,6 +25,9 @@ on:
       TENANT_ID:
         required: true
 
+env:
+  DIR: ${{ inputs.DIR }}
+
 jobs:
   set_env_matrix:
     outputs:
@@ -113,5 +116,5 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.environments.name }}-plan
-          path: ${{ inputs.DIR }}/.terraform/plans/${{ matrix.environments.name }}.enc
+          path: ${{ env.DIR }}/.terraform/plans/${{ matrix.environments.name }}.enc
           if-no-files-found: error
