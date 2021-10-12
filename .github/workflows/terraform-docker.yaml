@@ -115,6 +115,9 @@ jobs:
             PLAN_ERROR_CODE=$?
           fi
 
+          # Allways logout from azure
+          az logout
+
           if [[ ${PREPARE_ERROR_CODE} != 0 ]]; then
             echo "ERROR: PREPARE failed."
             exit ${PREPARE_ERROR_CODE}
@@ -132,3 +135,68 @@ jobs:
           name: ${{ matrix.environments.name }}-plan
           path: ${{ env.DIR }}/.terraform/plans/${{ matrix.environments.name }}.enc
           if-no-files-found: error
+
+  terraform_apply:
+    needs: [set_env_matrix, terraform_plan]
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fix directory permissions
+        run: |
+          set -e
+          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+          mkdir -p $AZURE_CONFIG_DIR
+          sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
+          sudo chown -R $(id -u):$(id -g) ${PWD}
+
+      - name: Setup Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+      - name: Azure Login
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+        run: |
+          echo $HOME
+          echo $PATH
+          az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
+          az account set -s ${ARM_SUBSCRIPTION_ID}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create Terraform plan folder
+        env:
+          TERRAFORM_PLAN_FOLDER: ${{ env.DIR }}/.terraform/plans/
+        run: |
+          mkdir -p ${TERRAFORM_PLAN_FOLDER}
+      - name: Download artifact (encrypted plan)
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.environments.name }}-plan
+          path: ${{ env.DIR }}/.terraform/plans/
+
+      - name: Terraform apply
+        env:
+          ENV: ${{ matrix.environments.name }}
+          servicePrincipalId: ${{ secrets.AZ_APP_ID }}
+          servicePrincipalKey: ${{ secrets.AZ_APP_SECRET }}
+          tenantId: ${{ secrets.TENANT_ID }}
+        run: |
+          # pre github actions
+          set -e
+          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+          make apply DIR=${DIR} ENV=${ENV}
+          ERROR_CODE=$?
+          # post github actions
+          az logout
+          sudo chown -R $(id -u):$(id -g) ${PWD}/${DIR}
+          sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
+          sudo chown -R $(id -u):$(id -g) ${PWD}/global.tfvars
+          exit $ERROR_CODE
