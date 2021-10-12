@@ -35,8 +35,8 @@ jobs:
         id: set-matrix
         run: |
           set -e
-          echo ${{ inputs.ENVIRONMENTS }} | jq .
-          MATRIX=$(echo ${{ inputs.ENVIRONMENTS }} | jq -c .)
+          echo '${{ inputs.ENVIRONMENTS }}' | jq .
+          MATRIX=$(echo '${{ inputs.ENVIRONMENTS }}' | jq -c .)
           echo "::set-output name=matrix::${MATRIX}"
 
   terraform_plan:
