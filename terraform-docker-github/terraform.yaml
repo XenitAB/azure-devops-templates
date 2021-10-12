@@ -5,14 +5,14 @@ on:
     branches:
       - main
     paths:
-      - "core/**"
+      - core/**
   pull_request:
     paths:
-      - "core/**"
+      - core/**
   workflow_dispatch:
     inputs:
       OPA_BLAST_RADIUS:
-        description: "OPA Blast Radius"
+        description: OPA Blast Radius
         required: true
         default: "50"
 
@@ -21,9 +21,15 @@ jobs:
     uses: xenitab/azure-devops-templates/.github/workflows/terraform-docker.yaml@2021.09.3
     with:
       DIR: core
-      ENVIRONMENTS: '{"environments":[{"name":"dev"}]}'
+      ENVIRONMENTS: |
+        {
+          "environments":[
+            {"name":"dev"},
+            {"name":"qa"}
+          ]
+        }
     secrets:
       AZ_APP_ID: ${{ secrets.AZ_APP_ID }}
       AZ_APP_SECRET: ${{ secrets.AZ_APP_SECRET }}
-      SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
       TENANT_ID: ${{ secrets.TENANT_ID }}
+      SUB_IDS: '{"dev": "${{ secrets.SUBSCRIPTION_ID_DEV }}", "qa": "${{ secrets.SUBSCRIPTION_ID_QA }}"}'
