@@ -24,8 +24,6 @@ on:
         required: true
       AZ_APP_SECRET:
         required: true
-      SUBSCRIPTION_ID:
-        required: true
       TENANT_ID:
         required: true
 
@@ -68,7 +66,7 @@ jobs:
         env:
           ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.secret_name] }}
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: |
           echo $HOME
@@ -160,7 +158,7 @@ jobs:
         env:
           ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.secret_name] }}
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: |
           echo $HOME
