@@ -72,12 +72,11 @@ jobs:
         env:
           ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ matrix.environments.subscription_id }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.subscription_id_key] }}
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: |
-          echo $HOME
-          echo $PATH
           az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
+          env
           az account set -s ${ARM_SUBSCRIPTION_ID}
 
       - name: Checkout
@@ -164,11 +163,10 @@ jobs:
         env:
           ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
           ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ matrix.environments.subscription_id }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets[matrix.environments.subscription_id_key] }}
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
         run: |
-          echo $HOME
-          echo $PATH
+          env
           az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
           az account set -s ${ARM_SUBSCRIPTION_ID}
 
