@@ -20,7 +20,7 @@ on:
         default: "true"
         type: string
     secrets:
-      SUB_IDS:
+      AZURE_SP_SECRETS:
         required: true
 
 env:
@@ -50,7 +50,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
+          creds: ${{fromJson(secrets.AZURE_SP_SECRETS)[matrix.environments.name]}}
           enable-AzPSSession: true
       - name: Checkout
         uses: actions/checkout@v2
@@ -114,7 +114,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
+          creds: ${{fromJson(secrets.AZURE_SP_SECRETS)[matrix.environments.name]}}
           enable-AzPSSession: true
 
       - name: Checkout
