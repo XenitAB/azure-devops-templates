@@ -50,7 +50,8 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
+          # creds: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
+          creds: ${{ secrets[matrix.environments.secret_name] }}
           enable-AzPSSession: true
       - name: Checkout
         uses: actions/checkout@v2
