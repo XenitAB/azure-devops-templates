@@ -53,27 +53,10 @@ jobs:
       matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
     runs-on: ubuntu-latest
     steps:
-      - name: Fix directory permissions
-        run: |
-          set -e
-          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
-          mkdir -p $AZURE_CONFIG_DIR
-
-      - name: Setup Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
       - name: Azure Login
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
-          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
-        run: |
-          az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
-          env
-          echo "THIS IS SUBS IDS: ${ARM_SUBSCRIPTION_ID}"
-          az account set -s ${ARM_SUBSCRIPTION_ID}
-
+        uses: azure/login@v1
+        with:
+          creds: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -81,8 +64,6 @@ jobs:
         env:
           ENV: ${{ matrix.environments.name }}
           OPA_BLAST_RADIUS: ${{ github.event.inputs.OPA_BLAST_RADIUS }}
-          servicePrincipalId: ${{ secrets.AZ_APP_ID }}
-          servicePrincipalKey: ${{ secrets.AZ_APP_SECRET }}
           tenantId: ${{ secrets.TENANT_ID }}
         run: |
           set -e
@@ -93,6 +74,11 @@ jobs:
             echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
           fi
 
+          # TODO clean up env
+          env
+          ls -la ${HOME}/.azure
+          ls -la $GITHUB_WORKSPACE
+          ls -la $GITHUB_WORKFLOW
           AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
 
           make prepare
@@ -106,7 +92,6 @@ jobs:
             fi
           fi
           make plan
-          az logout
 
       - name: Upload artifact (encrypted plan)
         uses: actions/upload-artifact@v2
@@ -132,19 +117,10 @@ jobs:
           sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
           sudo chown -R $(id -u):$(id -g) ${PWD}
 
-      - name: Setup Azure CLI
-        run: |
-          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
       - name: Azure Login
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZ_APP_ID }}
-          ARM_CLIENT_SECRET: ${{ secrets.AZ_APP_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
-          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
-        run: |
-          env
-          az login --service-principal -u ${ARM_CLIENT_ID} -p ${ARM_CLIENT_SECRET} -t ${ARM_TENANT_ID}
-          az account set -s ${ARM_SUBSCRIPTION_ID}
+        uses: azure/login@v1
+        with:
+          creds: ${{fromJson(secrets.SUB_IDS)[matrix.environments.name]}}
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -163,14 +139,7 @@ jobs:
       - name: Terraform apply
         env:
           ENV: ${{ matrix.environments.name }}
-          servicePrincipalId: ${{ secrets.AZ_APP_ID }}
-          servicePrincipalKey: ${{ secrets.AZ_APP_SECRET }}
-          tenantId: ${{ secrets.TENANT_ID }}
         run: |
           # pre github actions
           AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
           make apply DIR=${DIR} ENV=${ENV}
-          ERROR_CODE=$?
-          # post github actions
-          az logout
-          exit $ERROR_CODE
