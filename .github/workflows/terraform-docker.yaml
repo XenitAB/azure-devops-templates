@@ -78,7 +78,7 @@ jobs:
             mkdir -p $AZURE_CONFIG_DIR
             sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
             sudo chown -R $(id -u):$(id -g) ${PWD}
-            az login --service-principal -u ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV)[clientId] }} -p ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV)[clientSecret] }} -t ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV)[tenantId] }} -s ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV)[subscriptionId] }}
+            az login --service-principal -u ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientId }} -p ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientSecret }} -t ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).tenantId }} -s ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).subscriptionId }}
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -95,6 +95,8 @@ jobs:
             export OPA_BLAST_RADIUS=50
             echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
           fi
+          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+
 
           make prepare
 
