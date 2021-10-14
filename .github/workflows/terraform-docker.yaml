@@ -63,11 +63,23 @@ jobs:
           echo $AZURE_CREDS
           echo "::set-output name=content::$AZURE_CREDS"
 
+      #- name: Azure Login
+      #  uses: azure/login@v1
+      #  with:
+      #    # creds: ${{ secrets.steps.my_string.outputs.content }}
+      #    creds: ${{ secrets.AZURE_CREDENTIALS_DEV }}
+
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/CLI@v1
         with:
-          # creds: ${{ secrets.steps.my_string.outputs.content }}
-          creds: ${{ secrets.AZURE_CREDENTIALS_DEV }}
+          azcliversion: 2.0.72
+          inlineScript: |
+            AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+            mkdir -p $AZURE_CONFIG_DIR
+            sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
+            sudo chown -R $(id -u):$(id -g) ${PWD}
+            az login --service-principal -u ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV)[clientId] }} -p ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV)[clientSecret] }} -t ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV)[tenantId] }} -s ${{fromJSON(secrets.AZURE_CREDENTIALS_DEV)[subscriptionId] }}
+
       - name: Checkout
         uses: actions/checkout@v2
 
