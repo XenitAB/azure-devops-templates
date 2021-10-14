@@ -51,10 +51,17 @@ jobs:
       matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
     runs-on: ubuntu-latest
     steps:
+      - name: Create secret name
+        id: my_string
+        run: |
+          AZURE_CREDS=AZURE_CREDENTIALS_${{ matrix.environments.name }}
+          echo $AZURE_CREDS
+          echo "::set-output name=content::$AZURE_CREDS"
+
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{secrets["AZURE_CREDENTIALS_"+matrix.environments.name]}}
+          creds: ${{ secrets.steps.my_string.outputs.content }}
           enable-AzPSSession: true
       - name: Checkout
         uses: actions/checkout@v2
@@ -118,7 +125,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{secrets["AZURE_CREDENTIALS_"+matrix.environments.name]}}
+          creds: ${{ secrets.AZURE_CREDENTIALS_matrix.environments.name }}
           enable-AzPSSession: true
 
       - name: Checkout
