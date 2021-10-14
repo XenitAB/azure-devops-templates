@@ -68,7 +68,6 @@ jobs:
         with:
           # creds: ${{ secrets.steps.my_string.outputs.content }}
           creds: ${{ secrets.AZURE_CREDENTIALS_DEV }}
-          enable-AzPSSession: true
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -111,6 +110,16 @@ jobs:
           path: ${{ env.DIR }}/.terraform/plans/${{ matrix.environments.name }}.enc
           if-no-files-found: error
 
+      - name: Azure logout
+        if: always()
+        uses: azure/CLI@v1
+        with:
+          azcliversion: 2.0.72
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear
+
   terraform_apply:
     needs: [set_env_matrix, terraform_plan]
     strategy:
@@ -139,7 +148,6 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.steps.my_string.outputs.content }}
-          enable-AzPSSession: true
 
       - name: Checkout
         uses: actions/checkout@v2
