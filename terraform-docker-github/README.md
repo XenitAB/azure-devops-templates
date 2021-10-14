@@ -6,3 +6,8 @@ To make the files available for other github actions we have to store them in `.
 In [terraform.yaml](terraform.yaml) you can find a example how to use the action.
 
 The action supplies the **plan validate and apply** stages.
+
+{"clientId": "<GUID>",
+  "clientSecret": "<CLIENT_SECRET_VALUE>",
+  "subscriptionId": "<GUID>",
+  "tenantId": "<GUID>"}

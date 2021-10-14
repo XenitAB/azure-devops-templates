@@ -20,8 +20,12 @@ on:
         default: "true"
         type: string
     secrets:
-      AZURE_SP_SECRETS:
-        required: true
+      AZURE_CREDENTIALS_DEV:
+        required: false
+      AZURE_CREDENTIALS_QA:
+        required: false
+      AZURE_CREDENTIALS_PROD:
+        required: false
 
 env:
   DIR: ${{ inputs.DIR }}
@@ -50,7 +54,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{fromJson(secrets.AZURE_SP_SECRETS)[matrix.environments.name]}}
+          creds: ${{secrets["AZURE_CREDENTIALS_"+matrix.environments.name]}}
           enable-AzPSSession: true
       - name: Checkout
         uses: actions/checkout@v2
@@ -114,7 +118,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{fromJson(secrets.AZURE_SP_SECRETS)[matrix.environments.name]}}
+          creds: ${{secrets["AZURE_CREDENTIALS_"+matrix.environments.name]}}
           enable-AzPSSession: true
 
       - name: Checkout
