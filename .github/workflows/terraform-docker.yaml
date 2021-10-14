@@ -84,13 +84,6 @@ jobs:
             echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
           fi
 
-          # TODO clean up env
-          env
-          ls -la ${HOME}/.azure
-          ls -la $GITHUB_WORKSPACE
-          ls -la $GITHUB_WORKFLOW
-          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
-
           make prepare
 
           if [[ "${{ inputs.VALIDATE_ENABLED }}" -eq "True" || "${{ inputs.VALIDATE_ENABLED }}" -eq "true" ]]; then
