@@ -3,6 +3,10 @@ name: terraform
 on:
   workflow_call:
     inputs:
+      runs-on:
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
       opa_blast_radius:
         description: 'OPA Blast Radius'
         required: false
@@ -34,7 +38,7 @@ jobs:
   set_env_matrix:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-    runs-on: ubuntu-latest
+    runs-on: ${{fromJSON(inputs.runs-on)}}
     steps:
       - name: Set matrix for environment
         id: set-matrix
@@ -49,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
-    runs-on: ubuntu-latest
+    runs-on: ${{fromJSON(inputs.runs-on)}}
     steps:
       - name: Create secret name
         id: my_string
@@ -114,7 +118,7 @@ jobs:
       max-parallel: 1
       matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
     if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ${{fromJSON(inputs.runs-on)}}
     steps:
       - name: Fix directory permissions
         run: |
