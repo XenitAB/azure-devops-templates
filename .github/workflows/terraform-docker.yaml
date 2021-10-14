@@ -20,11 +20,11 @@ on:
         default: "true"
         type: string
     secrets:
-      AZURE_CREDENTIALS_dev:
+      AZURE_CREDENTIALS_DEV:
         required: false
-      AZURE_CREDENTIALS_qa:
+      AZURE_CREDENTIALS_QA:
         required: false
-      AZURE_CREDENTIALS_prod:
+      AZURE_CREDENTIALS_PROD:
         required: false
 
 env:
@@ -54,7 +54,8 @@ jobs:
       - name: Create secret name
         id: my_string
         run: |
-          AZURE_CREDS=AZURE_CREDENTIALS_${{ matrix.environments.name }}
+          AZURE_CREDS_TMP=AZURE_CREDENTIALS_${{ matrix.environments.name }}
+          AZURE_CREDS=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
           echo $AZURE_CREDS
           echo "::set-output name=content::$AZURE_CREDS"
 
@@ -62,7 +63,7 @@ jobs:
         uses: azure/login@v1
         with:
           # creds: ${{ secrets.steps.my_string.outputs.content }}
-          creds: ${{ secrets.AZURE_CREDENTIALS_dev }}
+          creds: ${{ secrets.AZURE_CREDENTIALS_DEV }}
           enable-AzPSSession: true
       - name: Checkout
         uses: actions/checkout@v2
@@ -126,7 +127,8 @@ jobs:
       - name: Create secret name
         id: my_string
         run: |
-          AZURE_CREDS=AZURE_CREDENTIALS_${{ matrix.environments.name }}
+          AZURE_CREDS_TMP=AZURE_CREDENTIALS_${{ matrix.environments.name }}
+          AZURE_CREDS=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
           echo $AZURE_CREDS
           echo "::set-output name=content::$AZURE_CREDS"
       - name: Azure Login
