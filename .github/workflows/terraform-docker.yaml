@@ -20,11 +20,11 @@ on:
         default: "true"
         type: string
     secrets:
-      AZURE_CREDENTIALS_DEV:
+      AZURE_CREDENTIALS_dev:
         required: false
-      AZURE_CREDENTIALS_QA:
+      AZURE_CREDENTIALS_qa:
         required: false
-      AZURE_CREDENTIALS_PROD:
+      AZURE_CREDENTIALS_prod:
         required: false
 
 env:
@@ -62,7 +62,7 @@ jobs:
         uses: azure/login@v1
         with:
           # creds: ${{ secrets.steps.my_string.outputs.content }}
-          creds: ${{ secrets.AZURE_CREDENTIALS_DEV }}
+          creds: ${{ secrets.AZURE_CREDENTIALS_dev }}
           enable-AzPSSession: true
       - name: Checkout
         uses: actions/checkout@v2
@@ -123,10 +123,16 @@ jobs:
           sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
           sudo chown -R $(id -u):$(id -g) ${PWD}
 
+      - name: Create secret name
+        id: my_string
+        run: |
+          AZURE_CREDS=AZURE_CREDENTIALS_${{ matrix.environments.name }}
+          echo $AZURE_CREDS
+          echo "::set-output name=content::$AZURE_CREDS"
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS_matrix.environments.name }}
+          creds: ${{ secrets.steps.my_string.outputs.content }}
           enable-AzPSSession: true
 
       - name: Checkout
