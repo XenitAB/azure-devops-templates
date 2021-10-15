@@ -92,11 +92,13 @@ jobs:
           fi
           env
           AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
-          echo "ARM_CLIENT_ID$=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientId }}">> $TEMP_ENV_FILE
-          echo "ARM_CLIENT_SECRET$=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientSecret }}">> $TEMP_ENV_FILE
-          echo "ARM_TENANT_ID$=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).tenantId }}">> $TEMP_ENV_FILE
+
+          echo "ARM_CLIENT_ID=$ARM_CLIENT_ID" >> $TEMP_ENV_FILE
+          echo "ARM_CLIENT_SECRET=$ARM_CLIENT_SECRET" >> $TEMP_ENV_FILE
+          echo "ARM_TENANT_ID=$ARM_TENANT_ID" >> $TEMP_ENV_FILE
 
           # TODO remove cat
+          echo "This is a cat"
           cat $TEMP_ENV_FILE
           make prepare
 
