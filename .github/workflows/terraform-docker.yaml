@@ -110,6 +110,10 @@ jobs:
               exit 1
             fi
           fi
+          echo "ARM_CLIENT_ID=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientId }}">> $TEMP_ENV_FILE
+          echo "ARM_CLIENT_SECRET=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientSecret }}">> $TEMP_ENV_FILE
+          echo "ARM_TENANT_ID=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).tenantId }}">> $TEMP_ENV_FILE
+
           make plan
 
       - name: Upload artifact (encrypted plan)
