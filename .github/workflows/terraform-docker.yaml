@@ -81,7 +81,6 @@ jobs:
         env:
           ENV: ${{ matrix.environments.name }}
           OPA_BLAST_RADIUS: ${{ github.event.inputs.OPA_BLAST_RADIUS }}
-          TEMP_ENV_FILE: /tmp/docker-env-file
         run: |
           set -e
           if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
@@ -93,13 +92,13 @@ jobs:
           env
           AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
 
-          echo "ARM_CLIENT_ID=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientId }}">> $TEMP_ENV_FILE
-          echo "ARM_CLIENT_SECRET=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientSecret }}">> $TEMP_ENV_FILE
-          echo "ARM_TENANT_ID=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).tenantId }}">> $TEMP_ENV_FILE
+          echo "export time"
+          export servicePrincipalId=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientId }}
+          export servicePrincipalKey=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientSecret }}
+          export tenantId=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).tenantId }}
 
-          # TODO remove cat
-          echo "This is a cat"
-          cat $TEMP_ENV_FILE
+          echo "check env"
+          env
           make prepare
 
           if [[ "${{ inputs.VALIDATE_ENABLED }}" -eq "True" || "${{ inputs.VALIDATE_ENABLED }}" -eq "true" ]]; then
@@ -110,9 +109,6 @@ jobs:
               exit 1
             fi
           fi
-          echo "ARM_CLIENT_ID=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientId }}">> $TEMP_ENV_FILE
-          echo "ARM_CLIENT_SECRET=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientSecret }}">> $TEMP_ENV_FILE
-          echo "ARM_TENANT_ID=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).tenantId }}">> $TEMP_ENV_FILE
 
           make plan
 
