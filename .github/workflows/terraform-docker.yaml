@@ -81,6 +81,7 @@ jobs:
         env:
           ENV: ${{ matrix.environments.name }}
           OPA_BLAST_RADIUS: ${{ github.event.inputs.OPA_BLAST_RADIUS }}
+          TEMP_ENV_FILE: /tmp/docker-env-file
         run: |
           set -e
           if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
@@ -89,9 +90,14 @@ jobs:
             export OPA_BLAST_RADIUS=50
             echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
           fi
+          env
           AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+          echo "ARM_CLIENT_ID$=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientId }}">> $TEMP_ENV_FILE
+          echo "ARM_CLIENT_SECRET$=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientSecret }}">> $TEMP_ENV_FILE
+          echo "ARM_TENANT_ID$=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).tenantId }}">> $TEMP_ENV_FILE
 
-
+          # TODO remove cat
+          cat $TEMP_ENV_FILE
           make prepare
 
           if [[ "${{ inputs.VALIDATE_ENABLED }}" -eq "True" || "${{ inputs.VALIDATE_ENABLED }}" -eq "true" ]]; then
@@ -120,6 +126,7 @@ jobs:
             az logout
             az cache purge
             az account clear
+            make teardown
 
   terraform_apply:
     needs: [set_env_matrix, terraform_plan]
