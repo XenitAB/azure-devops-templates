@@ -66,7 +66,7 @@ jobs:
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.steps.my_string.outputs.content }}
+          creds: ${{ secrets[steps.my_string.outputs.content] }}
           # creds: ${{ secrets.AZURE_CREDENTIALS_DEV }}
       - run: |
           AZ_ACCOUNT_TYPE="$(az account show --query user.type --output tsv)"
