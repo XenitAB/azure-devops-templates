@@ -83,9 +83,9 @@ jobs:
             echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
           fi
 
-          export servicePrincipalId=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientId }}
-          export servicePrincipalKey=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientSecret }}
-          export tenantId=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).tenantId }}
+          export servicePrincipalId=${{fromJSON(${{ secrets[steps.creds_env.outputs.azure_creds_env] }}).clientId }}
+          export servicePrincipalKey=${{fromJSON(${{ secrets[steps.creds_env.outputs.azure_creds_env] }}).clientSecret }}
+          export tenantId=${{fromJSON(${{ secrets[steps.creds_env.outputs.azure_creds_env] }}).tenantId }}
 
           make prepare
 
@@ -160,7 +160,10 @@ jobs:
           ENV: ${{ matrix.environments.name }}
         run: |
           # pre github actions
-          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+          export servicePrincipalId=${{fromJSON(${{ secrets[steps.creds_env.outputs.azure_creds_env] }}).clientId }}
+          export servicePrincipalKey=${{fromJSON(${{ secrets[steps.creds_env.outputs.azure_creds_env] }}).clientSecret }}
+          export tenantId=${{fromJSON(${{ secrets[steps.creds_env.outputs.azure_creds_env] }}).tenantId }}
+
           make apply DIR=${DIR} ENV=${ENV}
 
       - name: Azure logout
