@@ -55,24 +55,17 @@ jobs:
       matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
     runs-on: ${{fromJSON(inputs.runs-on)}}
     steps:
-      - name: Create secret name
-        id: my_string
+      - name: Create Azure credentials secret name
+        id: creds_env
         run: |
           AZURE_CREDS_TMP=AZURE_CREDENTIALS_${{ matrix.environments.name }}
-          AZURE_CREDS=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
-          echo $AZURE_CREDS
-          echo "::set-output name=content::$AZURE_CREDS"
+          AZURE_CREDS_ENV=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
+          echo "::set-output name=azure_creds_env::$AZURE_CREDS_ENV"
 
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets[steps.my_string.outputs.content] }}
-          # creds: ${{ secrets.AZURE_CREDENTIALS_DEV }}
-      - run: |
-          AZ_ACCOUNT_TYPE="$(az account show --query user.type --output tsv)"
-          echo "AZ_ACCOUNT_TYPE: $AZ_ACCOUNT_TYPE"
-          which az
-          echo $AZURE_CONFIG_DIR
+          creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
 
       - name: Checkout
         uses: actions/checkout@v2
@@ -89,16 +82,11 @@ jobs:
             export OPA_BLAST_RADIUS=50
             echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
           fi
-          env
-          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
 
-          echo "export time"
           export servicePrincipalId=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientId }}
           export servicePrincipalKey=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).clientSecret }}
           export tenantId=${{fromJSON(secrets.AZURE_CREDENTIALS_DEV).tenantId }}
 
-          echo "check env"
-          env
           make prepare
 
           if [[ "${{ inputs.VALIDATE_ENABLED }}" -eq "True" || "${{ inputs.VALIDATE_ENABLED }}" -eq "true" ]]; then
@@ -141,25 +129,17 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: ${{fromJSON(inputs.runs-on)}}
     steps:
-      - name: Fix directory permissions
-        run: |
-          set -e
-          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
-          mkdir -p $AZURE_CONFIG_DIR
-          sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
-          sudo chown -R $(id -u):$(id -g) ${PWD}
-
-      - name: Create secret name
-        id: my_string
+      - name: Create Azure credentials secret name
+        id: creds_env
         run: |
           AZURE_CREDS_TMP=AZURE_CREDENTIALS_${{ matrix.environments.name }}
-          AZURE_CREDS=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
-          echo $AZURE_CREDS
-          echo "::set-output name=content::$AZURE_CREDS"
+          AZURE_CREDS_ENV=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
+          echo "::set-output name=azure_creds_env::$AZURE_CREDS_ENV"
+
       - name: Azure Login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.steps.my_string.outputs.content }}
+          creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
 
       - name: Checkout
         uses: actions/checkout@v2
