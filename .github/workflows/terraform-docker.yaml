@@ -1,0 +1,179 @@
+name: terraform
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+      opa_blast_radius:
+        description: 'OPA Blast Radius'
+        required: false
+        type: string
+        default: "50"
+      ENVIRONMENTS:
+        description: '{"environments":[{"name":"dev"}, {"name":"qa"}]}'
+        required: true
+        type: string
+      DIR:
+        required: true
+        type: string
+      VALIDATE_ENABLED:
+        required: false
+        default: "true"
+        type: string
+    secrets:
+      AZURE_CREDENTIALS_DEV:
+        required: false
+      AZURE_CREDENTIALS_QA:
+        required: false
+      AZURE_CREDENTIALS_PROD:
+        required: false
+
+env:
+  DIR: ${{ inputs.DIR }}
+
+jobs:
+  set_env_matrix:
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ${{fromJSON(inputs.runs-on)}}
+    steps:
+      - name: Set matrix for environment
+        id: set-matrix
+        run: |
+          set -e
+          echo '${{ inputs.ENVIRONMENTS }}' | jq .
+          MATRIX=$(echo '${{ inputs.ENVIRONMENTS }}' | jq -c .)
+          echo "::set-output name=matrix::${MATRIX}"
+
+  terraform_plan:
+    needs: set_env_matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
+    runs-on: ${{fromJSON(inputs.runs-on)}}
+    steps:
+      - name: Create Azure credentials secret name
+        id: creds_env
+        run: |
+          AZURE_CREDS_TMP=AZURE_CREDENTIALS_${{ matrix.environments.name }}
+          AZURE_CREDS_ENV=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
+          echo "::set-output name=azure_creds_env::$AZURE_CREDS_ENV"
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Terraform plan
+        env:
+          ENV: ${{ matrix.environments.name }}
+          OPA_BLAST_RADIUS: ${{ github.event.inputs.OPA_BLAST_RADIUS }}
+        run: |
+          set -e
+          if [ -n "${OPA_BLAST_RADIUS}" ] && [ "${OPA_BLAST_RADIUS}" -eq "${OPA_BLAST_RADIUS}" ] 2>/dev/null; then
+            echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
+          else
+            export OPA_BLAST_RADIUS=50
+            echo OPA_BLAST_RADIUS: ${OPA_BLAST_RADIUS}
+          fi
+
+          export servicePrincipalId=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).clientId }}
+          export servicePrincipalKey=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).clientSecret }}
+          export tenantId=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).tenantId }}
+
+          make prepare
+
+          if [[ "${{ inputs.VALIDATE_ENABLED }}" -eq "True" || "${{ inputs.VALIDATE_ENABLED }}" -eq "true" ]]; then
+            make validate
+            if [[ $(git status --porcelain) ]]; then
+              git diff
+              echo 'run make validate and commit changes' 1>&2
+              exit 1
+            fi
+          fi
+
+          make plan
+
+      - name: Upload artifact (encrypted plan)
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.environments.name }}-plan
+          path: ${{ env.DIR }}/.terraform/plans/${{ matrix.environments.name }}.enc
+          if-no-files-found: error
+
+      - name: Azure logout
+        if: always()
+        uses: azure/CLI@v1
+        env:
+          ENV: ${{ matrix.environments.name }}
+        with:
+          azcliversion: 2.0.72
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear
+            make teardown
+
+  terraform_apply:
+    needs: [set_env_matrix, terraform_plan]
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
+    if: github.event_name != 'pull_request'
+    runs-on: ${{fromJSON(inputs.runs-on)}}
+    steps:
+      - name: Create Azure credentials secret name
+        id: creds_env
+        run: |
+          AZURE_CREDS_TMP=AZURE_CREDENTIALS_${{ matrix.environments.name }}
+          AZURE_CREDS_ENV=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
+          echo "::set-output name=azure_creds_env::$AZURE_CREDS_ENV"
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create Terraform plan folder
+        env:
+          TERRAFORM_PLAN_FOLDER: ${{ env.DIR }}/.terraform/plans/
+        run: |
+          mkdir -p ${TERRAFORM_PLAN_FOLDER}
+      - name: Download artifact (encrypted plan)
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.environments.name }}-plan
+          path: ${{ env.DIR }}/.terraform/plans/
+
+      - name: Terraform apply
+        env:
+          ENV: ${{ matrix.environments.name }}
+        run: |
+          export servicePrincipalId=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).clientId }}
+          export servicePrincipalKey=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).clientSecret }}
+          export tenantId=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).tenantId }}
+
+          make apply DIR=${DIR} ENV=${ENV}
+
+      - name: Azure logout
+        if: always()
+        uses: azure/CLI@v1
+        env:
+          ENV: ${{ matrix.environments.name }}
+        with:
+          azcliversion: 2.0.72
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear
+            make teardown

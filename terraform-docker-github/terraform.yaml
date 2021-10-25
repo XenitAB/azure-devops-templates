@@ -1,0 +1,36 @@
+name: terraform_core
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - core/**
+  pull_request:
+    paths:
+      - core/**
+  workflow_dispatch:
+    inputs:
+      OPA_BLAST_RADIUS:
+        description: OPA Blast Radius
+        required: true
+        default: "50"
+
+jobs:
+  terraform:
+    uses: xenitab/azure-devops-templates/.github/workflows/terraform-docker.yaml@2021.09.3
+    with:
+      DIR: core
+      runs-on: '["self-hosted", "linux"]' # If you don't want to use the default ubuntu-latest
+      ENVIRONMENTS: |
+        {
+          "environments":[
+            {"name":"dev"},
+            {"name":"qa"},
+            {"name":"prod"}
+          ]
+        }
+    secrets:
+      AZURE_CREDENTIALS_DEV: ${{ secrets.AZURE_CREDENTIALS_DEV }}
+      AZURE_CREDENTIALS_QA: ${{ secrets.AZURE_CREDENTIALS_QA }}
+      AZURE_CREDENTIALS_PROD: ${{ secrets.AZURE_CREDENTIALS_PROD }}
