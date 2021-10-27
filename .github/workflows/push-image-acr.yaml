@@ -1,0 +1,165 @@
+name: terraform
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+      ENVIRONMENTS:
+        description: '{"environments":[{"name":"dev"}, {"name":"qa"}]}'
+        required: true
+        type: string
+      image-name:
+        description: What the image should be called
+        required: true
+        type: string
+      organization:
+        description: Organization/username in github
+        required: true
+        type: string
+      gitops-repo:
+        description: Name of your gitops repository
+        required: true
+        type: string
+
+    secrets:
+      REGISTRY_LOGIN_SERVER_DEV:
+        description: The ACR URL
+        required: false
+      REGISTRY_USERNAME_DEV:
+        description: The SP clientId used to login to ACR
+        required: false
+      REGISTRY_PASSWORD_DEV:
+        description: The SP clientSecret used to login to ACR
+        required: false
+      REGISTRY_LOGIN_SERVER_QA:
+        description: The ACR URL
+        required: false
+      REGISTRY_USERNAME_QA:
+        description: The SP clientId used to login to ACR
+        required: false
+      REGISTRY_PASSWORD_QA:
+        description: The SP clientSecret used to login to ACR
+        required: false
+      REGISTRY_LOGIN_SERVER_PROD:
+        description: The ACR URL
+        required: false
+      REGISTRY_USERNAME_PROD:
+        description: The SP clientId used to login to ACR
+        required: false
+      REGISTRY_PASSWORD_PROD:
+        description: The SP clientSecret used to login to ACR
+        required: false
+      XKS_APP_ID:
+        description: The GitHub application ID use to communicate with other repositories
+        required: true
+      XKS_PRIVATE_KEY:
+        description: The GitHub application pem file
+        required: true
+
+jobs:
+  set_env_matrix:
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ${{fromJSON(inputs.runs-on)}}
+    steps:
+      - name: Set matrix for environment
+        id: set-matrix
+        run: |
+          set -e
+          echo '${{ inputs.ENVIRONMENTS }}' | jq .
+          MATRIX=$(echo '${{ inputs.ENVIRONMENTS }}' | jq -c .)
+          echo "::set-output name=matrix::${MATRIX}"
+
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Build and export
+        uses: docker/build-push-action@v2
+        with:
+          tags: ${{ inputs.image-name }}:latest
+          outputs: type=docker,dest=/tmp/${{ inputs.image-name }}.tar
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ inputs.image-name }}
+          path: /tmp/${{ inputs.image-name }}.tar
+
+  push_image:
+    runs-on: ubuntu-latest
+    needs: [set_env_matrix, build-app]
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
+    steps:
+      - name: Create Azure credentials secret name
+        id: creds_env
+        run: |
+          # ACR
+          REGISTRY_LOGIN_SERVER_TMP=REGISTRY_LOGIN_SERVER_${{ matrix.environments.name }}
+          REGISTRY_LOGIN_SERVER_ENV=$(echo $REGISTRY_LOGIN_SERVER_TMP |tr '[:lower:]' '[:upper:]')
+          echo "::set-output name=registry_login_server_env::$REGISTRY_LOGIN_SERVER_ENV"
+
+          # USERNAME
+          REGISTRY_USERNAME_TMP=REGISTRY_USERNAME_${{ matrix.environments.name }}
+          REGISTRY_USERNAME_ENV=$(echo $REGISTRY_USERNAME_TMP |tr '[:lower:]' '[:upper:]')
+          echo "::set-output name=registry_username_env::$REGISTRY_USERNAME_ENV"
+
+          # PASSWORD
+          REGISTRY_PASSWORD_TMP=REGISTRY_PASSWORD_${{ matrix.environments.name }}
+          REGISTRY_PASSWORD_ENV=$(echo $REGISTRY_PASSWORD_TMP |tr '[:lower:]' '[:upper:]')
+          echo "::set-output name=registry_password_env::$REGISTRY_PASSWORD_ENV"
+
+          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "::set-output name=sha_short::$SHA_SHORT"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ secrets[steps.creds_env.outputs.registry_login_server_env] }}
+          username: ${{ secrets[steps.creds_env.outputs.registry_username_env] }}
+          password: ${{ secrets[steps.creds_env.outputs.registry_password_env] }}
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ inputs.image-name }}
+          path: /tmp
+      - name: Load image and push
+        run: |
+          docker load --input /tmp/${{ inputs.image-name }}.tar
+          docker tag ${{ inputs.image-name }}:latest ${{ secrets[steps.creds_env.outputs.registry_login_server_env] }}/${{ inputs.organization }}/${{ inputs.image-name }}:${{ steps.creds_env.outputs.sha_short }}
+          docker push ${{ secrets[steps.creds_env.outputs.registry_login_server_env] }}/${{ inputs.organization }}/${{ inputs.image-name }}:${{ steps.creds_env.outputs.sha_short }}
+
+  trigger_gitops:
+    runs-on: ubuntu-latest
+    needs: push_image
+    steps:
+      - name: Generate GitHub App token
+        uses: tibdex/github-app-token@v1
+        id: generate_token
+        with:
+          app_id: ${{ secrets.XKS_APP_ID }}
+          private_key: ${{ secrets.XKS_PRIVATE_KEY }}
+          repository: ${{ github.repository_owner }}/${{ inputs.gitops-repo }}
+      - name: Short sha
+        id: short_sha
+        run: |
+            SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+            echo "::set-output name=sha_short::$SHA_SHORT"
+      - name: Notify gitops-promotion workflow
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+          repository: ${{ github.repository_owner }}/${{ inputs.gitops-repo }}
+          event-type: image-push
+          client-payload: |
+            {
+              "tag": "${{ steps.short_sha.outputs.sha_short }}"
+            }
