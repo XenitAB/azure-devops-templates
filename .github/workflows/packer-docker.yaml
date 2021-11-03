@@ -86,8 +86,6 @@ jobs:
           PACKER_TEMPLATE_REPO_BRANCH: ${{ inputs.PACKER_TEMPLATE_REPO_BRANCH }}
           PACKER_TEMPLATE_FILE: ${{ inputs.PACKER_TEMPLATE_FILE }}
         run: |
-          set -x
-          env
           set -e
           AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
           TMP_DIR="${TMP_DIR:-/tmp}"
