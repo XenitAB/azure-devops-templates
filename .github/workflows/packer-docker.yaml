@@ -80,11 +80,11 @@ jobs:
         env:
           ENV: ${{ matrix.environments.name }}
           TMP_DIR: ${{ runner.temp }}
-          IMAGE: ${{ github.event.inputs.IMAGE }}
-          RESOURCE_GROUP: "rg-${{ matrix.environments.name }}-we-${{ github.event.inputs.RESOURCE_GROUP_NAME_SUFFIX }}"
-          PACKER_TEMPLATE_REPO: ${{ github.event.inputs.PACKER_TEMPLATE_REPO }}
-          PACKER_TEMPLATE_REPO_BRANCH: ${{ github.event.inputs.PACKER_TEMPLATE_REPO_BRANCH }}
-          PACKER_TEMPLATE_FILE: ${{ github.event.inputs.PACKER_TEMPLATE_FILE }}
+          IMAGE: ${{ inputs.IMAGE }}
+          RESOURCE_GROUP: "rg-${{ matrix.environments.name }}-we-${{ inputs.RESOURCE_GROUP_NAME_SUFFIX }}"
+          PACKER_TEMPLATE_REPO: ${{ inputs.PACKER_TEMPLATE_REPO }}
+          PACKER_TEMPLATE_REPO_BRANCH: ${{ inputs.PACKER_TEMPLATE_REPO_BRANCH }}
+          PACKER_TEMPLATE_FILE: ${{ inputs.PACKER_TEMPLATE_FILE }}
         run: |
           set -x
           env
