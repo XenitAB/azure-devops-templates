@@ -15,6 +15,7 @@ on:
         description: "Image to build Packer with"
         required: true
         type: string
+        default: "ghcr.io/xenitab/github-actions/tools:2020.12.6"
       RESOURCE_GROUP_NAME_SUFFIX:
         description: "Resource group name suffix to create VM image in"
         required: true
