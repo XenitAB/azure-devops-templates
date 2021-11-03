@@ -97,7 +97,7 @@ jobs:
           set +e
           sudo chown -R 1000:1000 ${AZURE_CONFIG_DIR}
           sudo chown -R 1000:1000 ${TMP_DIR}/${ENV}.env
-          docker run --entrypoint "/opt/packer.sh" -v $(AZURE_CONFIG_DIR):/home/tools/.azure -v $(TMP_DIR)/$(ENV).env:/tmp/$(ENV).env $(IMAGE) build $(ENV) $(PACKER_TEMPLATE_REPO) $(PACKER_TEMPLATE_REPO_BRANCH) $(PACKER_TEMPLATE_FILE) $(RESOURCE_GROUP)
+          docker run --entrypoint "/opt/packer.sh" -v ${AZURE_CONFIG_DIR}:/home/tools/.azure -v ${TMP_DIR}/${ENV}.env:/tmp/${ENV}.env ${IMAGE} build ${ENV} ${PACKER_TEMPLATE_REPO} ${PACKER_TEMPLATE_REPO_BRANCH} ${PACKER_TEMPLATE_FILE} ${RESOURCE_GROUP}
           ERROR_CODE=$?
 
           sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
