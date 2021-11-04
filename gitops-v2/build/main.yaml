@@ -143,7 +143,6 @@ stages:
           - bash: |
               set -ex
               # Download
-              https://github.com/aquasecurity/trivy/releases/download/v0.20.2/trivy_0.20.2_Linux-64bit.tar.gz
               wget -O trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz https://github.com/aquasecurity/trivy/releases/download/${TRIVY_TAG}/trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
               DOWNLOAD_TRIVY_SHA=$(openssl sha1 -sha256 trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz | awk '{print $2}')
               if [[ "${TRIVY_SHA}" != "${DOWNLOAD_TRIVY_SHA}" ]]; then
