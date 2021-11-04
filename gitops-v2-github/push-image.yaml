@@ -1,0 +1,38 @@
+name: push_image
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      OPA_BLAST_RADIUS:
+        description: OPA Blast Radius
+        required: true
+        default: "50"
+
+jobs:
+  image:
+    uses: xenitab/azure-devops-templates/.github/workflows/push-image-acr.yaml@2021.10.2
+    with:
+      image-name: podinfo
+      organization: xenitab
+      gitops-repo: xenit-gitops
+      ENVIRONMENTS: |
+        {
+          "environments":[
+            {"name":"dev"}
+          ]
+        }
+    secrets:
+      REGISTRY_LOGIN_SERVER_DEV: ${{ secrets.REGISTRY_LOGIN_SERVER_DEV }}
+      REGISTRY_USERNAME_DEV: ${{ secrets.REGISTRY_USERNAME_DEV }}
+      REGISTRY_PASSWORD_DEV: ${{ secrets.REGISTRY_PASSWORD_DEV }}
+      REGISTRY_LOGIN_SERVER_QA: ${{ secrets.REGISTRY_LOGIN_SERVER_QA }}
+      REGISTRY_USERNAME_QA: ${{ secrets.REGISTRY_USERNAME_QA }}
+      REGISTRY_PASSWORD_QA: ${{ secrets.REGISTRY_PASSWORD_QA }}
+      REGISTRY_LOGIN_SERVER_PROD: ${{ secrets.REGISTRY_LOGIN_SERVER_PROD }}
+      REGISTRY_USERNAME_PROD: ${{ secrets.REGISTRY_USERNAME_PROD }}
+      REGISTRY_PASSWORD_PROD: ${{ secrets.REGISTRY_PASSWORD_PROD }}
+      XKS_APP_ID: ${{ secrets.XKS_APP_ID }}
+      XKS_PRIVATE_KEY: ${{ secrets.XKS_PRIVATE_KEY }}
