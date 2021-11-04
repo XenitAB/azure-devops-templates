@@ -48,8 +48,8 @@ parameters:
         tag: "v1.18.0"
         sha: "f9bc9de12438b463ca84e77fde70b07b155d4da07ca21bc3f4354a62c6199db4"
       trivy:
-        tag: "v0.12.0"
-        sha: "4003d993d4b6b5673d4ef6e216578e8ac2bf6b439201a8e748a75fc68430c3f5"
+        tag: "v0.20.2"
+        sha: "38a6de48e21a34e0fa0d2cf63439c0afcbbae0e78fb3feada7a84a9cf6e7f60c"
       horusec:
         tag: "v2.5.0"
         sha: "94bbfcb65db40d802b0c5b5b5a7f31bc89d4bd25ba6cbff3fa5debe3313d1b1f"
