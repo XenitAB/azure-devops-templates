@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: main
-        run: |
+      - run: |
           set -e
           echo 1
           git config --global pull.rebase true
