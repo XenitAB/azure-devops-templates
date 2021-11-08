@@ -1,0 +1,22 @@
+name: update-from-upstream
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  update-from-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          set -e
+          git config --global pull.rebase true
+          git config --global user.email "github-workflows-@$GITHUB_WORKFLOW-$GITHUB-REPOSITORY"
+          git config --global user.name "Github Workflows ($GITHUB_WORKFLOW $GITHUB-REPOSITORY)"
+          git remote add upstream https://github.com/XenitAB/azure-devops-templates
+          git pull upstream main
+          git push upstream main
+          git fetch upstream --tags --prune
+          git push origin --tags refs/remotes/upstream/*:refs/heads/* --prune
