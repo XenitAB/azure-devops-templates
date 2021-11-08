@@ -6,9 +6,9 @@ and pushing them to Azure Container Registry (ACR), and how to use our gitops pr
 ## Push image
 
 To make the files available for other github actions we have to store them in `.github/workflows/` folder,
-[push-image-acr.yaml](../.github/workflows/push-image-acr.yaml).
+[push-image-acr.yaml](https://github.com/XenitAB/azure-devops-templates/blob/main/.github/workflows/push-image-acr.yaml).
 
-In [push-image.yaml](push-image.yaml) you can find a example how to use the action.
+In [push-image.yaml](https://github.com/XenitAB/azure-devops-templates/blob/main/terraform-docker-github/terraform.yaml) you can find a example how to use the action.
 
 ### Input
 
