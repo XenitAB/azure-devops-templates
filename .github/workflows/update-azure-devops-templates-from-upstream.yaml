@@ -1,20 +1,19 @@
 name: update-from-upstream
 
 on:
-  pull_request:
-    branches:
-      - main
+  schedule:
+    - cron: "0 * * * *" # every hour
 
 jobs:
   update-from-upstream:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: main
       - run: |
           set -e
           echo 1
-          git fetch origin main:main
-          git checkout main
           git config --global pull.rebase true
           git config --global user.email "github-workflows-@$GITHUB_WORKFLOW-$GITHUB-REPOSITORY"
           git config --global user.name "Github Workflows ($GITHUB_WORKFLOW $GITHUB-REPOSITORY)"
