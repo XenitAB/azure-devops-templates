@@ -14,22 +14,16 @@ jobs:
         uses: actions/checkout@v2
         # this makes no sense to run on the main repository, so disable
         # it there
-        if: ${{ GITHUB_REPOSITORY != 'XenitAB/azure-devops-templates' }}
+        if: ${{ env.GITHUB_REPOSITORY != 'XenitAB/azure-devops-templates' }}
         with:
           ref: main
       - run: |
           set -e
-          echo 1
           git config --global pull.rebase true
-          git config --global user.email "github-workflows-@$GITHUB_WORKFLOW-$GITHUB-REPOSITORY"
-          git config --global user.name "Github Workflows ($GITHUB_WORKFLOW $GITHUB-REPOSITORY)"
-          echo 2
+          git config --global user.email "github-workflows-@$GITHUB_WORKFLOW-$GITHUB_REPOSITORY"
+          git config --global user.name "Github Workflows ($GITHUB_WORKFLOW $GITHUB_REPOSITORY)"
           git remote add upstream https://github.com/XenitAB/azure-devops-templates
-          echo 3
           git pull upstream main
-          echo 4
           git push origin main
-          echo 5
           git fetch upstream --tags --prune
-          echo 6
           git push origin --tags refs/remotes/upstream/*:refs/heads/* --prune
