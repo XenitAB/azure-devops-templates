@@ -4,6 +4,7 @@ on:
   schedule:
     - cron: "0 * * * *" # every hour
   workflow_dispatch:
+  pull_request:
 
 jobs:
   update-from-upstream:
