@@ -21,8 +21,6 @@ jobs:
       - run: |
           set -e
           git checkout main
-          git config --global user.email "github-workflows-@$GITHUB_WORKFLOW-$GITHUB_REPOSITORY"
-          git config --global user.name "Github Workflows ($GITHUB_WORKFLOW $GITHUB_REPOSITORY)"
           git remote add upstream https://github.com/XenitAB/azure-devops-templates
           git pull upstream main --rebase
           git push origin main
