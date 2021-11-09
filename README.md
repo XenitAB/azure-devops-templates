@@ -1,11 +1,11 @@
 # Azure DevOps Templates
 
-Collection of templates to use in Azure DevOps.
+Collection of templates to use in Azure DevOps and GitHub
 
 ## Usage
 
-Currently Azure DevOps does not support referencing templates from public GitHub repositories without
-specifiying a valid service connection. This would be too cumbersome to deal with for multiple organizations.
+Currently neither Azure DevOps nor GitHub support referencing templates from public GitHub repositories without
+specifying a valid service connection. This would be too cumbersome to deal with for multiple organizations.
 Instead this repo is best used by creating a mirror of it, and using a pipeline to synchronize the content from upstream.
 
 ### Importing the repository to Azure DevOps
@@ -17,9 +17,9 @@ Begin by [importing the repository](https://docs.microsoft.com/en-us/azure/devop
   - Clone URL: https://github.com/XenitAB/azure-devops-templates.git
   - [ ] Requires Authentication
   - Name: azure-devops-templates
-- Press Import
+- Press "Import"
 
-### Configuring Build Service permissions
+#### Configuring Build Service permissions
 
 Configure Build Service to have permission to push changes to the template repository.
 
@@ -29,7 +29,7 @@ Configure Build Service to have permission to push changes to the template repos
   - Create branch: `Allow`
   - Force push (rewrite history, delete branches and tags): `Allow`
 
-### Adding Azure Pipelines for repository syncronization
+#### Adding Azure Pipelines for repository syncronization
 
 Then create a pipeline from the definition located in `./ci/pipeline.yaml`, this pipeline will sync with Github.
 Any time you want to get the latest changes you need to run this pipeline.
@@ -40,7 +40,7 @@ Any time you want to get the latest changes you need to run this pipeline.
   - Path: /.ci/pipeline.yaml
 - Press Continue > Press Run
 
-### Adding reference to the synchronized repository
+#### Adding reference to the synchronized repository
 
 You should be able to use the templates when the mirroring is complete by referencing the git repository.
 
@@ -55,6 +55,18 @@ resources:
 stages:
   - template: gitops/deploy/pipeline.yaml@templates
 ```
+
+### Importing the repository to GitHub
+
+Begin by [importing the repository](https://github.com/new/import) into a global project in your organization.
+
+- GitHub > Repositories > New > Import a repository
+  - Clone URL: https://github.com/XenitAB/azure-devops-templates.git
+  - Owner: <your organization> / azure-devops-templates
+  - Privacy: Public
+- Press "Begin Import"
+
+The repository contains a GitHub Action that will run and update from upstream at least once per hour, see `./.github/workflows/update-azure-devops-templates-from-upstream.yaml`.
 
 # Versioning
 

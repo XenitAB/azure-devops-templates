@@ -1,0 +1,28 @@
+# Update the main branch to what upstream has on an hourly basis (and when triggered manually).
+# This is to ensure local copies always match upstream as close as possible.
+name: update-from-upstream
+
+on:
+  schedule:
+    - cron: "0 * * * *" # every hour
+  workflow_dispatch: nil
+
+jobs:
+  update-from-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update from upstream
+        uses: actions/checkout@v2
+        # this makes no sense to run on the main repository, and it might not even work there
+        if: ${{ env.GITHUB_REPOSITORY != 'XenitAB/azure-devops-templates' }}
+        with:
+          ref: main
+          fetch-depth: 0
+      - run: |
+          set -e
+          git checkout main
+          git remote add upstream https://github.com/XenitAB/azure-devops-templates
+          git pull upstream main --rebase
+          git push origin main
+          git fetch upstream --tags --prune
+          git push origin --tags refs/remotes/upstream/*:refs/heads/* --prune
