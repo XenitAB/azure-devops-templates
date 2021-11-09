@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Update from upstream
         uses: actions/checkout@v2
+        # this makes no sense to run on the main repository, so disable
+        # it there
+        if: ${{ GITHUB_REPOSITORY != 'XenitAB/azure-devops-templates' }}
         with:
           ref: main
       - run: |
