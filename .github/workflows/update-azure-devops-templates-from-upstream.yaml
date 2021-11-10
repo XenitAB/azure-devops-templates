@@ -1,6 +1,6 @@
 # Update the main branch to what upstream has on an hourly basis (and when triggered manually).
 # This is to ensure local copies always match upstream as close as possible.
-name: update-from-upstream
+name: Sync local copy of repository with upstream
 
 on:
   schedule:
