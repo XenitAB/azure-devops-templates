@@ -5,7 +5,7 @@ name: update-from-upstream
 on:
   schedule:
     - cron: "0 * * * *" # every hour
-  workflow_dispatch: nil
+  workflow_dispatch:
 
 jobs:
   update-from-upstream:
