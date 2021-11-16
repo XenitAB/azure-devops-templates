@@ -18,6 +18,9 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          # we need to use a PAT with access to "workflows" since
+          # updates when fetching the repo could include changes to workflows
+          token: ${{ secrets.UPDATE_FROM_UPSTREAM_PAT }}
       - run: |
           set -e
           git checkout main
