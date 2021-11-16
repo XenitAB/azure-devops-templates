@@ -18,6 +18,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
+          repo-token: ${{ secrets.UPDATE_FROM_UPSTREAM_PAT }}
       - run: |
           set -e
           git checkout main

@@ -66,7 +66,11 @@ Begin by [importing the repository](https://github.com/new/import) into a global
   - Privacy: Public
 - Press "Begin Import"
 
-The repository contains a GitHub Action that will run and update from upstream at least once per hour, see `./.github/workflows/update-azure-devops-templates-from-upstream.yaml`.
+#### Keeping the repository up to date
+
+The repository contains a GitHub Action that will automatically run and update from upstream at least once per hour, see `./.github/workflows/update-azure-devops-templates-from-upstream.yaml`.
+
+In order for this to run correctly, you need to add a secret to your project named XXXXXXXXX. This secrets needs to be a Personal Access Token (PAT) with access to the `workflow` scope. For information on how to create a PAT [see here](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token). For more information about how to add a secret, [see here](https://docs.github.com/en/actions/security-guides/encrypted-secrets).
 
 # Versioning
 
