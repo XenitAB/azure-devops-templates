@@ -1,4 +1,4 @@
-name: terraform
+name: Plan and apply Terraform configuration
 
 on:
   workflow_call:
