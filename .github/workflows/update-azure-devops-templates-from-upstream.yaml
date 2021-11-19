@@ -23,7 +23,6 @@ jobs:
           token: ${{ secrets.UPDATE_FROM_UPSTREAM_PAT }}
       - run: |
           set -e
-          git checkout main
           git remote add upstream https://github.com/XenitAB/azure-devops-templates
           git pull upstream main --rebase
           git push origin main
