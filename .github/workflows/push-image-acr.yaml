@@ -1,4 +1,4 @@
-name: terraform
+name: Build and push new image
 
 on:
   workflow_call:
