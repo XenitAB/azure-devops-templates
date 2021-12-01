@@ -72,6 +72,8 @@ The repository contains a GitHub Action that will automatically run and update t
 
 In order for this to run correctly, you need to register a new (or reuse an existing) GitHub App **private to your organization** with the appropriate access. To do this, [go here](https://github.com/settings/apps/new). It is important that the app has read and write access to `contents` and `workflows`.
 
+Please note that after registering an application, you also need to install it into your organization for it to have the correct access. It is not enough to just register the application.
+
 As you register your app, you will receive an _application id_ and a _private key_. These need to be added to the secrets for your repository:
 
 - Add the _application id_ as a secret named `UPDATE_FROM_UPSTREAM_APP_ID` (this will look something like `152762`)
