@@ -92,8 +92,11 @@ jobs:
           if [[ "${{ inputs.VALIDATE_ENABLED }}" -eq "True" || "${{ inputs.VALIDATE_ENABLED }}" -eq "true" ]]; then
             make validate
             if [[ $(git status --porcelain) ]]; then
-              git diff
-              echo 'run make validate and commit changes' 1>&2
+              echo -e "Changed or untracked files found. Please run 'make validate' and then commit the changed and/or untracked files.\n" 1>&2
+              echo -e "\nOutput from 'git status':\n\n" 1>&2
+              git status
+              echo -e "\nOutput from 'git diff':\n\n" 1>&2
+              git --no-pager diff
               exit 1
             fi
           fi
