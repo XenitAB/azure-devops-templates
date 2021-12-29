@@ -51,7 +51,7 @@ resources:
     - repository: templates
       type: git
       name: PROJ/azure-devops-templates
-      ref: resf/tags/2020.11.0
+      ref: refs/tags/2020.11.0
 
 stages:
   - template: terraform/plan/main.yaml@templates
