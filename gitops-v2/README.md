@@ -47,6 +47,9 @@ the "gitops" repository. These three pipelines are responsible for creating the 
 one environment to another. The templates make heavy use of the [gitops-promotion](https://github.com/XenitAB/gitops-promotion)
 tool to execute the majority of logic.
 
+In addition to the gitops promotion pipelines mentioned above, the `./validate/main.yaml` can be used in the "gitops" repository
+to create a pipeline that validates the syntactical correctness of the manifests.
+
 ## Usage
 
 Create the build pipeline in the application repository. The `serviceName` is the name of the application.
@@ -176,6 +179,22 @@ resources:
 
 stages:
   - template: ./gitops-v2/promote/main.yaml@templates
+```
+
+validate.yaml
+
+```yaml
+trigger: none
+
+resources:
+  repositories:
+    - repository: templates
+      type: git
+      name: XKS/azure-devops-templates
+      ref: refs/tags/2021.04.2
+
+stages:
+  - template: ./gitops-v2/validate/main.yaml@templates
 ```
 
 TBD - Repository configuration

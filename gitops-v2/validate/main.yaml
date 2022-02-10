@@ -1,0 +1,48 @@
+parameters:
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-18.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: binaries
+    type: object
+    default:
+      kustomize:
+        tag: "v4.5.1"
+        sha: "b8e16b303d9aa210d135710efb63f39ec15ae2a5fb5dedf38698f512f95cd2bd"
+
+stages:
+  - stage: validate
+    jobs:
+      - job: kustomize
+        pool:
+          ${{ if not(eq(parameters.poolName, '')) }}:
+            name: ${{ parameters.poolName }}
+          ${{ if not(eq(parameters.poolVmImage, '')) }}:
+            vmImage: ${{ parameters.poolVmImage }}
+        continueOnError: false
+        steps:
+          - bash: |
+              set -e
+              wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_TAG}/kustomize_${KUSTOMIZE_TAG}_linux_amd64.tar.gz
+              tar -xvf kustomize_v4.5.1_linux_amd64.tar.gz
+              DOWNLOAD_KUSTOMIZE_SHA=$(openssl sha1 -sha256 kustomize | awk '{print $2}')
+              if [[ "${KUSTOMIZE_SHA}" != "${DOWNLOAD_KUSTOMIZE_SHA}" ]]; then
+                  echo "Downloaded checksum (${DOWNLOAD_KUSTOMIZE_SHA}) for 'kustomize' does not match expected value: ${KUSTOMIZE_SHA}"
+                  exit 1
+              fi
+              # Go to all folders containing a kustomization.yaml file and run kustomize build
+              while IFS= read -r -d '' file; do
+                  dir=$(echo "$file" | sed -r 's|/[^/]+$||')
+                  cd "$dir"
+                  echo -e "\n======================================================================================" 1>&2
+                  echo "Running  'kustomize build .' in '$dir':" 1>&2
+                  echo "======================================================================================" 1>&2
+                  kustomize build .
+                  cd -
+              done < <(find . -type f -name 'kustomization.yaml' -print0)
+            displayName: "kustomize build"
+            env:
+              KUSTOMIZE_TAG: ${{ parameters.binaries.kustomize.tag }}
+              KUSTOMIZE_SHA: ${{ parameters.binaries.kustomize.sha }}
