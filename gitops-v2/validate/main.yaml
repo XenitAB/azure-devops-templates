@@ -35,12 +35,10 @@ stages:
               # Go to all folders containing a kustomization.yaml file and run kustomize build
               while read -r -d '' file; do
                   dir=$(dirname "$file")
-                  cd "$dir"
                   echo -e "\n======================================================================================" 1>&2
                   echo "Running  'kustomize build .' in '$dir':" 1>&2
                   echo "======================================================================================" 1>&2
-                  kustomize build .
-                  cd -
+                  kustomize build "$dir"
               done < <(find . -type f -name 'kustomization.yaml' -print0)
             displayName: "kustomize build"
             env:
