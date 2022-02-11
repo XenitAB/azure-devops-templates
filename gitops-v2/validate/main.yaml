@@ -29,12 +29,12 @@ stages:
               tar -xvf kustomize_v4.5.1_linux_amd64.tar.gz
               DOWNLOAD_KUSTOMIZE_SHA=$(openssl sha1 -sha256 kustomize | awk '{print $2}')
               if [[ "${KUSTOMIZE_SHA}" != "${DOWNLOAD_KUSTOMIZE_SHA}" ]]; then
-                  echo "Downloaded checksum (${DOWNLOAD_KUSTOMIZE_SHA}) for 'kustomize' does not match expected value: ${KUSTOMIZE_SHA}"
+                  echo "Downloaded checksum (${DOWNLOAD_KUSTOMIZE_SHA}) for 'kustomize' does not match expected value: ${KUSTOMIZE_SHA}" 1>&2
                   exit 1
               fi
               # Go to all folders containing a kustomization.yaml file and run kustomize build
-              while IFS= read -r -d '' file; do
-                  dir=$(echo "$file" | sed -r 's|/[^/]+$||')
+              while read -r -d '' file; do
+                  dir=$(dirname "$file")
                   cd "$dir"
                   echo -e "\n======================================================================================" 1>&2
                   echo "Running  'kustomize build .' in '$dir':" 1>&2
