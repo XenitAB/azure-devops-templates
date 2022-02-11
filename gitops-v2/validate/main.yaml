@@ -32,7 +32,7 @@ stages:
                   echo "Downloaded checksum (${DOWNLOAD_KUSTOMIZE_SHA}) for 'kustomize' does not match expected value: ${KUSTOMIZE_SHA}" 1>&2
                   exit 1
               fi
-              # Go to all folders containing a kustomization.yaml file and run kustomize build
+              # Run kustomize build for all folders containing a kustomization.yaml file
               while read -r -d '' file; do
                   dir=$(dirname "$file")
                   echo -e "\n======================================================================================" 1>&2
