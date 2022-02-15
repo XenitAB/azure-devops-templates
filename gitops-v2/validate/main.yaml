@@ -38,7 +38,7 @@ stages:
                   echo -e "\n======================================================================================" 1>&2
                   echo "Running  'kustomize build .' in '$dir':" 1>&2
                   echo "======================================================================================" 1>&2
-                  kustomize build "$dir"
+                  ./kustomize build "$dir"
               done < <(find . -type f -name 'kustomization.yaml' -print0)
             displayName: "kustomize build"
             env:
