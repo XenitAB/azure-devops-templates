@@ -1,0 +1,33 @@
+name: 'Validate'
+description: 'Validate kubernetes manifests using kustomize build'
+inputs:
+  kustomize-tag:
+    description: 'Kustomize version tag'
+    required: true
+    default: 'v4.5.1'
+  kustomize-sha:
+    description: 'Kustomize SHA'
+    required: true
+    default: 'b8e16b303d9aa210d135710efb63f39ec15ae2a5fb5dedf38698f512f95cd2bd'
+runs:
+  using: "composite"
+  steps:
+    - name: Kustomize build
+      run: |
+        set -e
+        wget https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${{ kustomize-tag }}/kustomize_${{ kustomize-tag }}_linux_amd64.tar.gz
+        tar -xvf kustomize_v4.5.1_linux_amd64.tar.gz
+        DOWNLOAD_KUSTOMIZE_SHA=$(openssl sha1 -sha256 kustomize | awk '{print $2 }')
+        if [[ "${{ kustomize-sha }}" != "${{ DOWNLOAD_KUSTOMIZE_SHA }}" ]]; then
+            echo "Downloaded checksum (${{ DOWNLOAD_KUSTOMIZE_SHA }}) for 'kustomize' does not match expected value: ${{ kustomize-sha }}" 1>&2
+            exit 1
+        fi
+        # Run kustomize build for all folders containing a kustomization.yaml file
+        while read -r -d '' file; do
+            dir=$(dirname "$file")
+            echo -e "\n======================================================================================" 1>&2
+            echo "Running  'kustomize build .' in '$dir':" 1>&2
+            echo "======================================================================================" 1>&2
+            ./kustomize build "$dir"
+        done < <(find . -type f -name 'kustomization.yaml' -print0)
+      shell: bash
