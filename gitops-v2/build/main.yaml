@@ -152,9 +152,9 @@ stages:
               tar xzvf trivy_${TRIVY_TAG:1}_Linux-64bit.tar.gz
               chmod +x trivy
               # Run
-              ./trivy --reset --no-progress
-              ./trivy --exit-code 0 --no-progress --input ${IMAGE_ID}.tar
-              ./trivy --exit-code 1 --no-progress --ignore-unfixed --input ${IMAGE_ID}.tar
+              ./trivy image --reset --no-progress
+              ./trivy image --exit-code 0 --no-progress --input ${IMAGE_ID}.tar
+              ./trivy image --exit-code 1 --no-progress --ignore-unfixed --input ${IMAGE_ID}.tar
             displayName: Image scan
             continueOnError: ${{ parameters.imageScan.ignoreRuleViolations }}
             env:
