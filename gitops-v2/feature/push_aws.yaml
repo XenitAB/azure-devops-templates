@@ -1,0 +1,29 @@
+parameters:
+  - name: awsRegion
+    type: string
+    default: ""
+  - name: awsServiceConnection
+    type: string
+    default: ""
+
+steps:
+  - task: AmazonWebServices.aws-vsts-tools.AWSShellScript.AWSShellScript@1
+    displayName: "Get ECR login info"
+    condition: succeeded()
+    inputs:
+      workingDirectory: "."
+      awsCredentials: ${{ parameters.awsServiceConnection }}
+      regionName: ${{ parameters.awsRegion }}
+      scriptType: inline
+      inlineScript: |
+        set -e
+        SHA_SHORT=$(shaShort)
+
+        aws ecr describe-repositories --repository-names ${SERVICE_NAME} || aws ecr create-repository --repository-name ${SERVICE_NAME} --image-scanning-configuration scanOnPush=true
+        ECR_URI=$(aws ecr describe-repositories --repository-names ${SERVICE_NAME} --output json | jq -r '.repositories[0].repositoryUri')
+        aws ecr get-login-password --region ${AWS_REGION} | docker login -u AWS --password-stdin $ECR_URI
+
+        IMAGE_ID_FULL=$ECR_URI:$SHA_SHORT
+        echo "##vso[task.setvariable variable=imageIdFull]$IMAGE_ID_FULL"
+    env:
+      SERVICE_NAME: $(resources.triggeringAlias)

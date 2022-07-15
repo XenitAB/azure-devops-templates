@@ -1,0 +1,56 @@
+parameters:
+  - name: poolVmImage
+    type: string
+    default: "ubuntu-18.04"
+  - name: poolName
+    type: string
+    default: ""
+  - name: gitopsPromotionTag
+    type: string
+  - name: group
+    type: string
+
+jobs:
+  - job: Feature
+    pool:
+      ${{ if not(eq(parameters.poolName, '')) }}:
+        name: ${{ parameters.poolName }}
+      ${{ if not(eq(parameters.poolVmImage, '')) }}:
+        vmImage: ${{ parameters.poolVmImage }}
+    steps:
+      - checkout: self
+        persistCredentials: true
+        displayName: Get sources
+      - bash: |
+          set -e
+          SOURCE_VERSION_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCECOMMIT"
+          SOURCE_VERSION=$(env | grep -e "^${SOURCE_VERSION_KEY}" | cut -d= -f2)
+          echo "##vso[task.setvariable variable=tag]${SOURCE_VERSION:0:7}"
+          SOURCE_BRANCH_KEY="RESOURCES_PIPELINE_${SERVICE_NAME^^}_SOURCEBRANCH"
+          SOURCE_BRANCH=$(env | grep -e "^${SOURCE_BRANCH_KEY}" | cut -d= -f2)
+          SOURCE_BRANCH=$(echo $SOURCE_BRANCH | cut -f1,2 -d'-')
+          echo "##vso[task.setvariable variable=feature]${SOURCE_BRANCH:0:7}"
+        displayName: "Calculate artifact variables"
+        env:
+          SERVICE_NAME: $(resources.triggeringAlias)
+      - bash: |
+          git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
+          git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
+          echo "Debug:"
+          echo "tag (TAG): $TAG"
+          echo "feature (FEATURE): $FEATURE"
+          echo "parameters.group (GROUP): $GROUP"
+          echo "resources.triggeringAlias (APP): $APP"
+
+          docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} feature --token ${TOKEN} --group ${GROUP} --app ${APP} --tag ${TAG:0:7} --feature ${FEATURE} 
+        env:
+          GITOPS_PROMOTION_TAG: ${{ parameters.gitopsPromotionTag }}
+          PROJECT_NAME: $(System.TeamProject)
+          REPO_NAME: $(Build.Repository.Name)
+          TOKEN: $(System.AccessToken)
+          GROUP: ${{ parameters.group }}
+          APP: $(resources.triggeringAlias)
+          TAG: $(tag)
+          FEATURE: $(feature)
+          USER_IDENTITY: $(Build.RequestedForId)
+        displayName: GitOps Promotion
