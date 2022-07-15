@@ -96,7 +96,7 @@ stages:
               DOCKERFILE_PATH: ${{ parameters.dockerfilePath }}
             # IF needed to apply different conditions if pull request or not
             ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
-              condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+              condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true), startsWith(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
             ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
               condition: and(succeeded(), eq(${{ parameters.dockerLint.enable }}, true))
           - bash: |
@@ -118,7 +118,7 @@ stages:
               HORUSEC_TAG: ${{ parameters.binaries.horusec.tag }}
               HORUSEC_SHA: ${{ parameters.binaries.horusec.sha }}
             ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
-              condition: and(succeeded(), eq(${{ parameters.horusec.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+              condition: and(succeeded(), eq(${{ parameters.horusec.enable }}, true), startsWith(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
             ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
               condition: and(succeeded(), eq(${{ parameters.horusec.enable }}, true))
           - bash: |
@@ -139,7 +139,7 @@ stages:
               ENABLE_DOCKER_BUILDKIT: ${{ parameters.enableDockerBuildkit }}
             displayName: "Build and save image"
             ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
-              condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+              condition: and(succeeded(), startsWith(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
           - bash: |
               set -ex
               # Download
@@ -163,7 +163,7 @@ stages:
               IMAGE_ID: $(imageId)
             # IF needed to apply different conditions if pull request or not
             ${{ if not(eq(variables['Build.Reason'], 'PullRequest')) }}:
-              condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
+              condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true), startsWith(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'))
             ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
               condition: and(succeeded(), eq(${{ parameters.imageScan.enable }}, true))
           - ${{ parameters.postBuild }}
@@ -172,7 +172,7 @@ stages:
             inputs:
               targetPath: $(artifactFileName)
               artifactName: ${{ parameters.serviceName }}
-            condition: and(succeeded(), eq(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'), ne(variables['Build.Reason'], 'PullRequest'))
+            condition: and(succeeded(), startsWith(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'), ne(variables['Build.Reason'], 'PullRequest'))
 
   # Stage needed to trigger CD, since it can't identify if the build reason is pull request or not
   - stage: cd_trigger
