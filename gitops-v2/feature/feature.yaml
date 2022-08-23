@@ -1,7 +1,7 @@
 parameters:
   - name: poolVmImage
     type: string
-    default: "ubuntu-18.04"
+    default: "ubuntu-22.04"
   - name: poolName
     type: string
     default: ""
@@ -42,7 +42,7 @@ jobs:
           echo "parameters.group (GROUP): $GROUP"
           echo "resources.triggeringAlias (APP): $APP"
 
-          docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} feature --token ${TOKEN} --group ${GROUP} --app ${APP} --tag ${TAG:0:7} --feature ${FEATURE} 
+          docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} feature --token ${TOKEN} --group ${GROUP} --app ${APP} --tag ${TAG:0:7} --feature ${FEATURE}
         env:
           GITOPS_PROMOTION_TAG: ${{ parameters.gitopsPromotionTag }}
           PROJECT_NAME: $(System.TeamProject)
