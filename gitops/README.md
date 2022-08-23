@@ -11,7 +11,7 @@ The format command is passed the environment name, which can be placed in the st
 ## Build
 | Name | Default | Description |
 | --- | --- | --- |
-| poolVmImage | `"ubuntu-18.04"` | VM Image to set in pool configuration. |
+| poolVmImage | `"ubuntu-22.04"` | VM Image to set in pool configuration. |
 | poolName | `""` | Pool name to set in pool configuration. |
 | sourceBranch | `"refs/heads/master"` | Source branch to limit image builds to. |
 | dockerfilePath | `"./Dockerfile"` | Path to Dockerfile used in build. |

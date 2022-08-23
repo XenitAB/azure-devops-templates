@@ -12,7 +12,7 @@ The format command is passed the environment name, which can be placed in the st
 | Name                      | Default                                                              | Description                                                     |
 | ------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------- |
 | poolNameTemplate          | `""`                                                                 | Pool name template.                                             |
-| poolVmImage               | `"ubuntu-18.04"`                                                     | Pool vm image (only used if `poolNameTemplate` is empty)        |
+| poolVmImage               | `"ubuntu-22.04"`                                                     | Pool vm image (only used if `poolNameTemplate` is empty)        |
 | azureSubscriptionTemplate | `""`                                                                 | Azure subscription name template.                               |
 | resourceGroupTemplate     | `""`                                                                 | Azure resource group name template.                             |
 | packerTemplateRepo        | `"https://github.com/XenitAB/cloud-automation.git"`                  | GIT repository to use for packer template.                      |
