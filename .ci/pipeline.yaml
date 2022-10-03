@@ -13,6 +13,7 @@ pool:
 
 steps:
   - checkout: self
+    fetchDepth: 0
     persistCredentials: true
   - script: |
       set -e
