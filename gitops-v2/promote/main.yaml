@@ -21,6 +21,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
+            fetchDepth: 0
             displayName: Get sources
           - bash: |
               git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"

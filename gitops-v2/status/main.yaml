@@ -22,6 +22,7 @@ stages:
         steps:
           - checkout: self
             persistCredentials: true
+            fetchDepth: 0
             displayName: Get sources
           - bash: |
               [ -z "$PR_BRANCH" ] && exit 0
