@@ -25,6 +25,7 @@ parameters:
     default: []
   - name: postBuildJob
     type: jobList
+    default: []
   - name: preBuild
     type: stepList
     default: []
