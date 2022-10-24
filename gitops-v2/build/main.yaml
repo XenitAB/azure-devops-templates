@@ -24,7 +24,7 @@ parameters:
     type: jobList
     default: []
   - name: postBuildJob
-    type: jobList    
+    type: jobList
   - name: preBuild
     type: stepList
     default: []
@@ -60,13 +60,13 @@ parameters:
         sha: "94bbfcb65db40d802b0c5b5b5a7f31bc89d4bd25ba6cbff3fa5debe3313d1b1f"
   - name: dependsOnStage
     type: object
-    default: ['build']
+    default: ["build"]
 
 stages:
   - stage: build
     jobs:
       - ${{ each job in parameters.preBuildJob }}:
-        - ${{ job }}    
+          - ${{ job }}
       - job: image
         pool:
           ${{ if not(eq(parameters.poolName, '')) }}:
@@ -184,7 +184,7 @@ stages:
               artifactName: ${{ parameters.serviceName }}
             condition: and(succeeded(), startsWith(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'), ne(variables['Build.Reason'], 'PullRequest'))
       - ${{ each job in parameters.postBuildJob }}:
-        - ${{ job }}
+          - ${{ job }}
   # Stage needed to trigger CD, since it can't identify if the build reason is pull request or not
   - stage: cd_trigger
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
