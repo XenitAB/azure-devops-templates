@@ -20,6 +20,11 @@ parameters:
   - name: enableDockerBuildkit
     type: boolean
     default: false
+  - name: preBuildJob
+    type: jobList
+    default: []
+  - name: postBuildJob
+    type: jobList    
   - name: preBuild
     type: stepList
     default: []
@@ -53,10 +58,15 @@ parameters:
       horusec:
         tag: "v2.5.0"
         sha: "94bbfcb65db40d802b0c5b5b5a7f31bc89d4bd25ba6cbff3fa5debe3313d1b1f"
+  - name: dependsOnStage
+    type: object
+    default: ['build']
 
 stages:
   - stage: build
     jobs:
+      - ${{ each job in parameters.preBuildJob }}:
+        - ${{ job }}    
       - job: image
         pool:
           ${{ if not(eq(parameters.poolName, '')) }}:
@@ -173,11 +183,12 @@ stages:
               targetPath: $(artifactFileName)
               artifactName: ${{ parameters.serviceName }}
             condition: and(succeeded(), startsWith(variables['Build.sourceBranch'], '${{ parameters.sourceBranch }}'), ne(variables['Build.Reason'], 'PullRequest'))
-
+      - ${{ each job in parameters.postBuildJob }}:
+        - ${{ job }}
   # Stage needed to trigger CD, since it can't identify if the build reason is pull request or not
   - stage: cd_trigger
     condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
-    dependsOn: build
+    dependsOn: ${{ parameters.dependsOnStage }}
     jobs:
       - job: cd_trigger
         pool:
