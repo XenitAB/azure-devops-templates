@@ -62,7 +62,7 @@ parameters:
   - name: dependsOnStage
     type: object
     default: ["build"]
-  - name: subModules
+  - name: submodules
     type: boolean
     default: false    
 
@@ -80,7 +80,7 @@ stages:
         continueOnError: false
         steps:
           - checkout: self
-            submodules: ${{ parameters.subModules }} 
+            submodules: ${{ parameters.submodules }} 
           - bash: |
               set -e
               IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
