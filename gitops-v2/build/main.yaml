@@ -62,6 +62,9 @@ parameters:
   - name: dependsOnStage
     type: object
     default: ["build"]
+  - name: subModules
+    type: boolean
+    default: false    
 
 stages:
   - stage: build
@@ -76,6 +79,8 @@ stages:
             vmImage: ${{ parameters.poolVmImage }}
         continueOnError: false
         steps:
+          - checkout: self
+            submodules: ${{ parameters.subModules }} 
           - bash: |
               set -e
               IMAGE_ID=${SERVICE_NAME}:${SOURCE_VERSION:0:7}
