@@ -8,7 +8,7 @@ on:
         required: false
         default: '["ubuntu-latest"]'
       opa_blast_radius:
-        description: 'OPA Blast Radius'
+        description: "OPA Blast Radius"
         required: false
         type: string
         default: "50"
@@ -63,7 +63,7 @@ jobs:
           echo "::set-output name=azure_creds_env::$AZURE_CREDS_ENV"
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v1.4.6
         with:
           creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
 
@@ -112,7 +112,7 @@ jobs:
 
       - name: Azure logout
         if: always()
-        uses: azure/CLI@v1
+        uses: azure/CLI@v1.0.7
         env:
           ENV: ${{ matrix.environments.name }}
         with:
@@ -140,7 +140,7 @@ jobs:
           echo "::set-output name=azure_creds_env::$AZURE_CREDS_ENV"
 
       - name: Azure Login
-        uses: azure/login@v1
+        uses: azure/login@v1.4.6
         with:
           creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
 
@@ -170,7 +170,7 @@ jobs:
 
       - name: Azure logout
         if: always()
-        uses: azure/CLI@v1
+        uses: azure/CLI@v1.0.7
         env:
           ENV: ${{ matrix.environments.name }}
         with:
