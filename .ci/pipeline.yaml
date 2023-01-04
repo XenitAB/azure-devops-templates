@@ -1,8 +1,8 @@
 trigger: none
 
 schedules:
-  - cron: "0 * * * *"
-    displayName: Hourly Sync
+  - cron: "0 8,10,12,14,16 * * Mon-Fri"
+    displayName: Every Second Hour Office Hours
     branches:
       include:
         - main
