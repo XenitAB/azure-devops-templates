@@ -24,6 +24,9 @@ parameters:
   - name: awsServiceConnectionTemplate
     type: string
     default: ""
+  - name: timeoutInMinutes
+    type: string
+    default: "60"    
 
 stages:
   - ${{ each env in parameters.environments }}:
@@ -39,6 +42,7 @@ stages:
                 vmImage: ${{ parameters.poolVmImage }}
             environment: ${{ env.name }}
             displayName: Terraform Apply
+            timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
             strategy:
               runOnce:
                 deploy:
@@ -80,3 +84,4 @@ stages:
                         AWS_ACCESS_KEY_ID: $(awsAccessKeyId)
                         AWS_SECRET_ACCESS_KEY: $(awsSecretAccessKey)
                         AWS_DEFAULT_REGION: $(awsDefaultRegion)
+                      timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
