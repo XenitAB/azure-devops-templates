@@ -68,7 +68,7 @@ jobs:
           creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Terraform plan
         env:
@@ -104,7 +104,7 @@ jobs:
           make plan
 
       - name: Upload artifact (encrypted plan)
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.environments.name }}-plan
           path: ${{ env.DIR }}/.terraform/plans/${{ matrix.environments.name }}.enc
@@ -145,7 +145,7 @@ jobs:
           creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
 
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Create Terraform plan folder
         env:
