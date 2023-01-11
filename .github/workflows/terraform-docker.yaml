@@ -46,7 +46,7 @@ jobs:
           set -e
           echo '${{ inputs.ENVIRONMENTS }}' | jq .
           MATRIX=$(echo '${{ inputs.ENVIRONMENTS }}' | jq -c .)
-          echo "::set-output name=matrix::${MATRIX}"
+          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
 
   terraform_plan:
     needs: set_env_matrix
@@ -60,7 +60,7 @@ jobs:
         run: |
           AZURE_CREDS_TMP=AZURE_CREDENTIALS_${{ matrix.environments.name }}
           AZURE_CREDS_ENV=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
-          echo "::set-output name=azure_creds_env::$AZURE_CREDS_ENV"
+          echo "azure_creds_env=$AZURE_CREDS_ENV" >> $GITHUB_OUTPUT
 
       - name: Azure Login
         uses: azure/login@v1.4.6
@@ -137,7 +137,7 @@ jobs:
         run: |
           AZURE_CREDS_TMP=AZURE_CREDENTIALS_${{ matrix.environments.name }}
           AZURE_CREDS_ENV=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
-          echo "::set-output name=azure_creds_env::$AZURE_CREDS_ENV"
+          echo "azure_creds_env=$AZURE_CREDS_ENV" >> $GITHUB_OUTPUT
 
       - name: Azure Login
         uses: azure/login@v1.4.6

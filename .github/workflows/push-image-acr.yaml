@@ -71,7 +71,7 @@ jobs:
           set -e
           echo '${{ inputs.ENVIRONMENTS }}' | jq .
           MATRIX=$(echo '${{ inputs.ENVIRONMENTS }}' | jq -c .)
-          echo "::set-output name=matrix::${MATRIX}"
+          echo "matrix=${MATRIX}" >> $GITHUB_OUTPUT
 
   build-app:
     runs-on: ubuntu-latest
@@ -104,20 +104,20 @@ jobs:
           # ACR
           REGISTRY_LOGIN_SERVER_TMP=REGISTRY_LOGIN_SERVER_${{ matrix.environments.name }}
           REGISTRY_LOGIN_SERVER_ENV=$(echo $REGISTRY_LOGIN_SERVER_TMP |tr '[:lower:]' '[:upper:]')
-          echo "::set-output name=registry_login_server_env::$REGISTRY_LOGIN_SERVER_ENV"
+          echo "registry_login_server_env=$REGISTRY_LOGIN_SERVER_ENV" >> $GITHUB_OUTPUT
 
           # USERNAME
           REGISTRY_USERNAME_TMP=REGISTRY_USERNAME_${{ matrix.environments.name }}
           REGISTRY_USERNAME_ENV=$(echo $REGISTRY_USERNAME_TMP |tr '[:lower:]' '[:upper:]')
-          echo "::set-output name=registry_username_env::$REGISTRY_USERNAME_ENV"
+          echo "registry_username_env=$REGISTRY_USERNAME_ENV" >> $GITHUB_OUTPUT
 
           # PASSWORD
           REGISTRY_PASSWORD_TMP=REGISTRY_PASSWORD_${{ matrix.environments.name }}
           REGISTRY_PASSWORD_ENV=$(echo $REGISTRY_PASSWORD_TMP |tr '[:lower:]' '[:upper:]')
-          echo "::set-output name=registry_password_env::$REGISTRY_PASSWORD_ENV"
+          echo "registry_password_env=$REGISTRY_PASSWORD_ENV" >> $GITHUB_OUTPUT
 
           SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "::set-output name=sha_short::$SHA_SHORT"
+          echo "sha_short=$SHA_SHORT" >> $GITHUB_OUTPUT
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to GitHub Container Registry
@@ -152,7 +152,7 @@ jobs:
         id: short_sha
         run: |
           SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
-          echo "::set-output name=sha_short::$SHA_SHORT"
+          echo "sha_short=$SHA_SHORT" >> $GITHUB_OUTPUT
       - name: Notify gitops-promotion workflow
         uses: peter-evans/repository-dispatch@v1
         with:
