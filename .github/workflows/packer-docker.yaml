@@ -1,0 +1,117 @@
+name: packer
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        type: string
+        required: false
+        default: '["ubuntu-latest"]'
+      ENVIRONMENTS:
+        description: '{"environments":[{"name":"dev"}, {"name":"qa"}]}'
+        required: true
+        type: string
+      IMAGE:
+        description: "Image to build Packer with"
+        required: true
+        type: string
+        default: "ghcr.io/xenitab/github-actions/tools:2020.12.6"
+      RESOURCE_GROUP_NAME_SUFFIX:
+        description: "Resource group name suffix to create VM image in"
+        required: true
+        type: string
+      PACKER_TEMPLATE_REPO:
+        description: "Repo to the packer template from"
+        required: true
+        type: string
+      PACKER_TEMPLATE_REPO_BRANCH:
+        description: "Branch to the packer template from"
+        required: true
+        type: string
+      PACKER_TEMPLATE_FILE:
+        description: "File path for the packer template"
+        required: true
+        type: string
+    secrets:
+      AZURE_CREDENTIALS_DEV:
+        required: false
+      AZURE_CREDENTIALS_QA:
+        required: false
+      AZURE_CREDENTIALS_PROD:
+        required: false
+
+jobs:
+  set_env_matrix:
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    runs-on: ${{fromJSON(inputs.runs-on)}}
+    steps:
+      - name: Set matrix for environment
+        id: set-matrix
+        run: |
+          set -e
+          echo '${{ inputs.ENVIRONMENTS }}' | jq .
+          MATRIX=$(echo '${{ inputs.ENVIRONMENTS }}' | jq -c .)
+          echo "::set-output name=matrix::${MATRIX}"
+
+  build:
+    needs: set_env_matrix
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(needs.set_env_matrix.outputs.matrix)}}
+    runs-on: ${{fromJSON(inputs.runs-on)}}
+    steps:
+      - name: Create Azure credentials secret name
+        id: creds_env
+        run: |
+          AZURE_CREDS_TMP=AZURE_CREDENTIALS_${{ matrix.environments.name }}
+          AZURE_CREDS_ENV=$(echo $AZURE_CREDS_TMP |tr '[:lower:]' '[:upper:]')
+          echo "::set-output name=azure_creds_env::$AZURE_CREDS_ENV"
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Packer build
+        env:
+          ENV: ${{ matrix.environments.name }}
+          TMP_DIR: ${{ runner.temp }}
+          IMAGE: ${{ inputs.IMAGE }}
+          RESOURCE_GROUP: "rg-${{ matrix.environments.name }}-we-${{ inputs.RESOURCE_GROUP_NAME_SUFFIX }}"
+          PACKER_TEMPLATE_REPO: ${{ inputs.PACKER_TEMPLATE_REPO }}
+          PACKER_TEMPLATE_REPO_BRANCH: ${{ inputs.PACKER_TEMPLATE_REPO_BRANCH }}
+          PACKER_TEMPLATE_FILE: ${{ inputs.PACKER_TEMPLATE_FILE }}
+        run: |
+          set -e
+          AZURE_CONFIG_DIR="${AZURE_CONFIG_DIR:-${HOME}/.azure}"
+          TMP_DIR="${TMP_DIR:-/tmp}"
+          echo AZURE_CLIENT_ID=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).clientId }} > ${TMP_DIR}/${ENV}.env
+          echo AZURE_CLIENT_SECRET=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).clientSecret }} >> ${TMP_DIR}/${ENV}.env
+          echo AZURE_TENANT_ID=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).tenantId }} >> ${TMP_DIR}/${ENV}.env
+          echo AZURE_SUBSCRIPTION_ID=${{fromJSON(secrets[steps.creds_env.outputs.azure_creds_env]).subscriptionId }} >> ${TMP_DIR}/${ENV}.env
+
+          set +e
+          sudo chown -R 1000:1000 ${AZURE_CONFIG_DIR}
+          sudo chown -R 1000:1000 ${TMP_DIR}/${ENV}.env
+          docker run --entrypoint "/opt/packer.sh" -v ${AZURE_CONFIG_DIR}:/home/tools/.azure -v ${TMP_DIR}/${ENV}.env:/tmp/${ENV}.env ${IMAGE} build ${ENV} ${PACKER_TEMPLATE_REPO} ${PACKER_TEMPLATE_REPO_BRANCH} ${PACKER_TEMPLATE_FILE} ${RESOURCE_GROUP}
+          ERROR_CODE=$?
+
+          sudo chown -R $(id -u):$(id -g) ${AZURE_CONFIG_DIR}
+          sudo chown -R $(id -u):$(id -g) ${TMP_DIR}/${ENV}.env
+          exit $ERROR_CODE
+
+      - name: Azure logout
+        if: always()
+        uses: azure/CLI@v1
+        env:
+          ENV: ${{ matrix.environments.name }}
+        with:
+          azcliversion: 2.0.72
+          inlineScript: |
+            az logout
+            az cache purge
+            az account clear
