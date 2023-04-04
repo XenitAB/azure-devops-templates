@@ -51,7 +51,7 @@ parameters:
     type: object
     default:
       hadolint:
-        tag: "v1.18.0"
+        tag: "v2.11.0"
         sha: "f9bc9de12438b463ca84e77fde70b07b155d4da07ca21bc3f4354a62c6199db4"
       trivy:
         tag: "v0.30.4"
