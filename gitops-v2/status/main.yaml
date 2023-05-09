@@ -7,7 +7,7 @@ parameters:
     default: ""
   - name: gitopsPromotionTag
     type: string
-    default: "v1.2.1"
+    default: "v1.3.1"
 
 stages:
   - stage: status
