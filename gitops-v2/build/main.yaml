@@ -143,6 +143,9 @@ stages:
               if [[ "${ENABLE_DOCKER_BUILDKIT}" == "True" ]]; then
                 export DOCKER_BUILDKIT=1
               fi
+              if [[ "${ENABLE_DOCKER_BUILDKIT}" == "False" ]]; then
+                export DOCKER_BUILDKIT=0
+              fi
 
               docker build -f ${DOCKERFILE_PATH} ${DOCKER_BUILD_ARGS} -t ${IMAGE_ID} .
               docker save --output ${IMAGE_ID}.tar ${IMAGE_ID}
