@@ -45,10 +45,11 @@ stages:
                       awsRegion: ${{ parameters.awsRegion }}
                       awsServiceConnection: ${{ format(parameters.awsServiceConnectionTemplate, env.name) }}
 
-              - task: AzureCLI@1
+              - task: AzureCLI@2
                 inputs:
                   azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
                   addSpnToEnvironment: true
+                  scriptType: bash
                   scriptLocation: inlineScript
                   inlineScript: |
                     set -e
