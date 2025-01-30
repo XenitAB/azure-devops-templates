@@ -104,7 +104,7 @@ jobs:
           make plan
 
       - name: Upload artifact (encrypted plan)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.environments.name }}-plan
           path: ${{ env.DIR }}/.terraform/plans/${{ matrix.environments.name }}.enc
@@ -153,7 +153,7 @@ jobs:
         run: |
           mkdir -p ${TERRAFORM_PLAN_FOLDER}
       - name: Download artifact (encrypted plan)
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.environments.name }}-plan
           path: ${{ env.DIR }}/.terraform/plans/
