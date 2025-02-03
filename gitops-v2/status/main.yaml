@@ -28,6 +28,7 @@ stages:
               [ -z "$PR_BRANCH" ] && exit 0
               PR_BRANCH=${PR_BRANCH//refs\/heads\//}
               git checkout ${PR_BRANCH}
+              git config --unset-all extensions.worktreeconfig
               git pull
               git fetch -p
               git reset --hard origin/${PR_BRANCH}

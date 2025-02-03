@@ -31,6 +31,7 @@ jobs:
         env:
           SERVICE_NAME: $(resources.triggeringAlias)
       - bash: |
+          git config --unset-all extensions.worktreeconfig
           git config --global user.email "azure-pipelines@${PROJECT_NAME}.${REPO_NAME}"
           git config --global user.name "Azure Pipelines (${PROJECT_NAME} ${REPO_NAME})"
           echo "Debug:"
