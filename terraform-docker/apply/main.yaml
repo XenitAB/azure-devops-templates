@@ -68,11 +68,12 @@ stages:
                         artifact: "${{ env.name }}.enc"
                         path: $(Build.Repository.LocalPath)/${{ parameters.terraformFolder }}/.terraform/plans
 
-                    - task: AzureCLI@1
+                    - task: AzureCLI@2
                       displayName: "Apply"
                       inputs:
                         azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
                         addSpnToEnvironment: true
+                        scriptType: bash
                         scriptLocation: inlineScript
                         inlineScript: |
                           set -e
