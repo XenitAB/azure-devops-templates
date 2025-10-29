@@ -63,12 +63,12 @@ jobs:
           echo "azure_creds_env=$AZURE_CREDS_ENV" >> $GITHUB_OUTPUT
 
       - name: Azure Login
-        uses: azure/login@v1.4.6
+        uses: azure/login@v2
         with:
           creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Terraform plan
         env:
@@ -112,11 +112,11 @@ jobs:
 
       - name: Azure logout
         if: always()
-        uses: azure/CLI@v1.0.7
+        uses: azure/CLI@v2
         env:
           ENV: ${{ matrix.environments.name }}
         with:
-          azcliversion: 2.30.0
+          azcliversion: 2.64.0
           inlineScript: |
             az logout
             az cache purge
@@ -140,12 +140,12 @@ jobs:
           echo "azure_creds_env=$AZURE_CREDS_ENV" >> $GITHUB_OUTPUT
 
       - name: Azure Login
-        uses: azure/login@v1.4.6
+        uses: azure/login@v2
         with:
           creds: ${{ secrets[steps.creds_env.outputs.azure_creds_env] }}
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Create Terraform plan folder
         env:
@@ -170,11 +170,11 @@ jobs:
 
       - name: Azure logout
         if: always()
-        uses: azure/CLI@v1.0.7
+        uses: azure/CLI@v2
         env:
           ENV: ${{ matrix.environments.name }}
         with:
-          azcliversion: 2.30.0
+          azcliversion: 2.64.0
           inlineScript: |
             az logout
             az cache purge

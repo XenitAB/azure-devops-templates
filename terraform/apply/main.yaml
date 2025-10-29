@@ -60,11 +60,12 @@ stages:
                       inputs:
                         artifact: "${{ env.name }}"
                         path: $(System.ArtifactsDirectory)
-                    - task: AzureCLI@1
+                    - task: AzureCLI@2
                       displayName: "Apply"
                       inputs:
                         azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
                         addSpnToEnvironment: true
+                        scriptType: bash
                         scriptLocation: inlineScript
                         inlineScript: |
                           set -e

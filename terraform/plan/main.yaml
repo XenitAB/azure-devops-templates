@@ -82,10 +82,11 @@ stages:
                   TFLINT_TAG: ${{ parameters.binaries.tflint.tag }}
                   TFLINT_SHA: ${{ parameters.binaries.tflint.sha }}
                 condition: and(succeeded(), eq(${{ parameters.terraformLint.enable }}, true))
-              - task: AzureCLI@1
+              - task: AzureCLI@2
                 inputs:
                   azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
                   addSpnToEnvironment: true
+                  scriptType: bash
                   scriptLocation: inlineScript
                   inlineScript: |
                     set -e
@@ -98,7 +99,7 @@ stages:
                   ENV: ${{ env.name }}
                   tfEncPassword: $(terraformEncryptionSecret)
                 displayName: "Terraform Plan"
-              - task: PublishPipelineArtifact@0
+              - task: PublishPipelineArtifact@1
                 inputs:
                   targetPath: $(Build.ArtifactStagingDirectory)
                   artifactName: "${{ env.name }}"

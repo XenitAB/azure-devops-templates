@@ -18,7 +18,7 @@ jobs:
           app_id: ${{ secrets.UPDATE_FROM_UPSTREAM_APP_ID }}
           private_key: ${{ secrets.UPDATE_FROM_UPSTREAM_PRIVATE_KEY }}
       - name: Update from upstream
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         # this makes no sense to run on the main repository, and it might not even work there
         if: ${{ env.GITHUB_REPOSITORY != 'XenitAB/azure-devops-templates' }}
         with:

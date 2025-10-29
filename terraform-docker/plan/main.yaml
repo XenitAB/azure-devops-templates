@@ -45,10 +45,11 @@ stages:
                       awsRegion: ${{ parameters.awsRegion }}
                       awsServiceConnection: ${{ format(parameters.awsServiceConnectionTemplate, env.name) }}
 
-              - task: AzureCLI@1
+              - task: AzureCLI@2
                 inputs:
                   azureSubscription: ${{ format(parameters.azureSubscriptionTemplate, env.name) }}
                   addSpnToEnvironment: true
+                  scriptType: bash
                   scriptLocation: inlineScript
                   inlineScript: |
                     set -e
@@ -86,7 +87,7 @@ stages:
                   AWS_DEFAULT_REGION: $(awsDefaultRegion)
                 displayName: "Terraform Plan"
 
-              - task: PublishPipelineArtifact@0
+              - task: PublishPipelineArtifact@1
                 inputs:
                   targetPath: $(Build.Repository.LocalPath)/${{ parameters.terraformFolder }}/.terraform/plans
                   artifactName: "${{ env.name }}.enc"
