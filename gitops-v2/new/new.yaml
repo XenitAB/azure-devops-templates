@@ -9,6 +9,9 @@ parameters:
     type: string
   - name: group
     type: string
+  - name: projectName
+    type: string
+    default: $(System.TeamProject)
 
 jobs:
   - job: New
@@ -42,7 +45,7 @@ jobs:
           docker run -v $(pwd):/workspace ghcr.io/xenitab/gitops-promotion:${GITOPS_PROMOTION_TAG} new --token ${TOKEN} --group ${GROUP} --app ${APP} --tag ${TAG:0:7}
         env:
           GITOPS_PROMOTION_TAG: ${{ parameters.gitopsPromotionTag }}
-          PROJECT_NAME: $(System.TeamProject)
+          PROJECT_NAME: ${{ parameters.projectName }}
           REPO_NAME: $(Build.Repository.Name)
           TOKEN: $(System.AccessToken)
           GROUP: ${{ parameters.group }}
